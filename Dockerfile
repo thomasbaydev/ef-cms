@@ -1,6 +1,4 @@
-FROM cypress/base:12.16.0
-
-RUN echo "recache again"
+FROM cypress/base:12.16.2
 
 WORKDIR /home/app
 
@@ -22,14 +20,16 @@ RUN apt-get install -yq gconf-service libasound2 libatk1.0-0 libc6 libcairo2 lib
   git bash openssh-client python python-dev python-pip python-setuptools ca-certificates less \
   unzip wget jq shellcheck clamav
 
-ENV AWS_CLI_VERSION 1.16.31
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+RUN unzip awscliv2.zip
+RUN ./aws/install
+RUN rm awscliv2.zip
 
 RUN freshclam
+
 RUN pip install --upgrade pip
-RUN apt-get install -y awscli && \
-  pip install --upgrade awscli==${AWS_CLI_VERSION} && \
-  wget -q -O terraform_0.11.14_linux_amd64.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip && \
-  unzip -o terraform_0.11.14_linux_amd64.zip terraform && \
+RUN wget -q -O terraform_0.12.28_linux_amd64.zip https://releases.hashicorp.com/terraform/0.12.28/terraform_0.12.28_linux_amd64.zip && \
+  unzip -o terraform_0.12.28_linux_amd64.zip terraform && \
   cp terraform /usr/local/bin/ && \
   curl -OL 'https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-3.2.0.1227-linux.zip' && \
   mkdir sonar_scanner && \
@@ -46,9 +46,15 @@ ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 COPY package.json /home/app/package.json
 COPY package-lock.json /home/app/package-lock.json
 RUN npm set progress=false && \
-  npm i
+  npm config set puppeteer_skip_chromium_download true && \
+  npm ci
 
 COPY . /home/app
+
+COPY web-client/pa11y/package.json /home/app/web-client/pa11y/package.json
+COPY web-client/pa11y/package-lock.json /home/app/web-client/pa11y/package-lock.json
+RUN npm set progress=false && npm ci --prefix=web-client/pa11y/
+COPY ./web-client/pa11y /home/app/web-client/pa11y
 
 RUN mkdir -p /home/app/web-client/cypress/screenshots && \
   mkdir -p /home/app/web-client/cypress/videos && \

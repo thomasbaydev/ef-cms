@@ -1,13 +1,20 @@
-const joi = require('@hapi/joi');
+const joi = require('joi');
+const {
+  ALL_DOCUMENT_TYPES,
+  ALL_EVENT_CODES,
+  OBJECTIONS_OPTIONS,
+  SCENARIOS,
+} = require('./EntityConstants');
+const {
+  JoiValidationConstants,
+} = require('../../utilities/JoiValidationConstants');
 const {
   joiValidationDecorator,
 } = require('../../utilities/JoiValidationDecorator');
 const {
   SupportingDocumentInformationFactory,
 } = require('./externalDocument/SupportingDocumentInformationFactory');
-const { getTimestampSchema } = require('../../utilities/dateSchema');
 const { replaceBracketed } = require('../utilities/replaceBracketed');
-const joiStrictTimestamp = getTimestampSchema();
 
 const {
   VALIDATION_ERROR_MESSAGES,
@@ -119,25 +126,39 @@ function CaseAssociationRequestFactory(rawProps) {
 
   let schema = {
     certificateOfService: joi.boolean().required(),
-    documentTitle: joi.string().optional(),
-    documentTitleTemplate: joi.string().required(),
-    documentType: joi.string().required(),
-    eventCode: joi.string().required(),
+    documentTitle: joi.string().max(500).optional(),
+    documentTitleTemplate: joi.string().max(500).required(),
+    documentType: joi
+      .string()
+      .valid(...ALL_DOCUMENT_TYPES)
+      .required(),
+    eventCode: joi
+      .string()
+      .valid(...ALL_EVENT_CODES)
+      .required(),
     partyIrsPractitioner: joi.boolean().optional(),
     partyPrivatePractitioner: joi.boolean().optional(),
-    primaryDocumentFile: joi.object().required(),
-    scenario: joi.string().required(),
+    primaryDocumentFile: joi.object().required(), // object of type File
+    scenario: joi
+      .string()
+      .valid(...SCENARIOS)
+      .required(),
   };
 
   let schemaOptionalItems = {
     attachments: joi.boolean().required(),
-    certificateOfServiceDate: joiStrictTimestamp.max('now').required(),
+    certificateOfServiceDate: JoiValidationConstants.ISO_DATE.max(
+      'now',
+    ).required(),
     exhibits: joi.boolean().required(),
     hasSupportingDocuments: joi.boolean().required(),
-    objections: joi.string().required(),
+    objections: joi
+      .string()
+      .valid(...OBJECTIONS_OPTIONS)
+      .required(),
     representingPrimary: joi.boolean().invalid(false).required(),
     representingSecondary: joi.boolean().invalid(false).required(),
-    supportingDocuments: joi.array().optional(),
+    supportingDocuments: joi.array().optional(), // validated with SupportingDocumentInformationFactory
   };
 
   const makeRequired = itemName => {

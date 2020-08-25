@@ -1,17 +1,21 @@
 const {
+  CASE_TYPES_MAP,
+  COUNTRY_TYPES,
+  PARTY_TYPES,
+  ROLES,
+} = require('../entities/EntityConstants');
+const {
   validateCaseDetailInteractor,
 } = require('./validateCaseDetailInteractor');
 const { applicationContext } = require('../test/createTestApplicationContext');
 const { Case } = require('../entities/cases/Case');
-const { ContactFactory } = require('../entities/contacts/ContactFactory');
 const { MOCK_USERS } = require('../../test/mockUsers');
-const { User } = require('../entities/User');
 const { VALIDATION_ERROR_MESSAGES } = Case;
 
 const contactPrimary = {
   address1: '123 Main St',
   city: 'Somewhere',
-  countryType: ContactFactory.COUNTRY_TYPES.DOMESTIC,
+  countryType: COUNTRY_TYPES.DOMESTIC,
   name: 'Test Petitioner',
   phone: '1234567890',
   postalCode: '12345',
@@ -54,7 +58,7 @@ describe('validate case detail', () => {
       applicationContext,
       caseDetail: {
         caseCaption: 'Caption',
-        caseType: 'Other',
+        caseType: CASE_TYPES_MAP.other,
         contactPrimary,
         docketNumber: '101-18',
         docketRecord: [
@@ -72,28 +76,31 @@ describe('validate case detail', () => {
             docketNumber: '101-18',
             documentId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
             documentType: 'Petition',
-            role: User.ROLES.petitioner,
+            eventCode: 'P',
+            filedBy: 'Test Petitioner',
+            role: ROLES.petitioner,
             userId: '9271f5ca-e7c9-40e8-b465-e970e22934e8',
-            workItems: [],
           },
           {
             createdAt: '2018-11-21T20:49:28.192Z',
             docketNumber: '101-18',
             documentId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
             documentType: 'Petition',
-            role: User.ROLES.petitioner,
+            eventCode: 'P',
+            filedBy: 'Test Petitioner',
+            role: ROLES.petitioner,
             userId: '9271f5ca-e7c9-40e8-b465-e970e22934e8',
-            workItems: [],
           },
         ],
         filingType: 'Myself',
         hasVerifiedIrsNotice: true,
         irsNoticeDate: new Date().toISOString(),
-        partyType: ContactFactory.PARTY_TYPES.petitioner,
+        partyType: PARTY_TYPES.petitioner,
         petitioners: [{ name: 'user' }],
         preferredTrialCity: 'Fresno, California',
         procedureType: 'Regular',
         signature: true,
+        userId: 'e8577e31-d6d5-4c4a-adc6-520075f3dde5',
       },
     });
     expect(errors).toEqual(null);
@@ -116,7 +123,7 @@ describe('validate case detail', () => {
       applicationContext,
       caseDetail: {
         caseCaption: 'Caption',
-        caseType: 'Other',
+        caseType: CASE_TYPES_MAP.other,
         contactPrimary,
         docketNumber: '101-18',
         docketRecord: [
@@ -134,28 +141,31 @@ describe('validate case detail', () => {
             docketNumber: '101-18',
             documentId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
             documentType: 'Petition',
-            role: User.ROLES.petitioner,
+            eventCode: 'P',
+            filedBy: 'Test Petitioner',
+            role: ROLES.petitioner,
             userId: '9271f5ca-e7c9-40e8-b465-e970e22934e8',
-            workItems: [],
           },
           {
             createdAt: '2018-11-21T20:49:28.192Z',
             docketNumber: '101-18',
             documentId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
             documentType: 'Petition',
-            role: User.ROLES.petitioner,
+            eventCode: 'P',
+            filedBy: 'Test Petitioner',
+            role: ROLES.petitioner,
             userId: '9271f5ca-e7c9-40e8-b465-e970e22934e8',
-            workItems: [],
           },
         ],
-        filingType: 'Other',
+        filingType: CASE_TYPES_MAP.other,
         hasVerifiedIrsNotice: true,
         irsNoticeDate: new Date().toISOString(),
-        partyType: ContactFactory.PARTY_TYPES.petitioner,
+        partyType: PARTY_TYPES.petitioner,
         petitioners: [{ name: 'user' }],
         preferredTrialCity: 'Fresno, California',
         procedureType: 'Regular',
         signature: true,
+        userId: 'e8577e31-d6d5-4c4a-adc6-520075f3dde5',
       },
     });
     expect(errors).toEqual(null);
@@ -166,7 +176,7 @@ describe('validate case detail', () => {
       applicationContext,
       caseDetail: {
         caseCaption: 'Caption',
-        caseType: 'Other',
+        caseType: CASE_TYPES_MAP.other,
         contactPrimary,
         docketNumber: '101-18',
         docketRecord: [
@@ -184,28 +194,31 @@ describe('validate case detail', () => {
             docketNumber: '101-18',
             documentId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
             documentType: 'Petition',
-            role: User.ROLES.petitioner,
+            eventCode: 'P',
+            filedBy: 'Test Petitioner',
+            role: ROLES.petitioner,
             userId: '9271f5ca-e7c9-40e8-b465-e970e22934e8',
-            workItems: [],
           },
           {
             createdAt: '2018-11-21T20:49:28.192Z',
             docketNumber: '101-18',
             documentId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
             documentType: 'Petition',
-            role: User.ROLES.petitioner,
+            eventCode: 'P',
+            filedBy: 'Test Petitioner',
+            role: ROLES.petitioner,
             userId: '9271f5ca-e7c9-40e8-b465-e970e22934e8',
-            workItems: [],
           },
         ],
-        filingType: 'Other',
+        filingType: CASE_TYPES_MAP.other,
         hasVerifiedIrsNotice: false,
         irsNoticeDate: null,
-        partyType: ContactFactory.PARTY_TYPES.petitioner,
+        partyType: PARTY_TYPES.petitioner,
         petitioners: [{ name: 'user' }],
         preferredTrialCity: 'Fresno, California',
         procedureType: 'Regular',
         signature: true,
+        userId: 'e8577e31-d6d5-4c4a-adc6-520075f3dde5',
       },
     });
     expect(errors).toEqual(null);

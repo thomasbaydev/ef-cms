@@ -4,7 +4,7 @@ const {
 const {
   orderPublicSearchInteractor,
 } = require('./orderPublicSearchInteractor');
-const { Document } = require('../../entities/Document');
+const { ORDER_EVENT_CODES } = require('../../entities/EntityConstants');
 
 describe('orderPublicSearchInteractor', () => {
   beforeEach(() => {
@@ -13,7 +13,6 @@ describe('orderPublicSearchInteractor', () => {
       .advancedDocumentSearch.mockResolvedValue([
         {
           caseCaption: 'Samson Workman, Petitioner',
-          caseId: '1',
           docketNumber: '103-19',
           docketNumberSuffix: 'AAA',
           documentContents:
@@ -24,7 +23,6 @@ describe('orderPublicSearchInteractor', () => {
         },
         {
           caseCaption: 'Samson Workman, Petitioner',
-          caseId: '2',
           docketNumber: '103-19',
           docketNumberSuffix: 'AAA',
           documentContents: 'KitKats are inferior candies',
@@ -34,7 +32,6 @@ describe('orderPublicSearchInteractor', () => {
         },
         {
           caseCaption: 'Gal Fieri, Petitioner',
-          caseId: '3',
           docketNumber: '104-19',
           docketNumberSuffix: 'AAA',
           documentContents: 'Baby Ruth is gross',
@@ -50,13 +47,14 @@ describe('orderPublicSearchInteractor', () => {
     await orderPublicSearchInteractor({
       applicationContext,
       keyword: 'fish',
+      startDate: '2001-01-01',
     });
 
     expect(
       applicationContext.getPersistenceGateway().advancedDocumentSearch.mock
         .calls[0][0],
     ).toMatchObject({
-      documentEventCodes: Document.ORDER_DOCUMENT_TYPES,
+      documentEventCodes: ORDER_EVENT_CODES,
     });
   });
 
@@ -64,12 +62,12 @@ describe('orderPublicSearchInteractor', () => {
     const result = await orderPublicSearchInteractor({
       applicationContext,
       keyword: 'fish',
+      startDate: '2001-01-01',
     });
 
     expect(result).toMatchObject([
       {
         caseCaption: 'Samson Workman, Petitioner',
-        caseId: '1',
         docketNumber: '103-19',
         docketNumberSuffix: 'AAA',
         documentContents:
@@ -80,7 +78,6 @@ describe('orderPublicSearchInteractor', () => {
       },
       {
         caseCaption: 'Samson Workman, Petitioner',
-        caseId: '2',
         docketNumber: '103-19',
         docketNumberSuffix: 'AAA',
         documentContents: 'KitKats are inferior candies',

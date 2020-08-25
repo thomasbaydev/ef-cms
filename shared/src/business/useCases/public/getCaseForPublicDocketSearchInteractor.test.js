@@ -39,7 +39,7 @@ describe('Get case for public docket record search', () => {
       docketNumber: MOCK_CASE.docketNumber,
     });
 
-    expect(caseRecord.caseId).toEqual('c54ba5a9-b37b-479d-9201-067ec6e335bb');
+    expect(caseRecord.docketNumber).toEqual(MOCK_CASE.docketNumber);
     expect(
       applicationContext.getPersistenceGateway().getCaseByDocketNumber.mock
         .calls[0][0].docketNumber,
@@ -47,6 +47,10 @@ describe('Get case for public docket record search', () => {
   });
 
   it('should throw an error when unable to find a case by docket number', async () => {
+    applicationContext
+      .getPersistenceGateway()
+      .getCaseByDocketNumber.mockResolvedValue(undefined);
+
     await expect(
       getCaseForPublicDocketSearchInteractor({
         applicationContext,

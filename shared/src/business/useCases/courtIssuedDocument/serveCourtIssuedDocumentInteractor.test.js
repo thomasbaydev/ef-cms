@@ -4,17 +4,21 @@ const {
   applicationContext,
 } = require('../../test/createTestApplicationContext');
 const {
+  CASE_STATUS_TYPES,
+  CASE_TYPES_MAP,
+  COUNTRY_TYPES,
+  COURT_ISSUED_EVENT_CODES,
+  DOCKET_SECTION,
+  PARTY_TYPES,
+  ROLES,
+} = require('../../entities/EntityConstants');
+const {
   ENTERED_AND_SERVED_EVENT_CODES,
 } = require('../../entities/courtIssuedDocument/CourtIssuedDocumentConstants');
 const {
   serveCourtIssuedDocumentInteractor,
 } = require('./serveCourtIssuedDocumentInteractor');
-const { Case } = require('../../entities/cases/Case');
-const { ContactFactory } = require('../../entities/contacts/ContactFactory');
 const { createISODateString } = require('../../utilities/DateHandler');
-const { DOCKET_SECTION } = require('../../entities/WorkQueue');
-const { Document } = require('../../entities/Document');
-const { User } = require('../../entities/User');
 const { v4: uuidv4 } = require('uuid');
 
 const testAssetsPath = path.join(__dirname, '../../../../test-assets/');
@@ -34,14 +38,12 @@ describe('serveCourtIssuedDocumentInteractor', () => {
 
   const mockUser = {
     name: 'Docket Clerk',
-    role: User.ROLES.docketClerk,
+    role: ROLES.docketClerk,
     userId: '2474e5c0-f741-4120-befa-b77378ac8bf0',
   };
 
   const mockWorkItem = {
-    caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-    docketNumber: '123-45',
-    isQC: true,
+    docketNumber: '101-20',
     section: DOCKET_SECTION,
     sentBy: mockUser.name,
     sentByUserId: mockUser.userId,
@@ -65,7 +67,7 @@ describe('serveCourtIssuedDocumentInteractor', () => {
         index,
       });
 
-      const eventCodeMap = Document.COURT_ISSUED_EVENT_CODES.find(
+      const eventCodeMap = COURT_ISSUED_EVENT_CODES.find(
         entry => entry.eventCode === eventCode,
       );
 
@@ -73,8 +75,11 @@ describe('serveCourtIssuedDocumentInteractor', () => {
         documentId,
         documentType: eventCodeMap.documentType,
         eventCode,
+        signedAt: createISODateString(),
+        signedByUserId: uuidv4(),
+        signedJudgeName: 'Chief Judge',
         userId: '2474e5c0-f741-4120-befa-b77378ac8bf0',
-        workItems: [mockWorkItem],
+        workItem: mockWorkItem,
       };
     },
   );
@@ -82,19 +87,18 @@ describe('serveCourtIssuedDocumentInteractor', () => {
   const mockCases = [
     {
       caseCaption: 'Caption',
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-      caseType: 'Deficiency',
+      caseType: CASE_TYPES_MAP.deficiency,
       contactPrimary: {
         address1: '123 Main St',
         city: 'Somewhere',
-        countryType: ContactFactory.COUNTRY_TYPES.DOMESTIC,
+        countryType: COUNTRY_TYPES.DOMESTIC,
         email: 'contact@example.com',
         name: 'Contact Primary',
         phone: '123123134',
         postalCode: '12345',
         state: 'TN',
       },
-      docketNumber: '123-45',
+      docketNumber: '101-20',
       docketRecord: [
         {
           description: 'Docket Record 0',
@@ -117,34 +121,40 @@ describe('serveCourtIssuedDocumentInteractor', () => {
       documents: [
         {
           documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bc',
-          documentType: 'O - Order',
+          documentType: 'Order',
           eventCode: 'O',
           serviceStamp: 'Served',
+          signedAt: createISODateString(),
+          signedByUserId: uuidv4(),
+          signedJudgeName: 'Chief Judge',
           userId: '2474e5c0-f741-4120-befa-b77378ac8bf0',
-          workItems: [mockWorkItem],
+          workItem: mockWorkItem,
         },
         {
           documentId: mockDocumentId,
-          documentType: 'OAJ - Order that case is assigned',
+          documentType: 'Order that case is assigned',
           eventCode: 'OAJ',
+          signedAt: createISODateString(),
+          signedByUserId: uuidv4(),
+          signedJudgeName: 'Chief Judge',
           userId: '2474e5c0-f741-4120-befa-b77378ac8bf0',
-          workItems: [mockWorkItem],
+          workItem: mockWorkItem,
         },
         ...documentsWithCaseClosingEventCodes,
       ],
       filingType: 'Myself',
-      partyType: ContactFactory.PARTY_TYPES.petitioner,
+      partyType: PARTY_TYPES.petitioner,
       preferredTrialCity: 'Fresno, California',
       procedureType: 'Regular',
+      userId: 'e8577e31-d6d5-4c4a-adc6-520075f3dde5',
     },
     {
       caseCaption: 'Caption',
-      caseId: 'd857e73a-636e-4aa7-9de2-b5cee8770ff0',
-      caseType: 'Deficiency',
+      caseType: CASE_TYPES_MAP.deficiency,
       contactPrimary: {
         address1: '123 Main St',
         city: 'Somewhere',
-        countryType: ContactFactory.COUNTRY_TYPES.DOMESTIC,
+        countryType: COUNTRY_TYPES.DOMESTIC,
         name: 'Contact Primary',
         phone: '123123134',
         postalCode: '12345',
@@ -153,13 +163,13 @@ describe('serveCourtIssuedDocumentInteractor', () => {
       contactSecondary: {
         address1: '123 Main St',
         city: 'Somewhere',
-        countryType: ContactFactory.COUNTRY_TYPES.DOMESTIC,
+        countryType: COUNTRY_TYPES.DOMESTIC,
         name: 'Contact Secondary',
         phone: '123123134',
         postalCode: '12345',
         state: 'TN',
       },
-      docketNumber: '123-45',
+      docketNumber: '102-20',
       docketRecord: [
         {
           description: 'Docket Record 0',
@@ -168,6 +178,9 @@ describe('serveCourtIssuedDocumentInteractor', () => {
           eventCode: 'O',
           filingDate: createISODateString(),
           index: 0,
+          signedAt: createISODateString(),
+          signedByUserId: uuidv4(),
+          signedJudgeName: 'Chief Judge',
         },
         {
           description: 'Docket Record 0',
@@ -182,27 +195,34 @@ describe('serveCourtIssuedDocumentInteractor', () => {
       documents: [
         {
           documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bc',
-          documentType: 'O - Order',
+          documentType: 'Order',
           eventCode: 'O',
           serviceStamp: 'Served',
+          signedAt: createISODateString(),
+          signedByUserId: uuidv4(),
+          signedJudgeName: 'Chief Judge',
           userId: '2474e5c0-f741-4120-befa-b77378ac8bf0',
-          workItems: [mockWorkItem],
+          workItem: mockWorkItem,
         },
         {
           documentId: mockDocumentId,
-          documentType: 'OAJ - Order that case is assigned',
+          documentType: 'Order that case is assigned',
           eventCode: 'OAJ',
+          signedAt: createISODateString(),
+          signedByUserId: uuidv4(),
+          signedJudgeName: 'Chief Judge',
           userId: '2474e5c0-f741-4120-befa-b77378ac8bf0',
-          workItems: [mockWorkItem],
+          workItem: mockWorkItem,
         },
         ...documentsWithCaseClosingEventCodes,
       ],
       filingType: 'Myself',
       isPaper: true,
       mailingDate: 'testing',
-      partyType: ContactFactory.PARTY_TYPES.petitionerSpouse,
+      partyType: PARTY_TYPES.petitionerSpouse,
       preferredTrialCity: 'Fresno, California',
       procedureType: 'Regular',
+      userId: 'e8577e31-d6d5-4c4a-adc6-520075f3dde5',
     },
   ];
 
@@ -213,8 +233,10 @@ describe('serveCourtIssuedDocumentInteractor', () => {
     applicationContext.getCurrentUser.mockImplementation(() => mockUser);
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockImplementation(({ caseId }) => {
-        const theCase = mockCases.find(mockCase => mockCase.caseId === caseId);
+      .getCaseByDocketNumber.mockImplementation(({ docketNumber }) => {
+        const theCase = mockCases.find(
+          mockCase => mockCase.docketNumber === docketNumber,
+        );
         if (theCase) {
           return {
             ...theCase,
@@ -241,7 +263,7 @@ describe('serveCourtIssuedDocumentInteractor', () => {
       .getTrialSessionById.mockReturnValue({
         caseOrder: [
           {
-            caseId: '46c4064f-b44a-4ac3-9dfb-9ce9f00e43f5',
+            docketNumber: '101-20',
           },
         ],
         createdAt: '2019-10-27T05:00:00.000Z',
@@ -271,13 +293,13 @@ describe('serveCourtIssuedDocumentInteractor', () => {
 
   it('should throw an Unauthorized error if the user role does not have the SERVE_DOCUMENT permission', async () => {
     // petitioner role does NOT have the SERVE_DOCUMENT permission
-    const user = { ...mockUser, role: User.ROLES.petitioner };
+    const user = { ...mockUser, role: ROLES.petitioner };
     applicationContext.getCurrentUser.mockReturnValue(user);
 
     await expect(
       serveCourtIssuedDocumentInteractor({
         applicationContext,
-        caseId: '000-00',
+        docketNumber: '101-20',
         documentId: '000',
       }),
     ).rejects.toThrow('Unauthorized');
@@ -286,12 +308,12 @@ describe('serveCourtIssuedDocumentInteractor', () => {
   it('should throw a Not Found error if the case can not be found', async () => {
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(null);
+      .getCaseByDocketNumber.mockReturnValue(null);
 
     await expect(
       serveCourtIssuedDocumentInteractor({
         applicationContext,
-        caseId: '000-00',
+        docketNumber: '000-00',
         documentId: '000',
       }),
     ).rejects.toThrow('Case 000-00 was not found');
@@ -301,7 +323,7 @@ describe('serveCourtIssuedDocumentInteractor', () => {
     await expect(
       serveCourtIssuedDocumentInteractor({
         applicationContext,
-        caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+        docketNumber: '101-20',
         documentId: '000',
       }),
     ).rejects.toThrow('Document 000 was not found');
@@ -310,7 +332,7 @@ describe('serveCourtIssuedDocumentInteractor', () => {
   it('should set the document as served and update the case and work items for a generic order document', async () => {
     await serveCourtIssuedDocumentInteractor({
       applicationContext,
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      docketNumber: '101-20',
       documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bc',
     });
 
@@ -336,7 +358,7 @@ describe('serveCourtIssuedDocumentInteractor', () => {
   it('should set the number of pages present in the document to be served', async () => {
     await serveCourtIssuedDocumentInteractor({
       applicationContext,
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      docketNumber: '101-20',
       documentId: mockDocumentId,
     });
 
@@ -365,7 +387,7 @@ describe('serveCourtIssuedDocumentInteractor', () => {
 
     await serveCourtIssuedDocumentInteractor({
       applicationContext,
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      docketNumber: '101-20',
       documentId: mockDocumentId,
     });
 
@@ -390,7 +412,7 @@ describe('serveCourtIssuedDocumentInteractor', () => {
   it('should call sendBulkTemplatedEmail, sending an email to all electronically-served parties, and should not return paperServicePdfData', async () => {
     const result = await serveCourtIssuedDocumentInteractor({
       applicationContext,
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      docketNumber: '101-20',
       documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bc',
     });
 
@@ -403,7 +425,7 @@ describe('serveCourtIssuedDocumentInteractor', () => {
   it('should return paperServicePdfData when there are paper service parties on the case', async () => {
     const result = await serveCourtIssuedDocumentInteractor({
       applicationContext,
-      caseId: 'd857e73a-636e-4aa7-9de2-b5cee8770ff0',
+      docketNumber: '102-20',
       documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bc',
     });
 
@@ -415,7 +437,7 @@ describe('serveCourtIssuedDocumentInteractor', () => {
 
     await serveCourtIssuedDocumentInteractor({
       applicationContext,
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      docketNumber: '101-20',
       documentId: documentsWithCaseClosingEventCodes[0].documentId,
     });
 
@@ -433,7 +455,7 @@ describe('serveCourtIssuedDocumentInteractor', () => {
       .getTrialSessionById.mockReturnValue({
         caseOrder: [
           {
-            caseId: '46c4064f-b44a-4ac3-9dfb-9ce9f00e43f5',
+            docketNumber: '101-20',
           },
         ],
         createdAt: '2019-10-27T05:00:00.000Z',
@@ -461,7 +483,7 @@ describe('serveCourtIssuedDocumentInteractor', () => {
 
     await serveCourtIssuedDocumentInteractor({
       applicationContext,
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      docketNumber: '101-20',
       documentId: documentsWithCaseClosingEventCodes[0].documentId,
     });
 
@@ -477,14 +499,14 @@ describe('serveCourtIssuedDocumentInteractor', () => {
     it(`should set the case status to closed for event code: ${document.eventCode}`, async () => {
       await serveCourtIssuedDocumentInteractor({
         applicationContext,
-        caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+        docketNumber: '101-20',
         documentId: document.documentId,
       });
 
       const updatedCase = applicationContext.getPersistenceGateway().updateCase
         .mock.calls[0][0].caseToUpdate;
 
-      expect(updatedCase.status).toEqual(Case.STATUS_TYPES.closed);
+      expect(updatedCase.status).toEqual(CASE_STATUS_TYPES.closed);
       expect(
         applicationContext.getPersistenceGateway()
           .deleteCaseTrialSortMappingRecords,

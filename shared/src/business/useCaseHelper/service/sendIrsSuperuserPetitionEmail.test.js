@@ -7,6 +7,7 @@ const {
 const {
   sendIrsSuperuserPetitionEmail,
 } = require('./sendIrsSuperuserPetitionEmail');
+const { DOCKET_NUMBER_SUFFIXES } = require('../../entities/EntityConstants');
 jest.mock(
   '../../utilities/generateHTMLTemplateForPDF/reactTemplateGenerator',
   () => ({
@@ -27,12 +28,17 @@ describe('sendIrsSuperuserPetitionEmail', () => {
         contactPrimary: {},
         contactSecondary: {},
         docketNumber: '123-20',
-        docketRecord: [],
+        docketRecord: [
+          {
+            documentId: '35479520-e2d6-4357-b72f-5b46f16a708a',
+            index: 0,
+          },
+        ],
         preferredTrialCity: 'Somecity, ST',
         privatePractitioners: [],
       },
       documentEntity: {
-        documentId: 'test-document-id',
+        documentId: '35479520-e2d6-4357-b72f-5b46f16a708a',
         documentType: 'The Document',
         eventCode: 'P',
         servedAt: '2019-03-01T21:40:46.415Z',
@@ -61,7 +67,7 @@ describe('sendIrsSuperuserPetitionEmail', () => {
           name: 'Carol Baskin',
         },
         docketNumber: '123-20',
-        docketNumberSuffix: 'S',
+        docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.SMALL,
         docketRecord: [],
         preferredTrialCity: 'Somecity, ST',
         privatePractitioners: [
@@ -69,7 +75,6 @@ describe('sendIrsSuperuserPetitionEmail', () => {
             representingPrimary: true,
           },
           {
-            representingPrimary: true,
             representingSecondary: true,
           },
         ],

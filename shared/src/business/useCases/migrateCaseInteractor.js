@@ -26,6 +26,30 @@ exports.migrateCaseInteractor = async ({
     .getPersistenceGateway()
     .getUserById({ applicationContext, userId: authorizedUser.userId });
 
+  if (caseMetadata && caseMetadata.docketNumber) {
+    const docketNumber = Case.formatDocketNumber(caseMetadata.docketNumber);
+
+    const caseToDelete = await applicationContext
+      .getPersistenceGateway()
+      .getCaseByDocketNumber({
+        applicationContext,
+        docketNumber,
+      });
+
+    if (caseToDelete) {
+      await Promise.all([
+        applicationContext
+          .getPersistenceGateway()
+          .deleteCaseByDocketNumber({ applicationContext, docketNumber }),
+        ...caseToDelete.documents.map(({ documentId }) =>
+          applicationContext
+            .getPersistenceGateway()
+            .deleteDocumentFromS3({ applicationContext, key: documentId }),
+        ),
+      ]);
+    }
+  }
+
   const caseToAdd = new Case(
     {
       ...caseMetadata,
@@ -36,10 +60,55 @@ exports.migrateCaseInteractor = async ({
     },
   );
 
+  for (const privatePractitioner of caseToAdd.privatePractitioners) {
+    const practitioner = await applicationContext
+      .getPersistenceGateway()
+      .getPractitionerByBarNumber({
+        applicationContext,
+        barNumber: privatePractitioner.barNumber,
+      });
+
+    privatePractitioner.userId = practitioner
+      ? practitioner.userId
+      : applicationContext.getUniqueId();
+  }
+
+  for (const irsPractitioner of caseToAdd.irsPractitioners) {
+    const practitioner = await applicationContext
+      .getPersistenceGateway()
+      .getPractitionerByBarNumber({
+        applicationContext,
+        barNumber: irsPractitioner.barNumber,
+      });
+
+    irsPractitioner.userId = practitioner
+      ? practitioner.userId
+      : applicationContext.getUniqueId();
+  }
+
+  const caseValidatedRaw = caseToAdd.validateForMigration().toRawObject();
+
   await applicationContext.getPersistenceGateway().createCase({
     applicationContext,
-    caseToCreate: caseToAdd.validate().toRawObject(),
+    caseToCreate: caseValidatedRaw,
   });
 
-  return new Case(caseToAdd, { applicationContext }).toRawObject();
+  for (const correspondenceEntity of caseToAdd.correspondence) {
+    await applicationContext.getPersistenceGateway().fileCaseCorrespondence({
+      applicationContext,
+      correspondence: correspondenceEntity.validate().toRawObject(),
+      docketNumber: caseToAdd.docketNumber,
+    });
+  }
+
+  // when part of a consolidated case, run the update use case
+  // which will link the cases together in DynamoDB
+  if (caseToAdd.leadDocketNumber) {
+    await applicationContext.getPersistenceGateway().updateCase({
+      applicationContext,
+      caseToUpdate: caseValidatedRaw,
+    });
+  }
+
+  return caseValidatedRaw;
 };

@@ -1,5 +1,4 @@
-import { SERVICE_INDICATOR_TYPES } from '../entities/cases/CaseConstants';
-import { User } from '../entities/User';
+import { ROLES, SERVICE_INDICATOR_TYPES } from '../entities/EntityConstants';
 import { setServiceIndicatorsForCase } from './setServiceIndicatorsForCase';
 
 let baseCaseDetail;
@@ -8,16 +7,16 @@ const basePractitioner = {
   email: 'practitioner1@example.com',
   name: 'Test Practitioner',
   representingPrimary: true,
-  role: User.ROLES.privatePractitioner,
-  serviceIndicator: 'Paper',
+  role: ROLES.privatePractitioner,
+  serviceIndicator: SERVICE_INDICATOR_TYPES.SI_PAPER,
 };
 
 const baseRespondent = {
   email: 'flexionustc+respondent@gmail.com',
   name: 'Test Respondent',
   respondentId: '123-abc-123-abc',
-  role: User.ROLES.irsPractitioner,
-  serviceIndicator: 'Paper',
+  role: ROLES.irsPractitioner,
+  serviceIndicator: SERVICE_INDICATOR_TYPES.SI_PAPER,
   userId: 'abc-123-abc-123',
 };
 

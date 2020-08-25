@@ -40,7 +40,9 @@ export const docketClerkEditsDocketEntryNonstandardB = test => {
       value: 'OBJ',
     });
 
-    await test.runSequence('submitDocketEntrySequence');
+    await test.runSequence('fileDocketEntrySequence', {
+      isSavingForLater: true,
+    });
 
     expect(test.getState('validationErrors')).toEqual({
       freeText: VALIDATION_ERROR_MESSAGES.freeText,
@@ -56,7 +58,9 @@ export const docketClerkEditsDocketEntryNonstandardB = test => {
       value: true,
     });
 
-    await test.runSequence('submitDocketEntrySequence');
+    await test.runSequence('fileDocketEntrySequence', {
+      isSavingForLater: true,
+    });
 
     expect(test.getState('validationErrors')).toEqual({});
 
@@ -83,7 +87,7 @@ export const docketClerkEditsDocketEntryNonstandardB = test => {
     expect(updatedDocument).toMatchObject({
       documentTitle: 'Objection Some free text',
       documentType: 'Objection [anything]',
-      eventCode: 'OBJ',
+      eventCode: 'MISCL',
       lodged: true,
     });
   });

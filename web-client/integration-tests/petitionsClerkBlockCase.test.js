@@ -1,4 +1,4 @@
-import { Case } from '../../shared/src/business/entities/cases/Case';
+import { AUTOMATIC_BLOCKED_REASONS } from '../../shared/src/business/entities/EntityConstants';
 import { docketClerkCreatesATrialSession } from './journey/docketClerkCreatesATrialSession';
 import { docketClerkSetsCaseReadyForTrial } from './journey/docketClerkSetsCaseReadyForTrial';
 import { docketClerkViewsTrialSessionList } from './journey/docketClerkViewsTrialSessionList';
@@ -36,16 +36,16 @@ describe('Blocking a Case', () => {
     trialLocation,
   };
 
-  loginAs(test, 'petitionsclerk');
+  loginAs(test, 'petitionsclerk@example.com');
   petitionsClerkCreatesNewCase(test, fakeFile, trialLocation);
 
-  loginAs(test, 'docketclerk');
+  loginAs(test, 'docketclerk@example.com');
   docketClerkSetsCaseReadyForTrial(test);
-  loginAs(test, 'docketclerk');
+  loginAs(test, 'docketclerk@example.com');
   docketClerkCreatesATrialSession(test, overrides);
   docketClerkViewsTrialSessionList(test, overrides);
 
-  loginAs(test, 'petitionsclerk');
+  loginAs(test, 'petitionsclerk@example.com');
   //manual block and unblock - check eligible list
   petitionsClerkViewsATrialSessionsEligibleCases(test, 1);
   petitionsClerkBlocksCase(test, trialLocation);
@@ -68,7 +68,7 @@ describe('Blocking a Case', () => {
     expect(test.getState('blockedCases')).toMatchObject([
       {
         automaticBlocked: true,
-        automaticBlockedReason: Case.AUTOMATIC_BLOCKED_REASONS.dueDate,
+        automaticBlockedReason: AUTOMATIC_BLOCKED_REASONS.dueDate,
         blocked: false,
         docketNumber: test.docketNumber,
       },
@@ -79,7 +79,7 @@ describe('Blocking a Case', () => {
   petitionsClerkViewsATrialSessionsEligibleCases(test, 1);
 
   //automatic block with a pending item
-  loginAs(test, 'irsPractitioner');
+  loginAs(test, 'irsPractitioner@example.com');
 
   it('respondent uploads a proposed stipulated decision (pending item)', async () => {
     await viewCaseDetail({
@@ -89,7 +89,7 @@ describe('Blocking a Case', () => {
     await uploadProposedStipulatedDecision(test);
   });
 
-  loginAs(test, 'petitionsclerk');
+  loginAs(test, 'petitionsclerk@example.com');
   it('petitions clerk views blocked report with an automatically blocked case for pending item', async () => {
     await refreshElasticsearchIndex();
 
@@ -103,7 +103,7 @@ describe('Blocking a Case', () => {
     expect(test.getState('blockedCases')).toMatchObject([
       {
         automaticBlocked: true,
-        automaticBlockedReason: Case.AUTOMATIC_BLOCKED_REASONS.pending,
+        automaticBlockedReason: AUTOMATIC_BLOCKED_REASONS.pending,
         blocked: false,
         docketNumber: test.docketNumber,
       },
@@ -129,7 +129,7 @@ describe('Blocking a Case', () => {
     expect(test.getState('blockedCases')).toMatchObject([
       {
         automaticBlocked: true,
-        automaticBlockedReason: Case.AUTOMATIC_BLOCKED_REASONS.dueDate,
+        automaticBlockedReason: AUTOMATIC_BLOCKED_REASONS.dueDate,
         blocked: true,
         blockedReason: 'just because',
         docketNumber: test.docketNumber,
@@ -176,7 +176,7 @@ describe('Blocking a Case', () => {
     expect(test.getState('blockedCases')).toMatchObject([]);
   });
 
-  markAllCasesAsQCed(test, () => [test.caseId]);
+  markAllCasesAsQCed(test, () => [test.docketNumber]);
   petitionsClerkSetsATrialSessionsSchedule(test);
 
   petitionsClerkCreatesACaseDeadline(test);

@@ -4,6 +4,9 @@ const {
 } = require('../../../authorization/authorizationClientService');
 const { Case } = require('../../entities/cases/Case');
 const { Document } = require('../../entities/Document');
+const { DOCUMENT_RELATIONSHIPS } = require('../../entities/EntityConstants');
+const { Message } = require('../../entities/Message');
+const { orderBy } = require('lodash');
 const { UnauthorizedError } = require('../../../errors/errors');
 
 /**
@@ -20,7 +23,7 @@ exports.fileCourtIssuedOrderInteractor = async ({
   primaryDocumentFileId,
 }) => {
   const authorizedUser = applicationContext.getCurrentUser();
-  const { caseId } = documentMetadata;
+  const { docketNumber } = documentMetadata;
 
   if (!isAuthorized(authorizedUser, ROLE_PERMISSIONS.COURT_ISSUED_DOCUMENT)) {
     throw new UnauthorizedError('Unauthorized');
@@ -32,9 +35,9 @@ exports.fileCourtIssuedOrderInteractor = async ({
 
   const caseToUpdate = await applicationContext
     .getPersistenceGateway()
-    .getCaseByCaseId({
+    .getCaseByDocketNumber({
       applicationContext,
-      caseId,
+      docketNumber,
     });
 
   const shouldScrapePDFContents = !documentMetadata.documentContents;
@@ -43,6 +46,9 @@ exports.fileCourtIssuedOrderInteractor = async ({
 
   if (['O', 'NOT'].includes(documentMetadata.eventCode)) {
     documentMetadata.freeText = documentMetadata.documentTitle;
+    if (documentMetadata.draftState) {
+      documentMetadata.draftState.freeText = documentMetadata.documentTitle;
+    }
   }
 
   if (shouldScrapePDFContents) {
@@ -108,16 +114,14 @@ exports.fileCourtIssuedOrderInteractor = async ({
       documentId: primaryDocumentFileId,
       documentType: documentMetadata.documentType,
       filedBy: user.name,
-      relationship: 'primaryDocument',
+      isDraft: true,
+      isFileAttached: true,
+      relationship: DOCUMENT_RELATIONSHIPS.PRIMARY,
       userId: user.userId,
     },
     { applicationContext },
   );
   documentEntity.setAsProcessingStatusAsCompleted();
-
-  if (documentMetadata.eventCode === 'NOT') {
-    documentEntity.setSigned(authorizedUser.userId);
-  }
 
   caseEntity.addDocumentWithoutDocketRecord(documentEntity);
 
@@ -125,6 +129,30 @@ exports.fileCourtIssuedOrderInteractor = async ({
     applicationContext,
     caseToUpdate: caseEntity.validate().toRawObject(),
   });
+
+  if (documentMetadata.parentMessageId) {
+    const messages = await applicationContext
+      .getPersistenceGateway()
+      .getMessageThreadByParentId({
+        applicationContext,
+        parentMessageId: documentMetadata.parentMessageId,
+      });
+
+    const mostRecentMessage = orderBy(messages, 'createdAt', 'desc')[0];
+
+    const messageEntity = new Message(mostRecentMessage, {
+      applicationContext,
+    }).validate();
+    messageEntity.addAttachment({
+      documentId: documentEntity.documentId,
+      documentTitle: documentEntity.documentTitle,
+    });
+
+    await applicationContext.getPersistenceGateway().updateMessage({
+      applicationContext,
+      message: messageEntity.validate().toRawObject(),
+    });
+  }
 
   return caseEntity.toRawObject();
 };

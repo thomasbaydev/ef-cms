@@ -16,14 +16,14 @@ const { WorkItem } = require('../entities/WorkItem');
  *
  * @param {object} providers the providers object
  * @param {object} providers.applicationContext the application context
- * @param {string} providers.caseId the id of the case to update
+ * @param {string} providers.docketNumber the docket number of the case to update
  * @param {object} providers.caseToUpdate the updated case data
  * @returns {object} the updated case data
  */
 exports.saveCaseDetailInternalEditInteractor = async ({
   applicationContext,
-  caseId,
   caseToUpdate,
+  docketNumber,
 }) => {
   const authorizedUser = applicationContext.getCurrentUser();
 
@@ -35,9 +35,16 @@ exports.saveCaseDetailInternalEditInteractor = async ({
     .getPersistenceGateway()
     .getUserById({ applicationContext, userId: authorizedUser.userId });
 
-  if (!caseToUpdate || caseId !== caseToUpdate.caseId) {
+  if (!caseToUpdate || docketNumber !== caseToUpdate.docketNumber) {
     throw new UnprocessableEntityError();
   }
+
+  const caseRecord = await applicationContext
+    .getPersistenceGateway()
+    .getCaseByDocketNumber({
+      applicationContext,
+      docketNumber,
+    });
 
   const editableFields = {
     caseCaption: caseToUpdate.caseCaption,
@@ -69,43 +76,41 @@ exports.saveCaseDetailInternalEditInteractor = async ({
     statistics: caseToUpdate.statistics,
   };
 
-  const theCase = await applicationContext
-    .getPersistenceGateway()
-    .getCaseByCaseId({
-      applicationContext,
-      caseId,
-    });
-
-  const fullCase = {
-    ...theCase,
+  const caseWithFormEdits = {
+    ...caseRecord,
     ...editableFields,
   };
 
-  if (!isEmpty(fullCase.contactPrimary)) {
-    fullCase.contactPrimary = ContactFactory.createContacts({
-      contactInfo: { primary: fullCase.contactPrimary },
-      partyType: fullCase.partyType,
-    }).primary.toRawObject();
-  }
-
-  if (!isEmpty(fullCase.contactSecondary)) {
-    fullCase.contactSecondary = ContactFactory.createContacts({
-      contactInfo: { secondary: fullCase.contactSecondary },
-      partyType: fullCase.partyType,
-    }).secondary.toRawObject();
-  }
-
-  const caseEntity = new Case(fullCase, { applicationContext }).validate();
-  caseEntity.setRequestForTrialDocketRecord(fullCase.preferredTrialCity, {
+  const caseEntity = new Case(caseWithFormEdits, {
     applicationContext,
   });
 
-  if (!caseEntity.isPaper) {
+  if (!isEmpty(caseWithFormEdits.contactPrimary)) {
+    caseWithFormEdits.contactPrimary = ContactFactory.createContacts({
+      applicationContext,
+      contactInfo: { primary: caseWithFormEdits.contactPrimary },
+      partyType: caseWithFormEdits.partyType,
+    }).primary.toRawObject();
+  }
+
+  if (!isEmpty(caseWithFormEdits.contactSecondary)) {
+    caseWithFormEdits.contactSecondary = ContactFactory.createContacts({
+      applicationContext,
+      contactInfo: { secondary: caseWithFormEdits.contactSecondary },
+      partyType: caseWithFormEdits.partyType,
+    }).secondary.toRawObject();
+  }
+
+  if (caseEntity.isPaper) {
+    await applicationContext.getUseCaseHelpers().updateInitialFilingDocuments({
+      applicationContext,
+      caseEntity,
+      caseToUpdate,
+    });
+  } else {
     const petitionDocument = caseEntity.getPetitionDocument();
 
-    const initializeCaseWorkItem = petitionDocument.workItems.find(
-      workItem => workItem.isInitializeCase,
-    );
+    const initializeCaseWorkItem = petitionDocument.workItem;
 
     await applicationContext.getPersistenceGateway().deleteWorkItemFromInbox({
       applicationContext,

@@ -1,12 +1,14 @@
+import { applicationContextForClient as applicationContext } from '../../../../shared/src/business/test/createTestApplicationContext';
 import { blockedCasesReportHelper as blockedCasesReportHelperComputed } from './blockedCasesReportHelper';
 import { runCompute } from 'cerebral/test';
 import { withAppContextDecorator } from '../../withAppContext';
 
-const blockedCasesReportHelper = withAppContextDecorator(
-  blockedCasesReportHelperComputed,
-);
-
 describe('blockedCasesReportHelper', () => {
+  const { DOCKET_NUMBER_SUFFIXES } = applicationContext.getConstants();
+
+  const blockedCasesReportHelper = withAppContextDecorator(
+    blockedCasesReportHelperComputed,
+  );
   it('returns blockedCasesCount as undefined if blockedCases is not on the state', () => {
     const result = runCompute(blockedCasesReportHelper, {
       state: {},
@@ -27,9 +29,9 @@ describe('blockedCasesReportHelper', () => {
     const result = runCompute(blockedCasesReportHelper, {
       state: {
         blockedCases: [
-          { caseId: '1', docketNumber: '101-19' },
-          { caseId: '2', docketNumber: '102-19' },
-          { caseId: '3', docketNumber: '103-19' },
+          { docketNumber: '101-19' },
+          { docketNumber: '102-19' },
+          { docketNumber: '103-19' },
         ],
       },
     });
@@ -44,7 +46,6 @@ describe('blockedCasesReportHelper', () => {
             blocked: true,
             blockedDate: '2019-03-01T21:42:29.073Z',
             caseCaption: 'Brett Osborne, Petitioner',
-            caseId: '1',
             docketNumber: '105-19',
             docketNumberWithSuffix: '105-19',
           },
@@ -54,7 +55,6 @@ describe('blockedCasesReportHelper', () => {
             blocked: true,
             blockedDate: '2019-07-01T21:42:29.073Z',
             caseCaption: 'Selma Horn & Cairo Harris, Petitioners',
-            caseId: '2',
             docketNumber: '102-19',
             docketNumberWithSuffix: '102-19',
           },
@@ -65,16 +65,14 @@ describe('blockedCasesReportHelper', () => {
             blockedDate: '2018-03-05T21:42:29.073Z',
             caseCaption:
               'Tatum Craig, Wayne Obrien, Partnership Representative, Petitioner(s)',
-            caseId: '3',
             docketNumber: '103-18',
-            docketNumberSuffix: 'S',
+            docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.SMALL,
             docketNumberWithSuffix: '103-18S',
           },
           {
             automaticBlocked: true,
             automaticBlockedDate: '2019-03-05T21:42:29.073Z',
             caseCaption: 'Bob Barker, Petitioner',
-            caseId: '4',
             docketNumber: '104-19',
             docketNumberWithSuffix: '104-19',
           },
@@ -92,10 +90,9 @@ describe('blockedCasesReportHelper', () => {
           blockedDateEarliest: '03/05/18',
           caseCaption:
             'Tatum Craig, Wayne Obrien, Partnership Representative, Petitioner(s)',
-          caseId: '3',
           caseTitle: 'Tatum Craig, Wayne Obrien, Partnership Representative',
           docketNumber: '103-18',
-          docketNumberSuffix: 'S',
+          docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.SMALL,
           docketNumberWithSuffix: '103-18S',
         },
         {
@@ -105,7 +102,6 @@ describe('blockedCasesReportHelper', () => {
           blockedDate: '2019-07-01T21:42:29.073Z',
           blockedDateEarliest: '03/05/18',
           caseCaption: 'Selma Horn & Cairo Harris, Petitioners',
-          caseId: '2',
           caseTitle: 'Selma Horn & Cairo Harris',
           docketNumber: '102-19',
           docketNumberWithSuffix: '102-19',
@@ -115,7 +111,6 @@ describe('blockedCasesReportHelper', () => {
           automaticBlockedDate: '2019-03-05T21:42:29.073Z',
           blockedDateEarliest: '03/05/19',
           caseCaption: 'Bob Barker, Petitioner',
-          caseId: '4',
           caseTitle: 'Bob Barker',
           docketNumber: '104-19',
           docketNumberWithSuffix: '104-19',
@@ -125,7 +120,6 @@ describe('blockedCasesReportHelper', () => {
           blockedDate: '2019-03-01T21:42:29.073Z',
           blockedDateEarliest: '03/01/19',
           caseCaption: 'Brett Osborne, Petitioner',
-          caseId: '1',
           caseTitle: 'Brett Osborne',
           docketNumber: '105-19',
           docketNumberWithSuffix: '105-19',

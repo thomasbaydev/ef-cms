@@ -1,14 +1,13 @@
-const joi = require('@hapi/joi');
+const joi = require('joi');
 const {
   joiValidationDecorator,
 } = require('../../utilities/JoiValidationDecorator');
 const {
-  User,
   userDecorator,
   userValidation,
   VALIDATION_ERROR_MESSAGES,
 } = require('./User');
-const { SERVICE_INDICATOR_TYPES } = require('./cases/CaseConstants');
+const { ROLES, SERVICE_INDICATOR_TYPES } = require('./EntityConstants');
 
 /**
  * constructor
@@ -23,17 +22,19 @@ function IrsPractitioner(rawUser) {
     rawUser.serviceIndicator || SERVICE_INDICATOR_TYPES.SI_ELECTRONIC;
 }
 
+IrsPractitioner.VALIDATION_RULES = joi.object().keys({
+  ...userValidation,
+  entityName: joi.string().valid('IrsPractitioner').required(),
+  role: joi.string().valid(ROLES.irsPractitioner).required(),
+  serviceIndicator: joi
+    .string()
+    .valid(...Object.values(SERVICE_INDICATOR_TYPES))
+    .required(),
+});
+
 joiValidationDecorator(
   IrsPractitioner,
-  joi.object().keys({
-    ...userValidation,
-    entityName: joi.string().valid('IrsPractitioner').required(),
-    role: joi.string().valid(User.ROLES.irsPractitioner).required(),
-    serviceIndicator: joi
-      .string()
-      .valid(...Object.values(SERVICE_INDICATOR_TYPES))
-      .required(),
-  }),
+  IrsPractitioner.VALIDATION_RULES,
   VALIDATION_ERROR_MESSAGES,
 );
 

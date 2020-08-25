@@ -1,12 +1,12 @@
 version: 2.1
 jobs:
-  bundle:
-    resource_class: large
+  build-api:
     docker:
       - image: $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/ef-cms-us-east-1:latest
         aws_auth:
           aws_access_key_id: $AWS_ACCESS_KEY_ID
           aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+    resource_class: small
     steps:
       - restore_cache:
           name: Source - Restoring Cache
@@ -22,32 +22,21 @@ jobs:
             - '.git'
       - run:
           name: NPM - Install
-          command: npm ci && npm rebuild node-sass
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - project
-
-  build-api:
-    docker:
-      - image: $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/ef-cms-us-east-1:latest
-        aws_auth:
-          aws_access_key_id: $AWS_ACCESS_KEY_ID
-          aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
-    steps:
-      - attach_workspace:
-          at: ~/
+          command: |
+            npm set progress=false
+            npm ci
+            npm rebuild node-sass
+            npm ci --prefix=web-client/pa11y/
       - run:
           name: Lint
-          command: |
-            npm run lint
+          command: npm run lint
       - run:
           name: Shellcheck
           command: |
             ./run-shellcheck.sh
       - run:
           name: Web API - Test
-          command: npm run test:api
+          command: npm run test:api:ci
       - run:
           name: Normalize Coverage for SonarQube
           command: npx istanbul-combine -d web-api/coverage web-api/coverage/coverage-final.json
@@ -70,13 +59,30 @@ jobs:
         aws_auth:
           aws_access_key_id: $AWS_ACCESS_KEY_ID
           aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
-    resource_class: xlarge
+    resource_class: small
     steps:
-      - attach_workspace:
-          at: ~/
+      - restore_cache:
+          name: Source - Restoring Cache
+          keys:
+            - source-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ .Revision }}
+            - source-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
+            - source-{{ .Environment.CACHE_VERSION }}-
+      - checkout
+      - save_cache:
+          name: Source - Saving Cache
+          key: deps-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - '.git'
+      - run:
+          name: NPM - Install
+          command: |
+            npm set progress=false
+            npm ci
+            npm rebuild node-sass
+            npm ci --prefix=web-client/pa11y/
       - run:
           name: Shared - Test
-          command: npm run test:shared
+          command: npm run test:shared:ci
       - run:
           name: Normalize Coverage for SonarQube
           command: npx istanbul-combine -d shared/coverage shared/coverage/coverage-final.json
@@ -99,13 +105,30 @@ jobs:
         aws_auth:
           aws_access_key_id: $AWS_ACCESS_KEY_ID
           aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
-    resource_class: xlarge
+    resource_class: small
     steps:
-      - attach_workspace:
-          at: ~/
+      - restore_cache:
+          name: Source - Restoring Cache
+          keys:
+            - source-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ .Revision }}
+            - source-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
+            - source-{{ .Environment.CACHE_VERSION }}-
+      - checkout
+      - save_cache:
+          name: Source - Saving Cache
+          key: deps-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - '.git'
+      - run:
+          name: NPM - Install
+          command: |
+            npm set progress=false
+            npm ci
+            npm rebuild node-sass
+            npm ci --prefix=web-client/pa11y/
       - run:
           name: Web Client - Unit Test
-          command: npm run build:assets && CI=false npm run test:client:unit
+          command: npm run build:assets && CI=false npm run test:client:unit:ci
       - persist_to_workspace:
           root: ~/
           paths:
@@ -119,29 +142,51 @@ jobs:
           aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
       - image: amazon/dynamodb-local
         command: ['-jar', 'DynamoDBLocal.jar', '-sharedDb']
-      - image: elastic/elasticsearch:7.5.2
         environment:
           discovery.type: single-node
-    resource_class: xlarge
+          JAVA_OPTS: '-Xms512m -Xmx512m'
+      - image: elastic/elasticsearch:7.8.1
+        environment:
+          discovery.type: single-node
+          ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+    resource_class: medium+
     parallelism: 5
     steps:
-      - attach_workspace:
-          at: ~/
+      - restore_cache:
+          name: Source - Restoring Cache
+          keys:
+            - source-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ .Revision }}
+            - source-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
+            - source-{{ .Environment.CACHE_VERSION }}-
+      - checkout
+      - save_cache:
+          name: Source - Saving Cache
+          key: deps-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - '.git'
+      - run:
+          name: NPM - Install
+          command: |
+            npm set progress=false
+            npm ci
+            npm rebuild node-sass
+            npm ci --prefix=web-client/pa11y/
       - run:
           name: Create web-client Artifacts Directory
           command: mkdir /tmp/web-client/
       - run:
           name: Web Client - Integration Test
           command: |
-            SKIP_CACHE_INVALIDATION=true AWS_ACCESS_KEY_ID=noop AWS_SECRET_ACCESS_KEY=noop npm run start:api:ci > /tmp/web-client/server-output.txt &
-            ./wait-until.sh http://localhost:3000/api/swagger
+            TEMP_DOCUMENTS_BUCKET_NAME=noop-temp-documents-local-us-east-1 DOCUMENTS_BUCKET_NAME=noop-documents-local-us-east-1 S3_ENDPOINT=http://localhost:9000 SKIP_CACHE_INVALIDATION=true AWS_ACCESS_KEY_ID=noop AWS_SECRET_ACCESS_KEY=noop npm run start:api:ci > /tmp/web-client/server-output.txt &
+            ./wait-until.sh http://localhost:4000/api/swagger
             TESTFILES=$(circleci tests glob "web-client/integration-tests/*.test.js" "web-client/integration-tests-public/*.test.js" | circleci tests split --split-by=timings)
-            CI=true NO_SCANNER=true SKIP_VIRUS_SCAN=true AWS_ACCESS_KEY_ID=noop AWS_SECRET_ACCESS_KEY=noop npx jest --coverageDirectory=./coverage-integration-${CIRCLE_NODE_INDEX} --runInBand --config web-client/jest-integration.config.js ${TESTFILES}
+            CI=true NO_SCANNER=true SKIP_VIRUS_SCAN=true AWS_ACCESS_KEY_ID=noop AWS_SECRET_ACCESS_KEY=noop TEMP_DOCUMENTS_BUCKET_NAME=noop-temp-documents-local-us-east-1 DOCUMENTS_BUCKET_NAME=noop-documents-local-us-east-1 S3_ENDPOINT=http://localhost:9000 npx jest --coverageDirectory=./coverage-integration-${CIRCLE_NODE_INDEX} --runInBand --config web-client/jest-integration.config.js ${TESTFILES}
       - store_artifacts:
           path: /tmp/web-client
       - persist_to_workspace:
           root: ~/
           paths:
+            - project/web-client
             - project/web-client/coverage-integration-*
 
   build-client-coverage:
@@ -150,6 +195,7 @@ jobs:
         aws_auth:
           aws_access_key_id: $AWS_ACCESS_KEY_ID
           aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+    resource_class: small
     steps:
       - attach_workspace:
           at: ~/
@@ -189,30 +235,119 @@ jobs:
           aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
       - image: amazon/dynamodb-local
         command: ['-jar', 'DynamoDBLocal.jar', '-sharedDb']
-      - image: elastic/elasticsearch:7.5.2
         environment:
           discovery.type: single-node
-    environment:
-      _JAVA_OPTIONS: '-Xms2048m -Xmx4096m'
-    resource_class: xlarge
+          JAVA_OPTS: '-Xms512m -Xmx512m'
+      - image: elastic/elasticsearch:7.8.1
+        environment:
+          discovery.type: single-node
+          ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+    resource_class: large
     steps:
-      - attach_workspace:
-          at: ~/
+      - restore_cache:
+          name: Source - Restoring Cache
+          keys:
+            - source-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ .Revision }}
+            - source-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
+            - source-{{ .Environment.CACHE_VERSION }}-
+      - checkout
+      - save_cache:
+          name: Source - Saving Cache
+          key: deps-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - '.git'
+      - run:
+          name: NPM - Install
+          command: |
+            npm set progress=false
+            npm ci
+            npm rebuild node-sass
+            npm ci --prefix=web-client/pa11y/
       - run:
           name: Create Pa11y Artifacts Directory
           command: mkdir /tmp/pa11y
       - run:
           name: Pa11y
+          environment:
+            SKIP_CACHE_INVALIDATION: true
+            TEMP_DOCUMENTS_BUCKET_NAME: noop-temp-documents-local-us-east-1
+            DOCUMENTS_BUCKET_NAME: noop-documents-local-us-east-1
+            S3_ENDPOINT: http://localhost:9000
+            MASTER_DYNAMODB_ENDPOINT: http://localhost:8000
+            AWS_ACCESS_KEY_ID: S3RVER
+            AWS_SECRET_ACCESS_KEY: S3RVER
           command: |
             npm run build:all
-            SKIP_CACHE_INVALIDATION=true SLS_DEBUG="*" AWS_ACCESS_KEY_ID=noop AWS_SECRET_ACCESS_KEY=noop npx run-p start:api:ci start:client:ci start:public:ci > /tmp/pa11y/pa11y-server.txt &
+            npx run-p start:api:ci start:client:ci >> /tmp/pa11y/pa11y-server.txt &
             ./wait-until-services.sh
-            ./wait-until.sh http://localhost:3000/api/swagger
-            sleep 15
-            npm run test:pa11y:1 --node-flags --max-old-space-size=1024
-            npm run test:pa11y:2 --node-flags --max-old-space-size=1024
-            npm run test:pa11y:3 --node-flags --max-old-space-size=1024
-            npm run test:pa11y:public --node-flags --max-old-space-size=1024
+            ./wait-until.sh http://localhost:4000/api/swagger
+            sleep 10
+            npm run test:pa11y:1 --prefix=web-client/pa11y/ --node-flags --max-old-space-size=1024
+            npm run test:pa11y:2 --prefix=web-client/pa11y/ --node-flags --max-old-space-size=1024
+            npm run test:pa11y:3 --prefix=web-client/pa11y/ --node-flags --max-old-space-size=1024
+      - store_artifacts:
+          path: /root/project/web-client/pa11y/pa11y-screenshots
+      - store_artifacts:
+          path: /tmp/pa11y
+
+  e2e-pa11y-public:
+    docker:
+      - image: $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/ef-cms-us-east-1:latest
+        aws_auth:
+          aws_access_key_id: $AWS_ACCESS_KEY_ID
+          aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+      - image: amazon/dynamodb-local
+        command: ['-jar', 'DynamoDBLocal.jar', '-sharedDb']
+        environment:
+          discovery.type: single-node
+          JAVA_OPTS: '-Xms512m -Xmx512m'
+      - image: elastic/elasticsearch:7.8.1
+        environment:
+          discovery.type: single-node
+          ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+    resource_class: medium+
+    steps:
+      - restore_cache:
+          name: Source - Restoring Cache
+          keys:
+            - source-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ .Revision }}
+            - source-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
+            - source-{{ .Environment.CACHE_VERSION }}-
+      - checkout
+      - save_cache:
+          name: Source - Saving Cache
+          key: deps-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - '.git'
+      - run:
+          name: NPM - Install
+          command: |
+            npm set progress=false
+            npm ci
+            npm rebuild node-sass
+            npm ci --prefix=web-client/pa11y/
+      - run:
+          name: Create Pa11y Artifacts Directory
+          command: mkdir /tmp/pa11y
+      - run:
+          name: Pa11y
+          environment:
+            SKIP_CACHE_INVALIDATION: true
+            TEMP_DOCUMENTS_BUCKET_NAME: noop-temp-documents-local-us-east-1
+            DOCUMENTS_BUCKET_NAME: noop-documents-local-us-east-1
+            S3_ENDPOINT: http://localhost:9000
+            MASTER_DYNAMODB_ENDPOINT: http://localhost:8000
+            AWS_ACCESS_KEY_ID: S3RVER
+            AWS_SECRET_ACCESS_KEY: S3RVER
+          command: |
+            npm run build:all
+            npx run-p start:api:ci start:public:ci >> /tmp/pa11y/pa11y-server.txt &
+            ./wait-until-services.sh
+            ./wait-until.sh http://localhost:5000/ 404
+            sleep 10
+            npm run test:pa11y:public --prefix=web-client/pa11y/ --node-flags --max-old-space-size=1024
+      - store_artifacts:
+          path: /root/project/web-client/pa11y/pa11y-screenshots
       - store_artifacts:
           path: /tmp/pa11y
 
@@ -224,30 +359,56 @@ jobs:
           aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
       - image: amazon/dynamodb-local
         command: ['-jar', 'DynamoDBLocal.jar', '-sharedDb']
-      - image: elastic/elasticsearch:7.5.2
         environment:
           discovery.type: single-node
-    environment:
-      _JAVA_OPTIONS: '-Xms1024m -Xmx2048m'
-    resource_class: xlarge
+          JAVA_OPTS: '-Xms512m -Xmx512m'
+      - image: elastic/elasticsearch:7.8.1
+        environment:
+          discovery.type: single-node
+          ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+    resource_class: large
     steps:
-      - attach_workspace:
-          at: ~/
+      - restore_cache:
+          name: Source - Restoring Cache
+          keys:
+            - source-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ .Revision }}
+            - source-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
+            - source-{{ .Environment.CACHE_VERSION }}-
+      - checkout
+      - save_cache:
+          name: Source - Saving Cache
+          key: deps-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - '.git'
+      - run:
+          name: NPM - Install
+          command: |
+            npm set progress=false
+            npm ci
+            npm rebuild node-sass
+            npm ci --prefix=web-client/pa11y/
       - run:
           name: Create Cypress Artifacts Directory
           command: mkdir /tmp/cypress
       - run:
           name: Cypress
+          environment:
+            SKIP_CACHE_INVALIDATION: true
+            TEMP_DOCUMENTS_BUCKET_NAME: noop-temp-documents-local-us-east-1
+            DOCUMENTS_BUCKET_NAME: noop-documents-local-us-east-1
+            S3_ENDPOINT: http://localhost:9000
+            MASTER_DYNAMODB_ENDPOINT: http://localhost:8000
+            AWS_ACCESS_KEY_ID: S3RVER
+            AWS_SECRET_ACCESS_KEY: S3RVER          
           command: |
             npm run build:all &&
             CYPRESS_VERSION=`./node_modules/.bin/cypress --version | awk -F' ' '{print $4; exit}'`
             if [ ! -e "/root/.cache/Cypress/${CYPRESS_VERSION}/Cypress/Cypress" ]; then
               ./node_modules/.bin/cypress install
             fi
-
-            SKIP_CACHE_INVALIDATION=true TEMP_DOCUMENTS_BUCKET_NAME=noop-temp-documents-local-us-east-1 DOCUMENTS_BUCKET_NAME=noop-documents-local-us-east-1 S3_ENDPOINT=http://localhost:9000 MASTER_DYNAMODB_ENDPOINT=http://localhost:8000 AWS_ACCESS_KEY_ID=S3RVER AWS_SECRET_ACCESS_KEY=S3RVER SLS_DEPLOYMENT_BUCKET=noop npx run-p start:api:ci start:client:ci > /tmp/cypress/cypress-output.txt &
+            npx run-p start:api:ci start:client:ci > /tmp/cypress/cypress-output.txt &
             ./wait-until-services.sh
-            ./wait-until.sh http://localhost:3000/api/swagger
+            ./wait-until.sh http://localhost:4000/api/swagger
             sleep 5
             npm run cypress
       - store_artifacts:
@@ -263,30 +424,56 @@ jobs:
           aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
       - image: amazon/dynamodb-local
         command: ['-jar', 'DynamoDBLocal.jar', '-sharedDb']
-      - image: elastic/elasticsearch:7.5.2
         environment:
           discovery.type: single-node
-    environment:
-      _JAVA_OPTIONS: '-Xms1024m -Xmx2048m'
-    resource_class: xlarge
+          JAVA_OPTS: '-Xms512m -Xmx512m'
+      - image: elastic/elasticsearch:7.8.1
+        environment:
+          discovery.type: single-node
+          ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+    resource_class: medium+
     steps:
-      - attach_workspace:
-          at: ~/
+      - restore_cache:
+          name: Source - Restoring Cache
+          keys:
+            - source-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ .Revision }}
+            - source-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
+            - source-{{ .Environment.CACHE_VERSION }}-
+      - checkout
+      - save_cache:
+          name: Source - Saving Cache
+          key: deps-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - '.git'
+      - run:
+          name: NPM - Install
+          command: |
+            npm set progress=false
+            npm ci
+            npm rebuild node-sass
+            npm ci --prefix=web-client/pa11y/
       - run:
           name: Create Cypress Artifacts Directory
           command: mkdir /tmp/cypress
       - run:
           name: Cypress
+          environment:
+            SKIP_CACHE_INVALIDATION: true
+            TEMP_DOCUMENTS_BUCKET_NAME: noop-temp-documents-local-us-east-1
+            DOCUMENTS_BUCKET_NAME: noop-documents-local-us-east-1
+            S3_ENDPOINT: http://localhost:9000
+            MASTER_DYNAMODB_ENDPOINT: http://localhost:8000
+            AWS_ACCESS_KEY_ID: S3RVER
+            AWS_SECRET_ACCESS_KEY: S3RVER          
           command: |
             npm run build:all &&
             CYPRESS_VERSION=`./node_modules/.bin/cypress --version | awk -F' ' '{print $4; exit}'`
             if [ ! -e "/root/.cache/Cypress/${CYPRESS_VERSION}/Cypress/Cypress" ]; then
               ./node_modules/.bin/cypress install
             fi
-
-            SKIP_CACHE_INVALIDATION=true TEMP_DOCUMENTS_BUCKET_NAME=noop-temp-documents-local-us-east-1 DOCUMENTS_BUCKET_NAME=noop-documents-local-us-east-1 S3_ENDPOINT=http://localhost:9000 MASTER_DYNAMODB_ENDPOINT=http://localhost:8000 AWS_ACCESS_KEY_ID=S3RVER AWS_SECRET_ACCESS_KEY=S3RVER SLS_DEPLOYMENT_BUCKET=noop npx run-p start:api:ci start:public:ci > /tmp/cypress/cypress-output.txt &
+            npx run-p start:api:ci start:public:ci > /tmp/cypress/cypress-output.txt &
             ./wait-until-services.sh
-            ./wait-until.sh http://localhost:3000/api/swagger
+            ./wait-until.sh http://localhost:4000/api/swagger
             sleep 5
             npm run cypress:public
       - store_artifacts:
@@ -294,14 +481,18 @@ jobs:
       - store_artifacts:
           path: /tmp/cypress
 
-  pre-deploy:
+  deploy:
     machine:
       docker_layer_caching: true
     steps:
       - checkout
       - run:
           name: Setup Env
-          command: echo "export ENV=$(./get-env.sh $CIRCLE_BRANCH)" >> $BASH_ENV
+          command: |
+            echo "export ENV=$(./get-env.sh $CIRCLE_BRANCH)" >> $BASH_ENV
+            echo "export EFCMS_DOMAIN=$(./get-efcms-domain.sh $CIRCLE_BRANCH)" >> $BASH_ENV
+            echo "export ZONE_NAME=$(./get-zone-name.sh $CIRCLE_BRANCH)" >> $BASH_ENV
+            echo "export IRS_SUPERUSER_EMAIL=$(./get-irs-superuser-email.sh $CIRCLE_BRANCH)" >> $BASH_ENV
       - run:
           name: Build Docker Image
           command: |
@@ -319,211 +510,22 @@ jobs:
           command: echo "export CIRCLE_HONEYBADGER_API_KEY='$(./get-honeybadger-keys.sh $CIRCLE_BRANCH)'" >> $BASH_ENV
       - run:
           name: 'Deploy - Web API - Terraform'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "COGNITO_SUFFIX=${COGNITO_SUFFIX}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "SES_DMARC_EMAIL=${SES_DMARC_EMAIL}" -e "ES_INSTANCE_COUNT=${ES_INSTANCE_COUNT}" --rm efcms /bin/sh -c "cd web-api/terraform/main && ../bin/deploy-app.sh ${ENV}"
+          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "COGNITO_SUFFIX=${COGNITO_SUFFIX}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "ZONE_NAME=${ZONE_NAME}" -e "SES_DMARC_EMAIL=${SES_DMARC_EMAIL}" -e "ES_INSTANCE_COUNT=${ES_INSTANCE_COUNT}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" --rm efcms /bin/sh -c "cd web-api/terraform/main && ../bin/deploy-app.sh ${ENV}"
       - run:
           name: 'Deploy - Web Client - Terraform'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "DYNAMSOFT_S3_ZIP_PATH=${DYNAMSOFT_S3_ZIP_PATH}" -e "DYNAMSOFT_URL=${DYNAMSOFT_URL}" -e "DYNAMSOFT_PRODUCT_KEYS=${DYNAMSOFT_PRODUCT_KEYS}" -e "IS_DYNAMSOFT_ENABLED=${IS_DYNAMSOFT_ENABLED}" --rm efcms /bin/sh -c "cd web-client/terraform/main && ../bin/deploy-app.sh $ENV"
-      - run:
-          name: 'Setup SNS Subscription'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "COGNITO_SUFFIX=${COGNITO_SUFFIX}" -e "AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "SES_DMARC_EMAIL=${SES_DMARC_EMAIL}" -e "ES_INSTANCE_COUNT=${ES_INSTANCE_COUNT}" --rm efcms /bin/sh -c "cd web-api && ./setup-sns-subscriptions.sh ${ENV}"
+          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "ZONE_NAME=${ZONE_NAME}" -e "DYNAMSOFT_S3_ZIP_PATH=${DYNAMSOFT_S3_ZIP_PATH}" -e "DYNAMSOFT_URL=${DYNAMSOFT_URL}" -e "DYNAMSOFT_PRODUCT_KEYS=${DYNAMSOFT_PRODUCT_KEYS}" -e "IS_DYNAMSOFT_ENABLED=${IS_DYNAMSOFT_ENABLED}" --rm efcms /bin/sh -c "cd web-client/terraform/main && ../bin/deploy-app.sh $ENV"
       - run:
           name: Setup Elasticsearch Index Settings
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" --rm efcms /bin/sh -c "./web-api/setup-elasticsearch-index.sh ${ENV}"
-
-  deploy-api-east:
-    machine:
-      docker_layer_caching: true
-    steps:
-      - checkout
-      - run:
-          name: Setup Env
-          command: echo "export ENV=$(./get-env.sh $CIRCLE_BRANCH)" >> $BASH_ENV
-      - run:
-          name: Build Docker Image
-          command: |
-            cd web-api/runtimes/puppeteer && ./build.sh && cd ../../..
-            cd web-api/runtimes/clamav && ./build.sh && cd ../../..
-            docker build -t efcms -f Dockerfile .
-      - run:
-          name: Setup Honeybadger Keys
-          command: echo "export CIRCLE_HONEYBADGER_API_KEY='$(./get-honeybadger-keys.sh $CIRCLE_BRANCH)'" >> $BASH_ENV
-      - run:
-          name: 'Deploy - Web API - Layers - Puppeteer - us-east-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" --rm efcms /bin/sh -c "./web-api/run-serverless-puppeteer.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Layers - ClamAV - us-east-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" --rm efcms /bin/sh -c "./web-api/run-serverless-clamav.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Public API - us-east-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-public-api.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - API - us-east-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-api.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Cases - us-east-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-cases.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Case Parties - us-east-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-case-parties.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Case Meta - us-east-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-case-meta.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Case Documents - us-east-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-case-documents.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Case Deadlines - us-east-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-case-deadlines.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Case Notes - us-east-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-case-notes.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Users - us-east-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-users.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Documents - us-east-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-documents.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Work Items - us-east-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-work-items.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Sections - us-east-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-sections.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Trial Sessions - us-east-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-trial-sessions.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Reports - us-east-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-reports.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Practitioners - us-east-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-practitioners.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Notifications - us-east-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-notifications.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Streams - us-east-1 (east only)'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-streams.sh ${ENV} us-east-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Migrate - us-east-1 (east only)'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-migrate.sh ${ENV} us-east-1"
-
-  deploy-api-west:
-    machine:
-      docker_layer_caching: true
-    steps:
-      - checkout
-      - run:
-          name: Setup Env
-          command: echo "export ENV=$(./get-env.sh $CIRCLE_BRANCH)" >> $BASH_ENV
-      - run:
-          name: Build Docker Image
-          command: |
-            cd web-api/runtimes/puppeteer && ./build.sh && cd ../../..
-            cd web-api/runtimes/clamav && ./build.sh && cd ../../..
-            docker build -t efcms -f Dockerfile .
-      - run:
-          name: Setup Honeybadger Keys
-          command: echo "export CIRCLE_HONEYBADGER_API_KEY='$(./get-honeybadger-keys.sh $CIRCLE_BRANCH)'" >> $BASH_ENV
-      - run:
-          name: 'Deploy - Web API - Layers - Puppeteer - us-west-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" --rm efcms /bin/sh -c "./web-api/run-serverless-puppeteer.sh ${ENV} us-west-1"
-      - run:
-          name: 'Deploy - Web API - Layers - ClamAV - us-west-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" --rm efcms /bin/sh -c "./web-api/run-serverless-clamav.sh ${ENV} us-west-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Public API - us-west-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-public-api.sh ${ENV} us-west-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - API - us-west-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-api.sh ${ENV} us-west-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Cases - us-west-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-cases.sh ${ENV} us-west-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Case Parties - us-west-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-case-parties.sh ${ENV} us-west-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Case Meta - us-west-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-case-meta.sh ${ENV} us-west-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Case Documents - us-west-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-case-documents.sh ${ENV} us-west-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Case Deadlines - us-west-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-case-deadlines.sh ${ENV} us-west-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Case Notes - us-west-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-case-notes.sh ${ENV} us-west-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Users - us-west-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-users.sh ${ENV} us-west-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Documents - us-west-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-documents.sh ${ENV} us-west-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Work Items - us-west-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-work-items.sh ${ENV} us-west-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Sections - us-west-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-sections.sh ${ENV} us-west-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Trial Sessions - us-west-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-trial-sessions.sh ${ENV} us-west-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Reports - us-west-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-reports.sh ${ENV} us-west-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Practitioners - us-west-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-practitioners.sh ${ENV} us-west-1"
-      - run:
-          name: 'Deploy - Web API - Serverless - Notifications - us-west-1'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" -e "IRS_SUPERUSER_EMAIL=${IRS_SUPERUSER_EMAIL}" -v $(pwd)/.cache:/home/app/.cache --rm efcms /bin/sh -c "./web-api/run-serverless-notifications.sh ${ENV} us-west-1"
-
-  switch-and-deploy-ui:
-    machine:
-      docker_layer_caching: true
-    steps:
-      - checkout
-      - run:
-          name: Setup Env
-          command: echo "export ENV=$(./get-env.sh $CIRCLE_BRANCH)" >> $BASH_ENV
-      - run:
-          name: Build Docker Image
-          command: |
-            cd web-api/runtimes/puppeteer && ./build.sh && cd ../../..
-            cd web-api/runtimes/clamav && ./build.sh && cd ../../..
-            docker build -t efcms -f Dockerfile .
-      - run:
-          name: Setup Honeybadger Keys
-          command: echo "export CIRCLE_HONEYBADGER_API_KEY='$(./get-honeybadger-keys.sh $CIRCLE_BRANCH)'" >> $BASH_ENV
+          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "ZONE_NAME=${ZONE_NAME}" --rm efcms /bin/sh -c "./web-api/setup-elasticsearch-index.sh ${ENV}"
       # - run:
       #     name: 'Deploy - Switch environment color'
       #     command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" --rm efcms /bin/sh -c "cd web-api && ./switch-environment-color.sh ${ENV}"
       - run:
           name: 'Deploy - Web Client - S3'
-          command: docker run -e "DYNAMSOFT_URL_OVERRIDE=${DYNAMSOFT_URL_OVERRIDE}" -e "ENV=${ENV}" -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "COGNITO_SUFFIX=${COGNITO_SUFFIX}" -e "CIRCLE_SHA1=${CIRCLE_SHA1}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" --rm efcms /bin/sh -c "./web-client/build-dist.sh $ENV && aws s3 sync dist s3://ui-${ENV}.${EFCMS_DOMAIN} --delete && aws s3 sync dist s3://failover-ui-${ENV}.${EFCMS_DOMAIN} --delete"
+          command: docker run -e "DYNAMSOFT_URL_OVERRIDE=${DYNAMSOFT_URL_OVERRIDE}" -e "ENV=${ENV}" -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "COGNITO_SUFFIX=${COGNITO_SUFFIX}" -e "CIRCLE_SHA1=${CIRCLE_SHA1}" -e "CIRCLE_HONEYBADGER_API_KEY=${CIRCLE_HONEYBADGER_API_KEY}" --rm efcms /bin/sh -c "./web-client/deploy-ui.sh"
       - run:
           name: 'Deploy - Public Web Client - S3'
-          command: docker run -e "ENV=${ENV}" -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "COGNITO_SUFFIX=${COGNITO_SUFFIX}" -e "CIRCLE_SHA1=${CIRCLE_SHA1}" --rm efcms /bin/sh -c "./web-client/build-dist-public.sh $ENV && aws s3 sync dist-public s3://ui-public-${ENV}.${EFCMS_DOMAIN} --delete && aws s3 sync dist-public s3://failover-ui-public-${ENV}.${EFCMS_DOMAIN} --delete"
-
-  post-deploy:
-    machine:
-      docker_layer_caching: true
-    steps:
-      - checkout
-      - run:
-          name: Build Docker Image
-          command: docker build -t efcms -f Dockerfile .
-      - run:
-          name: Setup Env
-          command: echo "export ENV=$(./get-env.sh $CIRCLE_BRANCH)" >> $BASH_ENV
-      - run:
-          name: 'Deploy - Web API - Route53'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" --rm efcms /bin/sh -c "cd web-api && ./setup-regional-route53.sh ${ENV}"
-      - run:
-          name: 'Deploy - Web WS - Route53'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" --rm efcms /bin/sh -c "cd web-api && ./setup-regional-route53-ws.sh ${ENV}"
+          command: docker run -e "ENV=${ENV}" -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" -e "COGNITO_SUFFIX=${COGNITO_SUFFIX}" -e "CIRCLE_SHA1=${CIRCLE_SHA1}" --rm efcms /bin/sh -c "./web-client/deploy-public.sh"
       - run:
           name: 'Deploy - Web API - Global Tables'
           command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" --rm efcms /bin/sh -c "cd web-api && node setup-global-tables.js efcms-${ENV} us-east-1,us-west-1"
@@ -533,22 +535,22 @@ jobs:
       - run:
           name: 'Deploy - Web API - Cognito Create Users'
           command: |
-            if [ "${CIRCLE_BRANCH}" == "staging" ] || [ "${CIRCLE_BRANCH}" == "irs" ]; then
+            if [ "${CIRCLE_BRANCH}" == "develop" ] || [ "${CIRCLE_BRANCH}" == "staging" ] || [ "${CIRCLE_BRANCH}" == "irs" ] || [ "${CIRCLE_BRANCH}" == "experimental1" ] || [ "${CIRCLE_BRANCH}" == "experimental2" ] ; then
               docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "USTC_ADMIN_PASS=${USTC_ADMIN_PASS}" --rm efcms /bin/sh -c "cd web-api && ./setup-cognito-users.sh ${ENV}"
             else
               echo "skipping…"
             fi
       - run:
           name: 'Deploy - Web API - Cognito Create Court Users'
-          command:  |
-            if [ "${CIRCLE_BRANCH}" == "staging" ] || [ "${CIRCLE_BRANCH}" == "test" ]; then
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "develop" ] || [ "${CIRCLE_BRANCH}" == "staging" ] || [ "${CIRCLE_BRANCH}" == "test" ] || [ "${CIRCLE_BRANCH}" == "experimental1" ] || [ "${CIRCLE_BRANCH}" == "experimental2" ]; then
               docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "USTC_ADMIN_PASS=${USTC_ADMIN_PASS}" --rm efcms /bin/sh -c "cd web-api && ./setup-court-users.sh ${ENV}"
             else
               echo "skipping…"
             fi
       - run:
           name: 'Deploy - Web API - Cognito Create IRS User'
-          command:  |
+          command: |
             if [ "${CIRCLE_BRANCH}" == "irs" ]; then
               docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "USTC_ADMIN_PASS=${USTC_ADMIN_PASS}" --rm efcms /bin/sh -c "cd web-api && ./setup-irs-user.sh ${ENV}"
             else
@@ -557,10 +559,11 @@ jobs:
       - run:
           name: 'Deploy - Web API - Run Migrations'
           command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "DYNAMODB_ENDPOINT=dynamodb.us-east-1.amazonaws.com" --rm efcms /bin/sh -c "npm run build:assets && ./web-api/run-umzug.sh ${ENV}"
+          no_output_timeout: 30m
       - run:
           name: 'Deploy - Web API - Smoke Tests - us-east-1'
           command: |
-            if [ "${CIRCLE_BRANCH}" == "staging" ] || [ "${CIRCLE_BRANCH}" == "irs" ]; then
+            if [ "${CIRCLE_BRANCH}" == "develop" ] || [ "${CIRCLE_BRANCH}" == "experimental1" ] || [ "${CIRCLE_BRANCH}" == "experimental2" ] || [ "${CIRCLE_BRANCH}" == "staging" ] || [ "${CIRCLE_BRANCH}" == "irs" ]; then
               docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" --rm efcms /bin/sh -c "cd web-api && node smoke-tests.js ${ENV} us-east-1"
             else
               echo "skipping…"
@@ -568,7 +571,7 @@ jobs:
       - run:
           name: 'Deploy - Web API - Smoke Tests - us-west-1'
           command: |
-            if [ "${CIRCLE_BRANCH}" == "staging" ] || [ "${CIRCLE_BRANCH}" == "irs" ]; then
+            if [ "${CIRCLE_BRANCH}" == "develop" ] || [ "${CIRCLE_BRANCH}" == "experimental1" ] || [ "${CIRCLE_BRANCH}" == "experimental2" ] || [ "${CIRCLE_BRANCH}" == "staging" ] || [ "${CIRCLE_BRANCH}" == "irs" ]; then
               docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" --rm efcms /bin/sh -c "cd web-api && node smoke-tests.js ${ENV} us-west-1"
             else
               echo "skipping…"
@@ -576,51 +579,61 @@ jobs:
       - run:
           name: 'Deploy - Cypress Smoke Tests'
           command: |
-            if [ "${CIRCLE_BRANCH}" == "staging" ] || [ "${CIRCLE_BRANCH}" == "irs" ]; then
-              docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" --rm efcms /bin/sh -c "CYPRESS_BASE_URL='https://ui-$ENV.$EFCMS_DOMAIN' ENV=${ENV} npm run cypress:smoketests"
+            if [ "${CIRCLE_BRANCH}" == "develop" ] || [ "${CIRCLE_BRANCH}" == "experimental1" ] || [ "${CIRCLE_BRANCH}" == "experimental2" ] || [ "${CIRCLE_BRANCH}" == "staging" ] || [ "${CIRCLE_BRANCH}" == "irs" ]; then
+              docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "ENV=${ENV}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" --rm efcms /bin/sh -c "npm run cypress:smoketests"
             else
               echo "skipping…"
             fi
       - run:
           name: 'Deploy - Pa11y Smoke Tests'
           command: |
-            if [ "${CIRCLE_BRANCH}" == "staging" ] || [ "${CIRCLE_BRANCH}" == "irs" ]; then
-              docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" --rm efcms /bin/sh -c "ENV=${ENV} npm run test:pa11y:smoketests"
+            if [ "${CIRCLE_BRANCH}" == "develop" ] || [ "${CIRCLE_BRANCH}" == "experimental1" ] || [ "${CIRCLE_BRANCH}" == "experimental2" ] || [ "${CIRCLE_BRANCH}" == "staging" ] || [ "${CIRCLE_BRANCH}" == "irs" ]; then
+              docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" --rm efcms /bin/sh -c "ENV=${ENV} npm run test:pa11y:smoketests --prefix=web-client/pa11y/"
             else
               echo "skipping…"
             fi
       - run:
-          name: 'Deploy - Cognito Authorizer Check'
-          command: docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" --rm efcms /bin/sh -c "find web-api/*.yml | ENV=${ENV} xargs node web-api/verify-authorizers.js"
+          name: 'Deploy - Authorizer Smoke Tests'
+          command: |
+            docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" --rm efcms /bin/sh -c "npm run verify-authorizers -- ${ENV}"
+      - run:
+          name: 'Deploy - Verify Private S3 Buckets'
+          command: |
+            docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" --rm efcms /bin/sh -c "npm run verify-private-s3-buckets -- ${ENV}"
+      - run:
+          name: 'Deploy - Verify Private Elasticsearch'
+          command: |
+            docker run -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "EFCMS_DOMAIN=${EFCMS_DOMAIN}" --rm efcms /bin/sh -c "npm run verify-private-elasticsearch -- ${ENV}"
       - store_artifacts:
           path: /home/app/cypress-smoketests/videos/
+
+
+build-and-deploy-defaults: &build-and-deploy-defaults
+  filters:
+    branches:
+      ignore:
+        - develop # run hourly below
+        - prod    # run with context workflow below
+
+build-and-deploy-with-context-defaults: &build-and-deploy-with-context-defaults
+  context: efcms-<< pipeline.git.branch >>
+  filters:
+    branches:
+      only:
+        - prod
 
 workflows:
   version: 2
   hourly:
     jobs:
-      - bundle
-      - build-shared:
-          requires:
-            - bundle
-      - build-api:
-          requires:
-            - bundle
-      - build-client-unit:
-          requires:
-            - bundle
-      - build-client-integration:
-          requires:
-            - bundle
-      - e2e-pa11y:
-          requires:
-            - bundle
-      - e2e-cypress:
-          requires:
-            - bundle
-      - e2e-cypress-public:
-          requires:
-            - bundle
+      - build-shared
+      - build-api
+      - build-client-unit
+      - build-client-integration
+      - e2e-pa11y
+      - e2e-pa11y-public
+      - e2e-cypress
+      - e2e-cypress-public
       - build-client-coverage:
           requires:
             - build-shared
@@ -628,101 +641,49 @@ workflows:
             - build-client-unit
             - build-client-integration
             - e2e-pa11y
+            - e2e-pa11y-public
             - e2e-cypress
             - e2e-cypress-public
-      - pre-deploy:
+      - deploy:
           requires:
             - build-client-coverage
-      - deploy-api-west:
-          requires:
-            - pre-deploy
-      - deploy-api-east:
-          requires:
-            - pre-deploy
-      - switch-and-deploy-ui:
-          requires:
-            - deploy-api-west
-            - deploy-api-east
-      - post-deploy:
-          requires:
-            - switch-and-deploy-ui
     triggers:
       - schedule:
-          cron: '0 12-23 * * 1-5'
+          cron: '0 13-22 * * 1-5'
           filters:
             branches:
               only:
                 - develop
   build-and-deploy:
     jobs:
-      - bundle:
-          filters:
-            branches:
-              ignore:
-                - develop
       - build-shared:
-          requires:
-            - bundle
-          filters:
-            branches:
-              ignore:
-                - develop
+          <<: *build-and-deploy-defaults
       - build-api:
-          requires:
-            - bundle
-          filters:
-            branches:
-              ignore:
-                - develop
+          <<: *build-and-deploy-defaults
       - build-client-unit:
-          requires:
-            - bundle
-          filters:
-            branches:
-              ignore:
-                - develop
+          <<: *build-and-deploy-defaults
       - build-client-integration:
-          requires:
-            - bundle
-          filters:
-            branches:
-              ignore:
-                - develop
+          <<: *build-and-deploy-defaults
       - e2e-pa11y:
-          requires:
-            - bundle
-          filters:
-            branches:
-              ignore:
-                - develop
+          <<: *build-and-deploy-defaults
+      - e2e-pa11y-public:
+          <<: *build-and-deploy-defaults
       - e2e-cypress:
-          requires:
-            - bundle
-          filters:
-            branches:
-              ignore:
-                - develop
+          <<: *build-and-deploy-defaults
       - e2e-cypress-public:
-          requires:
-            - bundle
-          filters:
-            branches:
-              ignore:
-                - develop
+          <<: *build-and-deploy-defaults
       - build-client-coverage:
+          <<: *build-and-deploy-defaults
           requires:
             - build-shared
             - build-api
             - build-client-unit
             - build-client-integration
             - e2e-pa11y
+            - e2e-pa11y-public
             - e2e-cypress
             - e2e-cypress-public
-          filters:
-            branches:
-              ignore:
-                - develop
-      - pre-deploy:
+      - deploy:
           requires:
             - build-client-coverage
           filters:
@@ -735,56 +696,38 @@ workflows:
                 - master
                 - experimental1
                 - experimental2
-      - deploy-api-east:
+                - dawson
+
+  build-and-deploy-with-context:
+    jobs:
+      - build-shared:
+          <<: *build-and-deploy-with-context-defaults
+      - build-api:
+          <<: *build-and-deploy-with-context-defaults
+      - build-client-unit:
+          <<: *build-and-deploy-with-context-defaults
+      - build-client-integration:
+          <<: *build-and-deploy-with-context-defaults
+      - e2e-pa11y:
+          <<: *build-and-deploy-with-context-defaults
+      - e2e-pa11y-public:
+          <<: *build-and-deploy-with-context-defaults
+      - e2e-cypress:
+          <<: *build-and-deploy-with-context-defaults
+      - e2e-cypress-public:
+          <<: *build-and-deploy-with-context-defaults
+      - build-client-coverage:
+          <<: *build-and-deploy-with-context-defaults
           requires:
-            - pre-deploy
-          filters:
-            branches:
-              only:
-                - irs
-                - staging
-                - test
-                - migration
-                - master
-                - experimental1
-                - experimental2
-      - deploy-api-west:
+            - build-shared
+            - build-api
+            - build-client-unit
+            - build-client-integration
+            - e2e-pa11y
+            - e2e-pa11y-public
+            - e2e-cypress
+            - e2e-cypress-public
+      - deploy:
+          <<: *build-and-deploy-with-context-defaults
           requires:
-            - pre-deploy
-          filters:
-            branches:
-              only:
-                - irs
-                - staging
-                - test
-                - migration
-                - master
-                - experimental1
-                - experimental2
-      - switch-and-deploy-ui:
-          requires:
-            - deploy-api-west
-            - deploy-api-east
-          filters:
-            branches:
-              only:
-                - irs
-                - staging
-                - test
-                - migration
-                - master
-                - experimental1
-                - experimental2
-      - post-deploy:
-          requires:
-            - switch-and-deploy-ui
-          filters:
-            branches:
-              only:
-                - irs
-                - staging
-                - test
-                - migration
-                - master
-                - experimental1
-                - experimental2
+            - build-client-coverage

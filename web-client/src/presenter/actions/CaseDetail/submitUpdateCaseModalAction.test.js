@@ -3,15 +3,17 @@ import { presenter } from '../../presenter-mock';
 import { runAction } from 'cerebral/test';
 import { submitUpdateCaseModalAction } from './submitUpdateCaseModalAction';
 
-const caseMock = {
-  caption: 'Test Caption',
-  caseId: '123',
-  status: 'New',
-};
-
-presenter.providers.applicationContext = applicationContext;
-
 describe('submitUpdateCaseModalAction', () => {
+  const { STATUS_TYPES } = applicationContext.getConstants();
+
+  const caseMock = {
+    caption: 'Test Caption',
+    docketNumber: '123-20',
+    status: STATUS_TYPES.new,
+  };
+
+  presenter.providers.applicationContext = applicationContext;
+
   it('Calls the update case context interactor if the case caption has been updated', async () => {
     await runAction(submitUpdateCaseModalAction, {
       modules: {
@@ -33,7 +35,7 @@ describe('submitUpdateCaseModalAction', () => {
         .calls[0][0],
     ).toMatchObject({
       caseCaption: 'Updated Test Caption',
-      caseId: '123',
+      docketNumber: '123-20',
     });
   });
 
@@ -45,7 +47,7 @@ describe('submitUpdateCaseModalAction', () => {
       state: {
         caseDetail: caseMock,
         modal: {
-          caseStatus: 'General Docket - Not at Issue',
+          caseStatus: STATUS_TYPES.generalDocket,
         },
       },
     });
@@ -57,8 +59,8 @@ describe('submitUpdateCaseModalAction', () => {
       applicationContext.getUseCases().updateCaseContextInteractor.mock
         .calls[0][0],
     ).toMatchObject({
-      caseId: '123',
-      caseStatus: 'General Docket - Not at Issue',
+      caseStatus: STATUS_TYPES.generalDocket,
+      docketNumber: '123-20',
     });
   });
 
@@ -70,7 +72,7 @@ describe('submitUpdateCaseModalAction', () => {
       state: {
         caseDetail: caseMock,
         modal: {
-          caseStatus: 'General Docket - Not at Issue',
+          caseStatus: STATUS_TYPES.generalDocket,
         },
       },
     });
@@ -82,8 +84,8 @@ describe('submitUpdateCaseModalAction', () => {
       applicationContext.getUseCases().updateCaseContextInteractor.mock
         .calls[0][0],
     ).toMatchObject({
-      caseId: '123',
-      caseStatus: 'General Docket - Not at Issue',
+      caseStatus: STATUS_TYPES.generalDocket,
+      docketNumber: '123-20',
     });
   });
 
@@ -96,7 +98,7 @@ describe('submitUpdateCaseModalAction', () => {
         caseDetail: caseMock,
         modal: {
           associatedJudge: 'Judge Armen',
-          caseStatus: 'General Docket - Not at Issue',
+          caseStatus: STATUS_TYPES.generalDocket,
         },
       },
     });
@@ -108,8 +110,8 @@ describe('submitUpdateCaseModalAction', () => {
       applicationContext.getUseCases().updateCaseContextInteractor.mock
         .calls[0][0],
     ).toMatchObject({
-      caseId: '123',
-      caseStatus: 'General Docket - Not at Issue',
+      caseStatus: STATUS_TYPES.generalDocket,
+      docketNumber: '123-20',
     });
   });
 });

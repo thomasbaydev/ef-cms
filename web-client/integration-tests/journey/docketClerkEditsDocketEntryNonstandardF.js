@@ -43,7 +43,9 @@ export const docketClerkEditsDocketEntryNonstandardF = test => {
       value: 'SUPM',
     });
 
-    await test.runSequence('submitDocketEntrySequence');
+    await test.runSequence('fileDocketEntrySequence', {
+      isSavingForLater: true,
+    });
 
     expect(test.getState('validationErrors')).toEqual({
       ordinalValue: VALIDATION_ERROR_MESSAGES.ordinalValue,
@@ -59,7 +61,9 @@ export const docketClerkEditsDocketEntryNonstandardF = test => {
       value: petitionDocument.documentId,
     });
 
-    await test.runSequence('submitDocketEntrySequence');
+    await test.runSequence('fileDocketEntrySequence', {
+      isSavingForLater: true,
+    });
 
     expect(test.getState('validationErrors')).toEqual({});
 
@@ -86,7 +90,7 @@ export const docketClerkEditsDocketEntryNonstandardF = test => {
     expect(updatedDocument).toMatchObject({
       documentTitle: 'First Supplement to Petition',
       documentType: 'Supplement',
-      eventCode: 'SUPM',
+      eventCode: 'MISCL',
     });
   });
 };

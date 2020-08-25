@@ -24,7 +24,6 @@ import { DashboardJudge } from './Dashboards/DashboardJudge';
 import { DashboardPetitioner } from './Dashboards/DashboardPetitioner';
 import { DashboardPractitioner } from './Dashboards/DashboardPractitioner';
 import { DashboardRespondent } from './Dashboards/DashboardRespondent';
-import { DocumentDetail } from './DocumentDetail/DocumentDetail';
 import { EditCorrespondenceDocument } from './Correspondence/EditCorrespondenceDocument';
 import { EditDeficiencyStatistic } from './CaseDetail/EditDeficiencyStatistic';
 import { EditDocketEntry } from './EditDocketEntry/EditDocketEntry';
@@ -45,7 +44,9 @@ import { IdleLogout } from './IdleLogout';
 import { Interstitial } from './Interstitial';
 import { Loading } from './Loading';
 import { LogIn } from './LogIn';
+import { MessageDetail } from './Messages/MessageDetail';
 import { Messages } from './Messages/Messages';
+import { OtherFilerInformation } from './CaseDetail/OtherFilerInformation';
 import { PendingReport } from './PendingReport/PendingReport';
 import { PetitionQc } from './PetitionQc/PetitionQc';
 import { PractitionerDetail } from './Practitioners/PractitionerDetail';
@@ -60,7 +61,6 @@ import { ReviewSavedPetition } from './CaseDetailEdit/ReviewSavedPetition';
 import { SecondaryContactEdit } from './SecondaryContactEdit';
 import { SelectDocumentType } from './FileDocument/SelectDocumentType';
 import { SignOrder } from './SignOrder';
-import { SignStipDecision } from './SignStipDecision';
 import { SimplePdfPreviewPage } from './PendingReport/SimplePdfPreviewPage';
 import { StartCaseInternal } from './StartCaseInternal/StartCaseInternal';
 import { StartCaseWizard } from './StartCase/StartCaseWizard';
@@ -74,6 +74,7 @@ import { UploadCorrespondenceDocument } from './Correspondence/UploadCorresponde
 import { UploadCourtIssuedDocument } from './UploadCourtIssuedDocument/UploadCourtIssuedDocument';
 import { UsaBanner } from './UsaBanner';
 import { UserContactEdit } from './UserContactEdit';
+import { WorkQueue } from './WorkQueue';
 import { connect } from '@cerebral/react';
 import { state } from 'cerebral';
 import React, { useEffect } from 'react';
@@ -103,7 +104,6 @@ const pages = {
   DashboardPetitioner,
   DashboardPractitioner,
   DashboardRespondent,
-  DocumentDetail,
   EditCorrespondenceDocument,
   EditDeficiencyStatistic,
   EditDocketEntry,
@@ -121,7 +121,9 @@ const pages = {
   Interstitial,
   Loading,
   LogIn,
+  MessageDetail,
   Messages,
+  OtherFilerInformation,
   PendingReport,
   PetitionQc,
   PractitionerDetail,
@@ -136,7 +138,6 @@ const pages = {
   SecondaryContactEdit,
   SelectDocumentType,
   SignOrder,
-  SignStipDecision,
   SimplePdfPreviewPage,
   StartCaseInternal,
   StartCaseWizard,
@@ -148,6 +149,7 @@ const pages = {
   UploadCorrespondenceDocument,
   UploadCourtIssuedDocument,
   UserContactEdit,
+  WorkQueue,
 };
 
 /**

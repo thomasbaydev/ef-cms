@@ -1,4 +1,4 @@
-const joi = require('@hapi/joi');
+const joi = require('joi');
 const { ContactFactory } = require('./ContactFactory');
 
 /**
@@ -10,8 +10,9 @@ exports.getPetitionerDeceasedSpouseContact = ContactFactory.createContactFactory
       inCareOf: 'Enter name for in care of',
     },
     additionalValidation: {
-      inCareOf: joi.string().required(),
-      phone: joi.string().optional().allow(null),
+      inCareOf: joi.string().max(100).required(),
+      phone: joi.string().max(100).optional().allow(null),
     },
+    contactName: 'PetitionerDeceasedSpouseContact',
   },
 );

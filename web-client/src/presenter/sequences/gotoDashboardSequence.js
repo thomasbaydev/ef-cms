@@ -1,9 +1,9 @@
-import { chooseWorkQueueSequence } from './chooseWorkQueueSequence';
 import { clearErrorAlertsAction } from '../actions/clearErrorAlertsAction';
 import { closeMobileMenuAction } from '../actions/closeMobileMenuAction';
-import { getConsolidatedCasesByUserAction } from '../actions/caseConsolidation/getConsolidatedCasesByUserAction';
 import { getConstants } from '../../getConstants';
+import { getInboxMessagesForUserAction } from '../actions/getInboxMessagesForUserAction';
 import { getJudgeForCurrentUserAction } from '../actions/getJudgeForCurrentUserAction';
+import { getOpenAndClosedCasesByUserAction } from '../actions/caseConsolidation/getOpenAndClosedCasesByUserAction';
 import { getTrialSessionsAction } from '../actions/TrialSession/getTrialSessionsAction';
 import { getUserAction } from '../actions/getUserAction';
 import { isLoggedInAction } from '../actions/isLoggedInAction';
@@ -13,8 +13,10 @@ import { runPathForUserRoleAction } from '../actions/runPathForUserRoleAction';
 import { set } from 'cerebral/factories';
 import { setCasesAction } from '../actions/setCasesAction';
 import { setCurrentPageAction } from '../actions/setCurrentPageAction';
+import { setDefaultCaseTypeToDisplayAction } from '../actions/setDefaultCaseTypeToDisplayAction';
 import { setJudgeUserAction } from '../actions/setJudgeUserAction';
 import { setMessageInboxPropsAction } from '../actions/setMessageInboxPropsAction';
+import { setMessagesAction } from '../actions/setMessagesAction';
 import { setTrialSessionsAction } from '../actions/TrialSession/setTrialSessionsAction';
 import { setUserAction } from '../actions/setUserAction';
 import { state } from 'cerebral';
@@ -22,6 +24,8 @@ import { takePathForRoles } from './takePathForRoles';
 const { USER_ROLES } = getConstants();
 
 const proceedToMessages = [navigateToMessagesAction];
+
+const getMessages = [getInboxMessagesForUserAction, setMessagesAction];
 
 const goToDashboard = [
   setCurrentPageAction('Interstitial'),
@@ -47,7 +51,7 @@ const goToDashboard = [
     ),
     chambers: [
       setMessageInboxPropsAction,
-      ...chooseWorkQueueSequence,
+      getMessages,
       getJudgeForCurrentUserAction,
       setJudgeUserAction,
       getTrialSessionsAction,
@@ -56,25 +60,28 @@ const goToDashboard = [
     ],
     inactivePractitioner: [setCurrentPageAction('DashboardInactive')],
     irsPractitioner: [
-      getConsolidatedCasesByUserAction,
+      setDefaultCaseTypeToDisplayAction,
+      getOpenAndClosedCasesByUserAction,
       setCasesAction,
       setCurrentPageAction('DashboardRespondent'),
     ],
     irsSuperuser: [setCurrentPageAction('DashboardIrsSuperuser')],
     judge: [
       setMessageInboxPropsAction,
-      ...chooseWorkQueueSequence,
+      getMessages,
       getTrialSessionsAction,
       setTrialSessionsAction,
       setCurrentPageAction('DashboardJudge'),
     ],
     petitioner: [
-      getConsolidatedCasesByUserAction,
+      setDefaultCaseTypeToDisplayAction,
+      getOpenAndClosedCasesByUserAction,
       setCasesAction,
       setCurrentPageAction('DashboardPetitioner'),
     ],
     privatePractitioner: [
-      getConsolidatedCasesByUserAction,
+      setDefaultCaseTypeToDisplayAction,
+      getOpenAndClosedCasesByUserAction,
       setCasesAction,
       setCurrentPageAction('DashboardPractitioner'),
     ],

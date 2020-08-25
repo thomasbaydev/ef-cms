@@ -1,4 +1,8 @@
-import { ContactFactory } from '../entities/contacts/ContactFactory';
+import {
+  COUNTRY_TYPES,
+  DOCKET_NUMBER_SUFFIXES,
+  PARTY_TYPES,
+} from '../entities/EntityConstants';
 import { generateDocketRecordPdfInteractor } from './generateDocketRecordPdfInteractor';
 const { applicationContext } = require('../test/createTestApplicationContext');
 const { MOCK_USERS } = require('../../test/mockUsers');
@@ -7,18 +11,17 @@ const mockId = '12345';
 const mockPdfUrlAndID = { fileId: mockId, url: 'www.example.com' };
 const caseDetail = {
   caseCaption: 'Test Case Caption',
-  caseId: 'ca-123',
   contactPrimary: {
     address1: 'address 1',
     city: 'City',
-    countryType: ContactFactory.COUNTRY_TYPES.DOMESTIC,
+    countryType: COUNTRY_TYPES.DOMESTIC,
     name: 'Test Petitioner',
     phone: '123-123-1234',
     postalCode: '12345',
-    state: 'ST',
+    state: 'AL',
   },
   docketNumber: '123-45',
-  docketNumberSuffix: 'S',
+  docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.SMALL,
   docketRecord: [
     {
       createdAt: '2011-10-05T14:48:00.000Z',
@@ -58,7 +61,7 @@ const caseDetail = {
     },
   ],
   irsPractitioners: [],
-  partyType: ContactFactory.PARTY_TYPES.petitioner,
+  partyType: PARTY_TYPES.petitioner,
   privatePractitioners: [],
 };
 
@@ -68,7 +71,7 @@ beforeAll(() => {
   );
   applicationContext
     .getPersistenceGateway()
-    .getCaseByCaseId.mockReturnValue({ ...caseDetail });
+    .getCaseByDocketNumber.mockReturnValue({ ...caseDetail });
   applicationContext
     .getUseCases()
     .generatePdfFromHtmlInteractor.mockImplementation(({ contentHtml }) => {

@@ -30,8 +30,7 @@ h3 {
   margin-top: 30px;
   margin-bottom: 20px;
   font-family: 'nimbus_roman', serif;
-  font-family: serif;
-  font-size: 14px;
+  font-size: 16px;
   text-align: center;
   text-decoration: underline;
 
@@ -78,8 +77,16 @@ th {
   width: 49%;
 }
 
+.margin-top-40 {
+  margin-top: 40px;
+}
+
 .margin-top-80 {
   margin-top: 80px;
+}
+
+.margin-top-200 {
+  margin-top: 200px;
 }
 
 .margin-top-5 {
@@ -126,7 +133,13 @@ th {
 
 .court-header {
   margin-bottom: 30px;
-  font-family: serif;
+  font-family: 'nimbus_roman', serif;
+
+  h1 {
+    font-family: 'nimbus_roman', serif;
+    font-size: 16px;
+    font-weight: bold;
+  }
 }
 
 .case-information #caption,
@@ -139,6 +152,10 @@ th {
   border-right: 1px dashed;
   font-size: 14px;
   line-height: 18px;
+
+  &.border-none {
+    border: none;
+  }
 
   #caption-extension,
   #caption-v,
@@ -262,17 +279,17 @@ th {
 }
 
 .court-address {
-  font-size: 12px;
+  font-size: 14px;
   text-align: center;
 }
 
 @page {
-  margin: 2cm 1cm;
+  margin: 1.5cm 1cm 2cm 1cm;
   size: 8.5in 11in;
 }
 @page :first {
-  margin-top: 1cm;
-  margin-bottom: 2cm;
+  margin-top: 0;
+  margin-bottom: 2.5cm;
 }
 
 .margin-top-0 {
@@ -314,7 +331,6 @@ th {
 .please-change {
   margin-bottom: 20px;
   font-size: 14px;
-  font-weight: 600;
 }
 
 .extra-margin-top {
@@ -345,9 +361,24 @@ th {
 
   h3 {
     margin-top: 0;
-    font-size: 14px;
+    font-family: 'nimbus_roman', serif;
+    font-size: 16px;
     font-weight: normal;
     text-decoration: none;
+  }
+}
+#document-cover-sheet {
+  .case-information,
+  #docket-number,
+  #document-title,
+  #certificate-of-service {
+    font-family: 'nimbus_roman', serif;
+  }
+
+  #certificate-of-service {
+    position: absolute;
+    bottom: 60px;
+    left: 60;
   }
 }
 
@@ -390,6 +421,10 @@ th {
   }
 }
 
+#order-content {
+  font-size: 14px;
+}
+
 .calendar-icon {
   width: 12px;
   height: 12px;
@@ -403,12 +438,12 @@ th {
 
   .docket {
     position: absolute;
-    top: 0;
+    top: 1cm;
     left: 0;
     padding-left: 0.6in;
   }
 
-  .address {
+  .address-label {
     position: absolute;
     bottom: 0in;
     left: 0.5in;

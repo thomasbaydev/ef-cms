@@ -2,7 +2,7 @@ const { getPdfFromUrl } = require('./getPdfFromUrl');
 
 const getDownloadPolicy = async ({
   applicationContext,
-  caseId,
+  docketNumber,
   documentId,
 }) => {
   const {
@@ -10,7 +10,7 @@ const getDownloadPolicy = async ({
   } = await applicationContext
     .getHttpClient()
     .get(
-      `${applicationContext.getBaseUrl()}/case-documents/${caseId}/${documentId}/download-policy-url`,
+      `${applicationContext.getBaseUrl()}/case-documents/${docketNumber}/${documentId}/download-policy-url`,
       {
         headers: {
           Authorization: `Bearer ${applicationContext.getCurrentUserToken()}`,
@@ -22,14 +22,12 @@ const getDownloadPolicy = async ({
 
 exports.getDocument = async ({
   applicationContext,
-  caseId,
+  docketNumber,
   documentId,
   protocol,
   useTempBucket,
 }) => {
-  // TODO: Fix protocol flag
   if (protocol === 'S3') {
-    // TODO: should this be in the persistence gateway?
     const S3 = applicationContext.getStorageClient();
     return (
       await S3.getObject({
@@ -42,7 +40,7 @@ exports.getDocument = async ({
   } else {
     const url = await getDownloadPolicy({
       applicationContext,
-      caseId,
+      docketNumber,
       documentId,
     });
 

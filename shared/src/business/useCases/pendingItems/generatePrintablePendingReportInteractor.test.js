@@ -2,10 +2,13 @@ const {
   applicationContext,
 } = require('../../test/createTestApplicationContext');
 const {
+  DOCKET_NUMBER_SUFFIXES,
+  ROLES,
+} = require('../../entities/EntityConstants');
+const {
   generatePrintablePendingReportInteractor,
 } = require('./generatePrintablePendingReportInteractor');
 const { MOCK_CASE } = require('../../../test/mockCase');
-const { User } = require('../../entities/User');
 
 describe('generatePrintablePendingReportInteractor', () => {
   beforeAll(() => {
@@ -25,7 +28,7 @@ describe('generatePrintablePendingReportInteractor', () => {
         associatedJudge: 'Judge Buch',
         caseCaption: 'Test Caption Two, Petitioner(s)',
         docketNumber: '234-56',
-        docketNumberSuffix: 'S',
+        docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.SMALL,
         documentType: 'Test Document Type',
         receivedAt: '2020-02-02T12:00:00.000Z',
       },
@@ -38,13 +41,13 @@ describe('generatePrintablePendingReportInteractor', () => {
 
   beforeEach(() => {
     applicationContext.getCurrentUser.mockReturnValue({
-      role: User.ROLES.petitionsClerk,
+      role: ROLES.petitionsClerk,
       userId: 'petitionsclerk',
     });
 
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(MOCK_CASE);
+      .getCaseByDocketNumber.mockReturnValue(MOCK_CASE);
   });
 
   afterEach(() => {
@@ -53,7 +56,7 @@ describe('generatePrintablePendingReportInteractor', () => {
 
   it('should throw an unauthorized error if the user does not have access', async () => {
     applicationContext.getCurrentUser.mockReturnValue({
-      role: User.ROLES.petitioner,
+      role: ROLES.petitioner,
       userId: 'petitioner',
     });
 
@@ -134,10 +137,10 @@ describe('generatePrintablePendingReportInteractor', () => {
     expect(subtitle).toEqual('Judge Armen');
   });
 
-  it('should get case information from persistence and generate a subtitle with the docket number if a caseId is present', async () => {
+  it('should get case information from persistence and generate a subtitle with the docket number if a docketNumber is present', async () => {
     await generatePrintablePendingReportInteractor({
       applicationContext,
-      caseId: '123',
+      docketNumber: MOCK_CASE.docketNumber,
     });
 
     const {
@@ -148,11 +151,11 @@ describe('generatePrintablePendingReportInteractor', () => {
   });
 
   it('should generate a subtitle with the docket number suffix if present', async () => {
-    MOCK_CASE.docketNumberSuffix = 'W';
+    MOCK_CASE.docketNumberSuffix = DOCKET_NUMBER_SUFFIXES.WHISTLEBLOWER;
 
     await generatePrintablePendingReportInteractor({
       applicationContext,
-      caseId: '123',
+      docketNumber: MOCK_CASE.docketNumber,
     });
 
     const {

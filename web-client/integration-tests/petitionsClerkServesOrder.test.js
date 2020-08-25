@@ -3,12 +3,9 @@ import { petitionerCreatesNewCase } from './journey/petitionerCreatesNewCase';
 import { petitionsClerkAddsDocketEntryFromOrder } from './journey/petitionsClerkAddsDocketEntryFromOrder';
 import { petitionsClerkCreateOrder } from './journey/petitionsClerkCreateOrder';
 import { petitionsClerkServesOrder } from './journey/petitionsClerkServesOrder';
+import { petitionsClerkSignsOrder } from './journey/petitionsClerkSignsOrder';
 
-const test = setupTest({
-  useCases: {
-    loadPDFForSigningInteractor: () => Promise.resolve(null),
-  },
-});
+const test = setupTest();
 test.draftOrders = [];
 
 describe('Docket Clerk Adds Court-Issued Order to Docket Record', () => {
@@ -16,11 +13,12 @@ describe('Docket Clerk Adds Court-Issued Order to Docket Record', () => {
     jest.setTimeout(30000);
   });
 
-  loginAs(test, 'petitioner');
+  loginAs(test, 'petitioner@example.com');
   petitionerCreatesNewCase(test, fakeFile);
 
-  loginAs(test, 'petitionsclerk');
+  loginAs(test, 'petitionsclerk@example.com');
   petitionsClerkCreateOrder(test);
+  petitionsClerkSignsOrder(test);
   petitionsClerkAddsDocketEntryFromOrder(test);
   petitionsClerkServesOrder(test);
 });

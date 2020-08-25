@@ -1,16 +1,19 @@
 const {
   applicationContext,
 } = require('../../test/createTestApplicationContext');
+const {
+  DOCKET_NUMBER_SUFFIXES,
+  PARTY_TYPES,
+  ROLES,
+} = require('../../entities/EntityConstants');
 const { completeWorkItemInteractor } = require('./completeWorkItemInteractor');
-const { User } = require('../../entities/User');
 
 describe('completeWorkItemInteractor', () => {
   let mockWorkItem = {
     assigneeId: 'docketclerk',
-    caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     createdAt: '2019-03-11T21:56:01.625Z',
     docketNumber: '101-18',
-    docketNumberSuffix: 'S',
+    docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.SMALL,
     document: {
       sentBy: 'petitioner',
     },
@@ -21,8 +24,8 @@ describe('completeWorkItemInteractor', () => {
   };
 
   const mockPetitionerUser = {
-    name: 'Petitioner',
-    role: User.ROLES.petitioner,
+    name: PARTY_TYPES.petitioner,
+    role: ROLES.petitioner,
     userId: 'petitioner',
   };
 

@@ -1,9 +1,21 @@
+import {
+  CASE_CAPTION_POSTFIX,
+  CASE_SEARCH_PAGE_SIZE,
+  COUNTRY_TYPES,
+  DOCUMENT_PROCESSING_STATUS_OPTIONS,
+  INITIAL_DOCUMENT_TYPES,
+  OBJECTIONS_OPTIONS_MAP,
+  TRANSCRIPT_EVENT_CODE,
+  US_STATES,
+  US_STATES_OTHER,
+} from '../../shared/src/business/entities/EntityConstants';
 import { Case } from '../../shared/src/business/entities/cases/Case';
-import { CaseSearch } from '../../shared/src/business/entities/cases/CaseSearch';
-import { ContactFactory } from '../../shared/src/business/entities/contacts/ContactFactory';
 import { casePublicSearchInteractor } from '../../shared/src/proxies/casePublicSearchProxy';
 import { compareCasesByDocketNumber } from '../../shared/src/business/utilities/getFormattedTrialSessionDetails';
-import { formatDateString } from '../../shared/src/business/utilities/DateHandler';
+import {
+  createISODateString,
+  formatDateString,
+} from '../../shared/src/business/utilities/DateHandler';
 import {
   formatDocketRecord,
   formatDocketRecordWithDocument,
@@ -15,9 +27,11 @@ import {
   getCognitoLoginUrl,
   getPublicSiteUrl,
 } from '../../shared/src/sharedAppContext.js';
+import { getDocumentDownloadUrlInteractor } from '../../shared/src/proxies/getDocumentDownloadUrlProxy';
 import { getJudgeLastName } from '../../shared/src/business/utilities/getFormattedJudgeName';
 import { getPublicCaseInteractor } from '../../shared/src/proxies/getPublicCaseProxy';
 import { getPublicJudgesInteractor } from '../../shared/src/proxies/public/getPublicJudgesProxy';
+import { getTodaysOpinionsInteractor } from '../../shared/src/proxies/public/getTodaysOpinionsProxy';
 import { opinionPublicSearchInteractor } from '../../shared/src/proxies/opinionPublicSearchProxy';
 import { orderPublicSearchInteractor } from '../../shared/src/proxies/orderPublicSearchProxy';
 import { validateCaseAdvancedSearchInteractor } from '../../shared/src/business/useCases/validateCaseAdvancedSearchInteractor';
@@ -34,17 +48,22 @@ const ADVANCED_SEARCH_TABS = {
 
 const applicationContextPublic = {
   getBaseUrl: () => {
-    return process.env.API_URL || 'http://localhost:3000';
+    return process.env.API_URL || 'http://localhost:5000';
   },
   getCaseTitle: Case.getCaseTitle,
   getCognitoLoginUrl,
   getConstants: () =>
     deepFreeze({
       ADVANCED_SEARCH_TABS,
-      CASE_CAPTION_POSTFIX: Case.CASE_CAPTION_POSTFIX,
-      CASE_SEARCH_PAGE_SIZE: CaseSearch.CASE_SEARCH_PAGE_SIZE,
-      COUNTRY_TYPES: ContactFactory.COUNTRY_TYPES,
-      US_STATES: ContactFactory.US_STATES,
+      CASE_CAPTION_POSTFIX: CASE_CAPTION_POSTFIX,
+      CASE_SEARCH_PAGE_SIZE: CASE_SEARCH_PAGE_SIZE,
+      COUNTRY_TYPES: COUNTRY_TYPES,
+      DOCUMENT_PROCESSING_STATUS_OPTIONS,
+      INITIAL_DOCUMENT_TYPES,
+      OBJECTIONS_OPTIONS_MAP,
+      TRANSCRIPT_EVENT_CODE,
+      US_STATES,
+      US_STATES_OTHER,
     }),
   getCurrentUserToken: () => null,
   getHttpClient: () => axios,
@@ -54,7 +73,9 @@ const applicationContextPublic = {
     generatePublicDocketRecordPdfInteractor,
     getCaseForPublicDocketSearchInteractor,
     getCaseInteractor: getPublicCaseInteractor,
+    getDocumentDownloadUrlInteractor,
     getPublicJudgesInteractor,
+    getTodaysOpinionsInteractor,
     opinionPublicSearchInteractor,
     orderPublicSearchInteractor,
     validateCaseAdvancedSearchInteractor,
@@ -64,6 +85,7 @@ const applicationContextPublic = {
   getUtilities: () => {
     return {
       compareCasesByDocketNumber,
+      createISODateString,
       formatDateString,
       formatDocketRecord,
       formatDocketRecordWithDocument,

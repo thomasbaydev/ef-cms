@@ -1,12 +1,14 @@
 import { DocketEntryFactory } from '../../../shared/src/business/entities/docketEntry/DocketEntryFactory';
+import { applicationContextForClient as applicationContext } from '../../../shared/src/business/test/createTestApplicationContext';
 import { formattedCaseDetail } from '../../src/presenter/computeds/formattedCaseDetail';
 import { getPetitionDocumentForCase } from '../helpers';
 import { runCompute } from 'cerebral/test';
 import { withAppContextDecorator } from '../../src/withAppContext';
 
-const { VALIDATION_ERROR_MESSAGES } = DocketEntryFactory;
-
 export const docketClerkEditsDocketEntryNonstandardH = test => {
+  const { VALIDATION_ERROR_MESSAGES } = DocketEntryFactory;
+  const { OBJECTIONS_OPTIONS_MAP } = applicationContext.getConstants();
+
   return it('docket clerk edits a paper-filed incomplete docket entry with Nonstandard H scenario', async () => {
     let caseDetailFormatted;
     await test.runSequence('gotoCaseDetailSequence', {
@@ -43,7 +45,9 @@ export const docketClerkEditsDocketEntryNonstandardH = test => {
       value: 'M115',
     });
 
-    await test.runSequence('submitDocketEntrySequence');
+    await test.runSequence('fileDocketEntrySequence', {
+      isSavingForLater: true,
+    });
 
     expect(test.getState('validationErrors')).toEqual({
       objections: VALIDATION_ERROR_MESSAGES.objections,
@@ -52,7 +56,7 @@ export const docketClerkEditsDocketEntryNonstandardH = test => {
 
     await test.runSequence('updateDocketEntryFormValueSequence', {
       key: 'objections',
-      value: 'Yes',
+      value: OBJECTIONS_OPTIONS_MAP.YES,
     });
     await test.runSequence('updateDocketEntryFormValueSequence', {
       key: 'secondaryDocument.eventCode',
@@ -67,7 +71,9 @@ export const docketClerkEditsDocketEntryNonstandardH = test => {
       value: petitionDocument.documentId,
     });
 
-    await test.runSequence('submitDocketEntrySequence');
+    await test.runSequence('fileDocketEntrySequence', {
+      isSavingForLater: true,
+    });
 
     expect(test.getState('validationErrors')).toEqual({});
 
@@ -95,7 +101,7 @@ export const docketClerkEditsDocketEntryNonstandardH = test => {
     expect(updatedDocument).toMatchObject({
       documentTitle: 'Motion for Leave to File First Amended Petition',
       documentType: 'Motion for Leave to File',
-      eventCode: 'M115',
+      eventCode: 'MISCL',
     });
   });
 };

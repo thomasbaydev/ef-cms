@@ -5,8 +5,9 @@ import { clearModalStateAction } from '../actions/clearModalStateAction';
 import { clearScreenMetadataAction } from '../actions/clearScreenMetadataAction';
 import { clearUsersAction } from '../actions/clearUsersAction';
 import { completeDocketEntryQCAction } from '../actions/EditDocketRecord/completeDocketEntryQCAction';
-import { createWorkItemAction } from '../actions/createWorkItemAction';
-import { navigateToCaseDetailAction } from '../actions/navigateToCaseDetailAction';
+import { createMessageAction } from '../actions/CaseDetail/createMessageAction';
+import { getMessagesForCaseAction } from '../actions/CaseDetail/getMessagesForCaseAction';
+import { navigateToDocumentQCAction } from '../actions/navigateToDocumentQCAction';
 import { setAlertSuccessAction } from '../actions/setAlertSuccessAction';
 import { setCaseAction } from '../actions/setCaseAction';
 import { setCompleteDocketEntryAlertAction } from '../actions/DocketEntry/setCompleteDocketEntryAlertAction';
@@ -15,20 +16,18 @@ import { setValidationErrorsByFlagAction } from '../actions/WorkItem/setValidati
 import { showProgressSequenceDecorator } from '../utilities/sequenceHelpers';
 import { startShowValidationAction } from '../actions/startShowValidationAction';
 import { stopShowValidationAction } from '../actions/stopShowValidationAction';
-import { updateWorkItemFromPropsOrModalOrFormAction } from '../actions/WorkItem/updateWorkItemFromPropsOrModalOrFormAction';
-import { validateInitialWorkItemMessageAction } from '../actions/validateInitialWorkItemMessageAction';
+import { validateCreateMessageAction } from '../actions/validateCreateMessageAction';
 
 export const completeDocketEntryQCAndSendMessageSequence = [
   clearAlertsAction,
   startShowValidationAction,
-  updateWorkItemFromPropsOrModalOrFormAction,
-  validateInitialWorkItemMessageAction,
+  validateCreateMessageAction,
   {
     error: [setValidationErrorsByFlagAction],
     success: showProgressSequenceDecorator([
+      createMessageAction,
       stopShowValidationAction,
       completeDocketEntryQCAction,
-      createWorkItemAction,
       clearFormAction,
       clearScreenMetadataAction,
       clearUsersAction,
@@ -38,7 +37,8 @@ export const completeDocketEntryQCAndSendMessageSequence = [
       setSaveAlertsForNavigationAction,
       setCaseAction,
       setAlertSuccessAction,
-      navigateToCaseDetailAction,
+      getMessagesForCaseAction,
+      navigateToDocumentQCAction,
     ]),
   },
 ];

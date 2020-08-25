@@ -1,5 +1,4 @@
 const React = require('react');
-
 const { PrimaryHeader } = require('../components/PrimaryHeader.jsx');
 const { ReportsHeader } = require('../components/ReportsHeader.jsx');
 
@@ -87,10 +86,10 @@ export const TrialCalendar = ({ cases, sessionDetail }) => {
       <table>
         <thead>
           <tr>
-            <th>Docket no.</th>
+            <th>Docket No.</th>
             <th>Case Title</th>
-            <th>Petitioner counsel</th>
-            <th>Respondent counsel</th>
+            <th>Petitioner Counsel</th>
+            <th>Respondent Counsel</th>
           </tr>
         </thead>
         <tbody>

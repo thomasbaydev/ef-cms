@@ -13,14 +13,14 @@ describe('updateCourtIssuedDocketEntryAction', () => {
       },
       state: {
         caseDetail: {
-          caseId: '123',
+          docketNumber: '123-45',
         },
         documentId: 'abc',
         form: {
           attachments: false,
           date: '2019-01-01T00:00:00.000Z',
           documentTitle: '[Anything]',
-          documentType: 'O - Order',
+          documentType: 'Order',
           eventCode: 'O',
           freeText: 'Testing',
           generatedDocumentTitle: 'Order F',

@@ -1,8 +1,10 @@
 import { DateInput } from '../../ustc-ui/DateInput/DateInput';
+import { FilingPartiesForm } from '../FilingPartiesForm';
 import { FormGroup } from '../../ustc-ui/FormGroup/FormGroup';
 import { Inclusions } from '../AddDocketEntry/Inclusions';
 import { NonstandardForm } from '../FileDocument/NonstandardForm';
 import { SecondaryDocumentForm } from '../AddDocketEntry/SecondaryDocumentForm';
+import { SelectSearch } from '../../ustc-ui/Select/SelectSearch';
 import { connect } from '@cerebral/react';
 import {
   docketEntryOnChange,
@@ -11,13 +13,11 @@ import {
 } from '../../ustc-ui/utils/documentTypeSelectHelper';
 import { sequences, state } from 'cerebral';
 import React from 'react';
-import Select from 'react-select';
-import classNames from 'classnames';
 
 export const PrimaryDocumentForm = connect(
   {
+    OBJECTIONS_OPTIONS: state.constants.OBJECTIONS_OPTIONS,
     addDocketEntryHelper: state.addDocketEntryHelper,
-    caseDetail: state.caseDetail,
     form: state.form,
     internalTypesHelper: state.internalTypesHelper,
     updateDocketEntryFormValueSequence:
@@ -28,9 +28,9 @@ export const PrimaryDocumentForm = connect(
   },
   function PrimaryDocumentForm({
     addDocketEntryHelper,
-    caseDetail,
     form,
     internalTypesHelper,
+    OBJECTIONS_OPTIONS,
     updateDocketEntryFormValueSequence,
     updateScreenMetadataSequence,
     validateDocketEntrySequence,
@@ -97,15 +97,11 @@ export const PrimaryDocumentForm = connect(
               Document type
             </label>
 
-            <Select
+            <SelectSearch
               aria-describedby="document-type-label"
-              className="select-react-element"
-              classNamePrefix="select-react-element"
               id="document-type"
-              isClearable={true}
               name="eventCode"
               options={internalTypesHelper.internalDocumentTypesForSelectSorted}
-              placeholder="- Select -"
               value={reactSelectValue({
                 documentTypes:
                   internalTypesHelper.internalDocumentTypesForSelectSorted,
@@ -148,17 +144,13 @@ export const PrimaryDocumentForm = connect(
                   docket entry for it.
                 </span>
               </label>
-              <Select
+              <SelectSearch
                 aria-describedby="secondary-document-type-label"
-                className="select-react-element"
-                classNamePrefix="select-react-element"
                 id="secondary-document-type"
-                isClearable={true}
                 name="secondaryDocument.eventCode"
                 options={
                   internalTypesHelper.internalDocumentTypesForSelectSorted
                 }
-                placeholder="- Select -"
                 value={reactSelectValue({
                   documentTypes:
                     internalTypesHelper.internalDocumentTypesForSelectSorted,
@@ -273,90 +265,18 @@ export const PrimaryDocumentForm = connect(
 
           <Inclusions updateSequence="updateDocketEntryFormValueSequence" />
 
-          <FormGroup errorText={addDocketEntryHelper.partyValidationError}>
-            <fieldset
-              className={classNames(
-                'usa-fieldset',
-                !addDocketEntryHelper.showObjection && 'margin-bottom-0',
-              )}
-            >
-              <legend className="usa-legend">
-                Who is filing this document?
-              </legend>
-              <div className="usa-checkbox">
-                <input
-                  checked={form.partyPrimary || false}
-                  className="usa-checkbox__input"
-                  id="party-primary"
-                  name="partyPrimary"
-                  type="checkbox"
-                  onChange={e => {
-                    updateDocketEntryFormValueSequence({
-                      key: e.target.name,
-                      value: e.target.checked,
-                    });
-                  }}
-                />
-                <label
-                  className="usa-checkbox__label inline-block"
-                  htmlFor="party-primary"
-                >
-                  {caseDetail.contactPrimary.name}
-                </label>
-              </div>
-              {addDocketEntryHelper.showSecondaryParty && (
-                <div className="usa-checkbox">
-                  <input
-                    checked={form.partySecondary || false}
-                    className="usa-checkbox__input"
-                    id="party-secondary"
-                    name="partySecondary"
-                    type="checkbox"
-                    onChange={e => {
-                      updateDocketEntryFormValueSequence({
-                        key: e.target.name,
-                        value: e.target.checked,
-                      });
-                    }}
-                  />
-                  <label
-                    className="usa-checkbox__label inline-block"
-                    htmlFor="party-secondary"
-                  >
-                    {caseDetail.contactSecondary.name}
-                  </label>
-                </div>
-              )}
-              <div className="usa-checkbox">
-                <input
-                  checked={form.partyIrsPractitioner || false}
-                  className="usa-checkbox__input"
-                  id="party-irs-practitioner"
-                  name="partyIrsPractitioner"
-                  type="checkbox"
-                  onChange={e => {
-                    updateDocketEntryFormValueSequence({
-                      key: e.target.name,
-                      value: e.target.checked,
-                    });
-                  }}
-                />
-                <label
-                  className="usa-checkbox__label inline-block"
-                  htmlFor="party-irs-practitioner"
-                >
-                  Respondent
-                </label>
-              </div>
-            </fieldset>
-          </FormGroup>
+          <FilingPartiesForm
+            updateSequence={updateDocketEntryFormValueSequence}
+            validateSequence={validateDocketEntrySequence}
+          />
+
           {addDocketEntryHelper.showObjection && (
             <FormGroup errorText={validationErrors.objections}>
               <fieldset className="usa-fieldset margin-bottom-0">
                 <legend className="usa-legend" id="objections-legend">
                   Are there any objections to the granting of this document?
                 </legend>
-                {['Yes', 'No', 'Unknown'].map(option => (
+                {OBJECTIONS_OPTIONS.map(option => (
                   <div className="usa-radio" key={option}>
                     <input
                       aria-describedby="objections-legend"

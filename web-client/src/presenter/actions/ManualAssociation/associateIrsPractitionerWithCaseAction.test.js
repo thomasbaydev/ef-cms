@@ -1,4 +1,4 @@
-import { SERVICE_INDICATOR_TYPES } from '../../../../../shared/src/business/entities/cases/CaseConstants';
+import { SERVICE_INDICATOR_TYPES } from '../../../../../shared/src/business/entities/EntityConstants';
 import { applicationContextForClient } from '../../../../../shared/src/business/test/createTestApplicationContext';
 import { associateIrsPractitionerWithCaseAction } from './associateIrsPractitionerWithCaseAction';
 import { presenter } from '../../presenter-mock';
@@ -19,7 +19,7 @@ describe('associateIrsPractitionerWithCaseAction', () => {
         presenter,
       },
       state: {
-        caseDetail: { caseId: 'sdsdfsd' },
+        caseDetail: { docketNumber: '123-20' },
         modal: {
           serviceIndicator: SERVICE_INDICATOR_TYPES.SI_ELECTRONIC,
           user: {

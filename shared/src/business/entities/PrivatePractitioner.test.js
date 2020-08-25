@@ -1,5 +1,5 @@
+const { COUNTRY_TYPES, ROLES } = require('./EntityConstants');
 const { PrivatePractitioner } = require('./PrivatePractitioner');
-const { User } = require('./User');
 
 describe('PrivatePractitioner', () => {
   it('Creates a valid PrivatePractitioner', () => {
@@ -10,14 +10,14 @@ describe('PrivatePractitioner', () => {
         address3: 'Under the stairs',
         city: 'Chicago',
         country: 'Brazil',
-        countryType: 'international',
+        countryType: COUNTRY_TYPES.INTERNATIONAL,
         phone: '+1 (555) 555-5555',
         postalCode: '61234',
         state: 'IL',
       },
       firstName: 'firstName',
       lastName: 'lastName',
-      role: User.ROLES.privatePractitioner,
+      role: ROLES.privatePractitioner,
       userId: '3ab77c88-1dd0-4adb-a03c-c466ad72d417',
     });
 
@@ -27,7 +27,7 @@ describe('PrivatePractitioner', () => {
 
   it('Creates an invalid', () => {
     const user = new PrivatePractitioner({
-      role: User.ROLES.irsPractitioner,
+      role: ROLES.irsPractitioner,
     });
     expect(user.isValid()).toBeFalsy();
   });

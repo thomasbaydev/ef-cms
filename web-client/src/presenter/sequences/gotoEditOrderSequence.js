@@ -7,11 +7,15 @@ import { redirectToCognitoAction } from '../actions/redirectToCognitoAction';
 import { setCaseAction } from '../actions/setCaseAction';
 import { setCurrentPageAction } from '../actions/setCurrentPageAction';
 import { setDocumentToEditAction } from '../actions/setDocumentToEditAction';
+import { setFormFromDraftStateAction } from '../actions/setFormFromDraftStateAction';
+import { setParentMessageIdAction } from '../actions/setParentMessageIdAction';
+import { setRedirectUrlAction } from '../actions/setRedirectUrlAction';
 import { state } from 'cerebral';
 import { stopShowValidationAction } from '../actions/stopShowValidationAction';
 import { unset } from 'cerebral/factories';
 
 const gotoEditOrder = [
+  setRedirectUrlAction,
   unset(state.documentToEdit),
   clearModalAction,
   setCurrentPageAction('Interstitial'),
@@ -19,7 +23,9 @@ const gotoEditOrder = [
   clearFormAction,
   getCaseAction,
   setCaseAction,
+  setFormFromDraftStateAction,
   setDocumentToEditAction,
+  setParentMessageIdAction,
   convertHtml2PdfSequence,
   setCurrentPageAction('CreateOrder'),
 ];

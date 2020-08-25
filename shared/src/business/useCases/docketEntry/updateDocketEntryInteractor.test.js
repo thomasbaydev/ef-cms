@@ -2,36 +2,87 @@ const {
   applicationContext,
 } = require('../../test/createTestApplicationContext');
 const {
+  CASE_TYPES_MAP,
+  COUNTRY_TYPES,
+  PARTY_TYPES,
+  ROLES,
+} = require('../../entities/EntityConstants');
+const {
   updateDocketEntryInteractor,
 } = require('./updateDocketEntryInteractor');
-const { User } = require('../../entities/User');
 
 describe('updateDocketEntryInteractor', () => {
   let mockCurrentUser;
 
   const workItem = {
-    caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     docketNumber: '45678-18',
     document: {
       documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
       documentType: 'Answer',
+      eventCode: 'A',
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     },
-    isQC: true,
     section: 'docket',
     sentBy: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     updatedAt: new Date().toISOString(),
     workItemId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
   };
 
+  const documents = [
+    {
+      docketNumber: '45678-18',
+      documentId: 'e24ba5a9-b37b-479d-9201-067ec6e335e2',
+      documentType: 'Petition',
+      eventCode: 'P',
+      filedBy: 'Test Petitioner',
+      userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      workItems: [workItem],
+    },
+    {
+      docketNumber: '45678-18',
+      documentId: 'b44ba5a9-b37b-479d-9201-067ec6e335b4',
+      documentType: 'Record on Appeal',
+      eventCode: 'ROA',
+      filedBy: 'Test Petitioner',
+      userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      workItems: [workItem],
+    },
+    {
+      docketNumber: '45678-18',
+      documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      documentType: 'Answer',
+      eventCode: 'A',
+      filedBy: 'Test Petitioner',
+      userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      workItem,
+    },
+    {
+      docketNumber: '45678-18',
+      documentId: 'd34ba5a9-b37b-479d-9201-067ec6e335d3',
+      documentType: 'Record on Appeal',
+      eventCode: 'ROA',
+      filedBy: 'Test Petitioner',
+      userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      workItems: [workItem],
+    },
+    {
+      docketNumber: '45678-18',
+      documentId: 'f14ba5a9-b37b-479d-9201-067ec6e335f1',
+      documentType: 'Request for Place of Trial',
+      eventCode: 'RQT',
+      filedBy: 'Test Petitioner',
+      userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      workItems: [workItem],
+    },
+  ];
+
   const caseRecord = {
     caseCaption: 'Caption',
-    caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-    caseType: 'Deficiency',
+    caseType: CASE_TYPES_MAP.deficiency,
     contactPrimary: {
       address1: '123 Main St',
       city: 'Somewhere',
-      countryType: 'domestic',
+      countryType: COUNTRY_TYPES.DOMESTIC,
       email: 'fieri@example.com',
       name: 'Guy Fieri',
       phone: '1234567890',
@@ -42,49 +93,56 @@ describe('updateDocketEntryInteractor', () => {
     docketNumber: '45678-18',
     docketRecord: [
       {
-        description: 'first record',
-        docketRecordId: '8675309b-18d0-43ec-bafb-654e83405411',
-        documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+        description: 'Petition',
+        docketRecordId: 'e275309b-18d0-43ec-bafb-654e83405411',
+        documentId: 'e24ba5a9-b37b-479d-9201-067ec6e335e2',
         eventCode: 'P',
         filingDate: '2018-03-01T00:01:00.000Z',
         index: 1,
       },
-    ],
-    documents: [
       {
-        docketNumber: '45678-18',
-        documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335b1',
-        documentType: 'Answer',
-        userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-        workItems: [workItem],
+        description: 'first record',
+        docketRecordId: '8675309b-18d0-43ec-bafb-654e83405411',
+        documentId: 'b44ba5a9-b37b-479d-9201-067ec6e335b4',
+        eventCode: 'ROA',
+        filingDate: '2018-03-01T00:01:00.000Z',
+        index: 2,
       },
       {
-        docketNumber: '45678-18',
-        documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335b2',
-        documentType: 'Answer',
-        userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-        workItems: [workItem],
-      },
-      {
-        docketNumber: '45678-18',
+        description: 'second record',
+        docketRecordId: 'c575309b-18d0-43ec-bafb-654e83405411',
         documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-        documentType: 'Answer',
-        userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-        workItems: [workItem],
+        eventCode: 'A',
+        filingDate: '2018-03-01T00:01:00.000Z',
+      },
+      {
+        description: 'third record',
+        docketRecordId: 'd375309b-18d0-43ec-bafb-654e83405411',
+        documentId: 'd34ba5a9-b37b-479d-9201-067ec6e335d3',
+        eventCode: 'ROA',
+        filingDate: '2018-03-01T00:01:00.000Z',
+      },
+      {
+        description: 'Request for Place of Trial',
+        docketRecordId: 'f175309b-18d0-43ec-bafb-654e83405411',
+        documentId: 'f14ba5a9-b37b-479d-9201-067ec6e335f1',
+        eventCode: 'RQT',
+        filingDate: '2018-03-01T00:01:00.000Z',
       },
     ],
+    documents,
     filingType: 'Myself',
-    partyType: 'Petitioner',
+    partyType: PARTY_TYPES.petitioner,
     preferredTrialCity: 'Fresno, California',
     procedureType: 'Regular',
-    role: User.ROLES.petitioner,
+    role: ROLES.petitioner,
     userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
   };
 
   beforeEach(() => {
     mockCurrentUser = {
       name: 'Emmett Lathrop "Doc" Brown, Ph.D.',
-      role: User.ROLES.docketClerk,
+      role: ROLES.docketClerk,
       section: 'docket',
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     };
@@ -92,13 +150,13 @@ describe('updateDocketEntryInteractor', () => {
     applicationContext.getCurrentUser.mockImplementation(() => mockCurrentUser);
     applicationContext.getPersistenceGateway().getUserById.mockReturnValue({
       name: 'Emmett Lathrop "Doc" Brown, Ph.D.',
-      role: User.ROLES.docketClerk,
+      role: ROLES.docketClerk,
       section: 'docket',
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(caseRecord);
+      .getCaseByDocketNumber.mockReturnValue(caseRecord);
   });
 
   it('should throw an error if not authorized', async () => {
@@ -108,8 +166,9 @@ describe('updateDocketEntryInteractor', () => {
       updateDocketEntryInteractor({
         applicationContext,
         documentMetadata: {
-          caseId: caseRecord.caseId,
+          docketNumber: caseRecord.docketNumber,
           documentType: 'Memorandum in Support',
+          eventCode: 'MISP',
         },
         primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
       }),
@@ -121,18 +180,19 @@ describe('updateDocketEntryInteractor', () => {
       updateDocketEntryInteractor({
         applicationContext,
         documentMetadata: {
-          caseId: caseRecord.caseId,
+          docketNumber: caseRecord.docketNumber,
           documentTitle: 'My Document',
           documentType: 'Memorandum in Support',
-          eventCode: 'P',
+          eventCode: 'MISP',
           isFileAttached: false,
+          partyPrimary: true,
         },
         primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
       }),
     ).resolves.not.toThrow();
 
     expect(
-      applicationContext.getPersistenceGateway().getCaseByCaseId,
+      applicationContext.getPersistenceGateway().getCaseByDocketNumber,
     ).toBeCalled();
     expect(
       applicationContext.getPersistenceGateway()
@@ -149,18 +209,19 @@ describe('updateDocketEntryInteractor', () => {
       updateDocketEntryInteractor({
         applicationContext,
         documentMetadata: {
-          caseId: caseRecord.caseId,
+          docketNumber: caseRecord.docketNumber,
           documentTitle: 'My Document',
           documentType: 'Memorandum in Support',
-          eventCode: 'P',
+          eventCode: 'MISP',
           isFileAttached: true,
+          partyPrimary: true,
         },
         primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
       }),
     ).resolves.not.toThrow();
 
     expect(
-      applicationContext.getPersistenceGateway().getCaseByCaseId,
+      applicationContext.getPersistenceGateway().getCaseByDocketNumber,
     ).toBeCalled();
     expect(
       applicationContext.getPersistenceGateway()
@@ -169,6 +230,42 @@ describe('updateDocketEntryInteractor', () => {
     expect(
       applicationContext.getPersistenceGateway().deleteWorkItemFromInbox,
     ).toBeCalled();
+    expect(
+      applicationContext.getPersistenceGateway().deleteWorkItemFromInbox,
+    ).toBeCalled();
+    expect(
+      applicationContext.getUseCaseHelpers().sendServedPartiesEmails,
+    ).toBeCalled();
+    expect(applicationContext.getPersistenceGateway().updateCase).toBeCalled();
+  });
+
+  it('adds documents and workitems but does not try to delete workitem because they all have files attached', async () => {
+    workItem.document.isFileAttached = true;
+    await expect(
+      updateDocketEntryInteractor({
+        applicationContext,
+        documentMetadata: {
+          docketNumber: caseRecord.docketNumber,
+          documentTitle: 'My Document',
+          documentType: 'Memorandum in Support',
+          eventCode: 'MISP',
+          isFileAttached: true,
+          partyPrimary: true,
+        },
+        primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      }),
+    ).resolves.not.toThrow();
+
+    expect(
+      applicationContext.getPersistenceGateway().getCaseByDocketNumber,
+    ).toBeCalled();
+    expect(
+      applicationContext.getPersistenceGateway()
+        .saveWorkItemForDocketClerkFilingExternalDocument,
+    ).toBeCalled();
+    expect(
+      applicationContext.getPersistenceGateway().deleteWorkItemFromInbox,
+    ).not.toBeCalled();
     expect(applicationContext.getPersistenceGateway().updateCase).toBeCalled();
   });
 
@@ -177,22 +274,108 @@ describe('updateDocketEntryInteractor', () => {
       updateDocketEntryInteractor({
         applicationContext,
         documentMetadata: {
-          caseId: caseRecord.caseId,
+          docketNumber: caseRecord.docketNumber,
           documentTitle: 'My Document',
           documentType: 'Memorandum in Support',
-          eventCode: 'P',
+          eventCode: 'MISP',
           isPaper: true,
+          partyPrimary: true,
         },
         primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
       }),
     ).resolves.not.toThrow();
 
     expect(
-      applicationContext.getPersistenceGateway().getCaseByCaseId,
+      applicationContext.getPersistenceGateway().getCaseByDocketNumber,
     ).toBeCalled();
     expect(
       applicationContext.getPersistenceGateway().saveWorkItemForNonPaper,
     ).not.toBeCalled();
+    expect(applicationContext.getPersistenceGateway().updateCase).toBeCalled();
+  });
+
+  it('should update only allowed editable fields on a docket entry document', async () => {
+    await updateDocketEntryInteractor({
+      applicationContext,
+      documentMetadata: {
+        docketNumber: caseRecord.docketNumber,
+        documentTitle: 'My Edited Document',
+        documentType: 'Memorandum in Support',
+        eventCode: 'MISP',
+        freeText: 'Some text about this document',
+        hasOtherFilingParty: true,
+        isPaper: true,
+        otherFilingParty: 'Bert Brooks',
+        partyPrimary: true,
+      },
+      primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+    });
+
+    expect(
+      applicationContext.getPersistenceGateway().updateCase.mock.calls[0][0]
+        .caseToUpdate.documents[2],
+    ).toMatchObject({
+      documentTitle: 'My Edited Document',
+      freeText: 'Some text about this document',
+      hasOtherFilingParty: true,
+      otherFilingParty: 'Bert Brooks',
+    });
+  });
+
+  it('updates document and workitem metadata with a file attached, but saving for later', async () => {
+    await expect(
+      updateDocketEntryInteractor({
+        applicationContext,
+        documentMetadata: {
+          docketNumber: caseRecord.docketNumber,
+          documentTitle: 'My Document',
+          documentType: 'Memorandum in Support',
+          eventCode: 'MISP',
+          isFileAttached: true,
+          partyPrimary: true,
+        },
+        isSavingForLater: true,
+        primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      }),
+    ).resolves.not.toThrow();
+
+    expect(
+      applicationContext.getPersistenceGateway().getCaseByDocketNumber,
+    ).toBeCalled();
+    expect(
+      applicationContext.getPersistenceGateway()
+        .saveWorkItemForDocketEntryInProgress,
+    ).toBeCalled();
+    expect(applicationContext.getPersistenceGateway().updateCase).toBeCalled();
+    expect(
+      applicationContext.getUseCaseHelpers().countPagesInDocument,
+    ).toBeCalled();
+  });
+
+  it('updates document and workitem metadata with no file attached', async () => {
+    await expect(
+      updateDocketEntryInteractor({
+        applicationContext,
+        documentMetadata: {
+          docketNumber: caseRecord.docketNumber,
+          documentTitle: 'My Document',
+          documentType: 'Memorandum in Support',
+          eventCode: 'MISP',
+          isFileAttached: false,
+          partyPrimary: true,
+        },
+        isSavingForLater: true,
+        primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      }),
+    ).resolves.not.toThrow();
+
+    expect(
+      applicationContext.getPersistenceGateway().getCaseByDocketNumber,
+    ).toBeCalled();
+    expect(
+      applicationContext.getPersistenceGateway()
+        .saveWorkItemForDocketEntryInProgress,
+    ).toBeCalled();
     expect(applicationContext.getPersistenceGateway().updateCase).toBeCalled();
   });
 });

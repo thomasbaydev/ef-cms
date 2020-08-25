@@ -1,13 +1,16 @@
 const {
+  OPINION_EVENT_CODES,
+  ROLES,
+} = require('../../business/entities/EntityConstants');
+const {
   opinionAdvancedSearchInteractor,
 } = require('./opinionAdvancedSearchInteractor');
 const { applicationContext } = require('../test/createTestApplicationContext');
-const { Document } = require('../../business/entities/Document');
 
 describe('opinionAdvancedSearchInteractor', () => {
   beforeEach(() => {
     applicationContext.getCurrentUser.mockReturnValue({
-      role: 'petitionsclerk',
+      role: ROLES.petitionsClerk,
     });
 
     applicationContext
@@ -15,19 +18,17 @@ describe('opinionAdvancedSearchInteractor', () => {
       .advancedDocumentSearch.mockResolvedValue([
         {
           caseCaption: 'Samson Workman, Petitioner',
-          caseId: '1',
           docketNumber: '103-19',
           docketNumberSuffix: 'AAA',
           documentContents:
             'Everyone knows that Reeses Outrageous bars are the best candy',
           documentTitle: 'T.C. Opinion for More Candy',
-          documentType: 'TCOP - T.C. Opinion',
+          documentType: 'T.C. Opinion',
           eventCode: 'TCOP',
           signedJudgeName: 'Guy Fieri',
         },
         {
           caseCaption: 'Samson Workman, Petitioner',
-          caseId: '2',
           docketNumber: '103-19',
           docketNumberSuffix: 'AAA',
           documentContents: 'KitKats are inferior candies',
@@ -41,7 +42,7 @@ describe('opinionAdvancedSearchInteractor', () => {
 
   it('returns an unauthorized error on petitioner user role', async () => {
     applicationContext.getCurrentUser.mockReturnValue({
-      role: 'petitioner',
+      role: ROLES.petitioner,
     });
 
     await expect(
@@ -55,24 +56,23 @@ describe('opinionAdvancedSearchInteractor', () => {
     const result = await opinionAdvancedSearchInteractor({
       applicationContext,
       keyword: 'candy',
+      startDate: '2001-01-01',
     });
 
     expect(result).toMatchObject([
       {
         caseCaption: 'Samson Workman, Petitioner',
-        caseId: '1',
         docketNumber: '103-19',
         docketNumberSuffix: 'AAA',
         documentContents:
           'Everyone knows that Reeses Outrageous bars are the best candy',
         documentTitle: 'T.C. Opinion for More Candy',
-        documentType: 'TCOP - T.C. Opinion',
+        documentType: 'T.C. Opinion',
         eventCode: 'TCOP',
         signedJudgeName: 'Guy Fieri',
       },
       {
         caseCaption: 'Samson Workman, Petitioner',
-        caseId: '2',
         docketNumber: '103-19',
         docketNumberSuffix: 'AAA',
         documentContents: 'KitKats are inferior candies',
@@ -90,13 +90,14 @@ describe('opinionAdvancedSearchInteractor', () => {
     await opinionAdvancedSearchInteractor({
       applicationContext,
       keyword,
+      startDate: '2001-01-01',
     });
 
     expect(
       applicationContext.getPersistenceGateway().advancedDocumentSearch.mock
         .calls[0][0],
     ).toMatchObject({
-      documentEventCodes: Document.OPINION_DOCUMENT_TYPES,
+      documentEventCodes: OPINION_EVENT_CODES,
     });
   });
 });

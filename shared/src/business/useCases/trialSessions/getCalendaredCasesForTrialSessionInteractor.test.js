@@ -4,13 +4,13 @@ const {
 const {
   getCalendaredCasesForTrialSessionInteractor,
 } = require('./getCalendaredCasesForTrialSessionInteractor');
+const { MOCK_CASE } = require('../../../test/mockCase');
+const { PARTY_TYPES, ROLES } = require('../../entities/EntityConstants');
 const { UnauthorizedError } = require('../../../errors/errors');
 const { User } = require('../../entities/User');
 
-const { MOCK_CASE } = require('../../../test/mockCase');
-
 const mockJudge = {
-  role: 'judge',
+  role: ROLES.judge,
   section: 'judgeChambers',
   userId: '123',
 };
@@ -30,8 +30,8 @@ describe('getCalendaredCasesForTrialSessionInteractor', () => {
 
   it('throws an exception when the user is unauthorized', async () => {
     user = new User({
-      name: 'Petitioner',
-      role: User.ROLES.petitioner,
+      name: PARTY_TYPES.petitioner,
+      role: ROLES.petitioner,
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
 
@@ -46,7 +46,7 @@ describe('getCalendaredCasesForTrialSessionInteractor', () => {
   it('should find the cases for a trial session successfully', async () => {
     user = new User({
       name: 'Docket Clerk',
-      role: User.ROLES.docketClerk,
+      role: ROLES.docketClerk,
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
 

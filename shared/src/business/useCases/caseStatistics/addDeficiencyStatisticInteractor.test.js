@@ -5,18 +5,18 @@ const {
   applicationContext,
 } = require('../../test/createTestApplicationContext');
 const { MOCK_CASE } = require('../../../test/mockCase');
-const { User } = require('../../entities/User');
+const { ROLES } = require('../../entities/EntityConstants');
 
 describe('addDeficiencyStatisticInteractor', () => {
   beforeEach(() => {
     applicationContext.getCurrentUser.mockReturnValue({
-      role: User.ROLES.docketClerk,
+      role: ROLES.docketClerk,
       userId: 'docketClerk',
     });
 
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(Promise.resolve(MOCK_CASE));
+      .getCaseByDocketNumber.mockReturnValue(Promise.resolve(MOCK_CASE));
   });
 
   it('should throw an error if the user is unauthorized to update case statistics', async () => {
@@ -25,7 +25,7 @@ describe('addDeficiencyStatisticInteractor', () => {
     await expect(
       addDeficiencyStatisticInteractor({
         applicationContext,
-        caseId: MOCK_CASE.caseId,
+        docketNumber: MOCK_CASE.docketNumber,
       }),
     ).rejects.toThrow('Unauthorized for editing statistics');
   });
@@ -42,7 +42,7 @@ describe('addDeficiencyStatisticInteractor', () => {
 
     const result = await addDeficiencyStatisticInteractor({
       applicationContext,
-      caseId: MOCK_CASE.caseId,
+      docketNumber: MOCK_CASE.docketNumber,
       ...statistic,
     });
     expect(result).toMatchObject({

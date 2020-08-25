@@ -1,28 +1,31 @@
 const {
   applicationContext,
 } = require('../../../business/test/createTestApplicationContext');
+const {
+  PETITIONS_SECTION,
+  ROLES,
+} = require('../../../business/entities/EntityConstants');
 const { createUser, createUserRecords } = require('./createUser');
-const { User } = require('../../../business/entities/User');
 
 const userId = '9b52c605-edba-41d7-b045-d5f992a499d3';
 
 const petitionsClerkUser = {
   name: 'Test Petitionsclerk',
-  role: User.ROLES.petitionsClerk,
-  section: 'petitions',
+  role: ROLES.petitionsClerk,
+  section: PETITIONS_SECTION,
 };
 
 const privatePractitionerUser = {
   barNumber: 'pt1234', //intentionally lower case - should be converted to upper case when persisted
   name: 'Test Private Practitioner',
-  role: User.ROLES.privatePractitioner,
+  role: ROLES.privatePractitioner,
   section: 'privatePractitioner',
 };
 
 const privatePractitionerUserWithoutBarNumber = {
   barNumber: '',
   name: 'Test Private Practitioner',
-  role: User.ROLES.privatePractitioner,
+  role: ROLES.privatePractitioner,
   section: 'privatePractitioner',
 };
 
@@ -56,8 +59,8 @@ describe('createUser', () => {
   it('should call adminCreateUser', async () => {
     const petitionsclerkUser = {
       name: 'Test Petitionsclerk',
-      role: User.ROLES.petitionsClerk,
-      section: 'petitions',
+      role: ROLES.petitionsClerk,
+      section: PETITIONS_SECTION,
     };
 
     await createUser({ applicationContext, user: petitionsclerkUser });
@@ -166,7 +169,7 @@ describe('createUser', () => {
     it('attempts to persist a judge user with a section mapping record for the chambers and the judge', async () => {
       const judgeUser = {
         name: 'Judge Adam',
-        role: User.ROLES.judge,
+        role: ROLES.judge,
         section: 'adamsChambers',
       };
 
@@ -319,7 +322,7 @@ describe('createUser', () => {
     it('does not persist section mapping record if user does not have a section', async () => {
       const privatePractitionerUserWithoutSection = {
         name: 'Test Private Practitioner',
-        role: User.ROLES.privatePractitioner,
+        role: ROLES.privatePractitioner,
       };
 
       await createUserRecords({

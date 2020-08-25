@@ -1,4 +1,5 @@
 import { Case } from '../../shared/src/business/entities/cases/Case';
+import { PAYMENT_STATUS } from '../../shared/src/business/entities/EntityConstants';
 import { loginAs, setupTest, uploadPetition } from './helpers';
 
 const test = setupTest();
@@ -10,14 +11,14 @@ describe('docket clerk edits a petition payment fee', () => {
 
   let caseDetail;
 
-  loginAs(test, 'petitioner');
+  loginAs(test, 'petitioner@example.com');
 
   it('login as a tax payer and create a case', async () => {
     caseDetail = await uploadPetition(test);
     expect(caseDetail.docketNumber).toBeDefined();
   });
 
-  loginAs(test, 'docketclerk');
+  loginAs(test, 'docketclerk@example.com');
 
   it('login as the docketclerk and edit the case petition payment fee', async () => {
     await test.runSequence('gotoEditPetitionDetailsSequence', {
@@ -26,7 +27,7 @@ describe('docket clerk edits a petition payment fee', () => {
 
     expect(test.getState('caseDetail.petitionPaymentDate')).toBeUndefined();
     expect(test.getState('caseDetail.petitionPaymentStatus')).toEqual(
-      Case.PAYMENT_STATUS.UNPAID,
+      PAYMENT_STATUS.UNPAID,
     );
     expect(test.getState('caseDetail.docketRecord')).not.toContainEqual({
       description: 'Filing Fee Paid',
@@ -37,7 +38,7 @@ describe('docket clerk edits a petition payment fee', () => {
 
     await test.runSequence('updateFormValueSequence', {
       key: 'petitionPaymentStatus',
-      value: Case.PAYMENT_STATUS.PAID,
+      value: PAYMENT_STATUS.PAID,
     });
 
     await test.runSequence('updatePetitionDetailsSequence');
@@ -71,7 +72,7 @@ describe('docket clerk edits a petition payment fee', () => {
     expect(test.getState('validationErrors')).toEqual({});
 
     expect(test.getState('caseDetail.petitionPaymentStatus')).toEqual(
-      Case.PAYMENT_STATUS.PAID,
+      PAYMENT_STATUS.PAID,
     );
     expect(test.getState('caseDetail.petitionPaymentDate')).toEqual(
       '2001-01-01T05:00:00.000Z',

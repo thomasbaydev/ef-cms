@@ -1,19 +1,14 @@
 import { DocumentSearch } from '../../shared/src/business/entities/documents/DocumentSearch';
-
 import { loginAs, refreshElasticsearchIndex, setupTest } from './helpers';
 
-const test = setupTest({
-  useCases: {
-    loadPDFForSigningInteractor: () => Promise.resolve(null),
-  },
-});
+const test = setupTest();
 
 describe('docket clerk opinion advanced search', () => {
   beforeAll(() => {
     jest.setTimeout(30000);
   });
 
-  loginAs(test, 'docketclerk');
+  loginAs(test, 'docketclerk@example.com');
 
   it('go to advanced opinion search tab', async () => {
     await refreshElasticsearchIndex();
@@ -32,6 +27,7 @@ describe('docket clerk opinion advanced search', () => {
       test.setState('advancedSearchForm', {
         opinionSearch: {
           keyword: 'osteodontolignikeratic',
+          startDate: '1995-08-03',
         },
       });
 
@@ -46,6 +42,7 @@ describe('docket clerk opinion advanced search', () => {
         opinionSearch: {
           keyword: 'opinion',
           opinionType: 'Summary Opinion',
+          startDate: '1995-08-03',
         },
       });
 
@@ -61,6 +58,7 @@ describe('docket clerk opinion advanced search', () => {
       test.setState('advancedSearchForm', {
         opinionSearch: {
           keyword: 'sunglasses',
+          startDate: '1995-08-03',
         },
       });
 
@@ -82,6 +80,7 @@ describe('docket clerk opinion advanced search', () => {
         opinionSearch: {
           docketNumber: '105-20',
           keyword: 'sunglasses',
+          startDate: '1995-08-03',
         },
       });
 
@@ -102,6 +101,7 @@ describe('docket clerk opinion advanced search', () => {
       test.setState('advancedSearchForm', {
         opinionSearch: {
           keyword: 'sunglasses',
+          startDate: '1995-08-03',
         },
       });
 
@@ -120,7 +120,8 @@ describe('docket clerk opinion advanced search', () => {
       test.setState('advancedSearchForm', {
         opinionSearch: {
           keyword: 'opinion',
-          opinionType: 'TCOP - T.C. Opinion',
+          opinionType: 'T.C. Opinion',
+          startDate: '1995-08-03',
         },
       });
 

@@ -2,6 +2,12 @@ const {
   aggregatePartiesForService,
 } = require('../../utilities/aggregatePartiesForService');
 const {
+  DOCUMENT_PROCESSING_STATUS_OPTIONS,
+  NOTICE_OF_TRIAL,
+  STANDING_PRETRIAL_NOTICE,
+  STANDING_PRETRIAL_ORDER,
+} = require('../../entities/EntityConstants');
+const {
   isAuthorized,
   ROLE_PERMISSIONS,
 } = require('../../../authorization/authorizationClientService');
@@ -16,12 +22,12 @@ const { UnauthorizedError } = require('../../../errors/errors');
  * @param {object} providers the providers object
  * @param {object} providers.applicationContext the applicationContext
  * @param {string} providers.trialSessionId the trial session id
- * @param {string} providers.caseId optional caseId to explicitly set the notice on the ONE specified case
+ * @param {string} providers.docketNumber optional docketNumber to explicitly set the notice on the ONE specified case
  * @returns {Promise} the promises for the updateCase calls
  */
 exports.setNoticesForCalendaredTrialSessionInteractor = async ({
   applicationContext,
-  caseId,
+  docketNumber,
   trialSessionId,
 }) => {
   let shouldSetNoticesIssued = true;
@@ -42,12 +48,12 @@ exports.setNoticesForCalendaredTrialSessionInteractor = async ({
 
   // opting to pull from the set of calendared cases rather than load the
   // case individually to add an additional layer of validation
-  if (caseId) {
+  if (docketNumber) {
     // Do not set when sending notices for a single case
     shouldSetNoticesIssued = false;
 
     const singleCase = calendaredCases.find(
-      caseRecord => caseRecord.caseId === caseId,
+      caseRecord => caseRecord.docketNumber === docketNumber,
     );
 
     calendaredCases = [singleCase];
@@ -114,18 +120,20 @@ exports.setNoticesForCalendaredTrialSessionInteractor = async ({
 
     const noticeOfTrialDocument = new Document(
       {
-        caseId: caseEntity.caseId,
         documentId: newNoticeOfTrialIssuedDocumentId,
         documentTitle: noticeOfTrialDocumentTitle,
-        documentType: Document.NOTICE_OF_TRIAL.documentType,
-        eventCode: Document.NOTICE_OF_TRIAL.eventCode,
-        processingStatus: 'complete',
+        documentType: NOTICE_OF_TRIAL.documentType,
+        eventCode: NOTICE_OF_TRIAL.eventCode,
+        processingStatus: DOCUMENT_PROCESSING_STATUS_OPTIONS.COMPLETE,
+        signedAt: applicationContext.getUtilities().createISODateString(), // The signature is in the template of the document being generated
         userId: user.userId,
       },
       { applicationContext },
     );
 
-    caseEntity.addDocument(noticeOfTrialDocument, { applicationContext });
+    caseEntity.addDocument(noticeOfTrialDocument, {
+      applicationContext,
+    });
     caseEntity.setNoticeOfTrialDate();
 
     // Standing Pretrial Notice/Order
@@ -143,10 +151,8 @@ exports.setNoticesForCalendaredTrialSessionInteractor = async ({
           trialSessionId: trialSessionEntity.trialSessionId,
         });
 
-      standingPretrialDocumentTitle =
-        Document.STANDING_PRETRIAL_NOTICE.documentType;
-      standingPretrialDocumentEventCode =
-        Document.STANDING_PRETRIAL_NOTICE.eventCode;
+      standingPretrialDocumentTitle = STANDING_PRETRIAL_NOTICE.documentType;
+      standingPretrialDocumentEventCode = STANDING_PRETRIAL_NOTICE.eventCode;
     } else {
       // Generate Standing Pretrial Order
       standingPretrialFile = await applicationContext
@@ -157,10 +163,8 @@ exports.setNoticesForCalendaredTrialSessionInteractor = async ({
           trialSessionId: trialSessionEntity.trialSessionId,
         });
 
-      standingPretrialDocumentTitle =
-        Document.STANDING_PRETRIAL_ORDER.documentType;
-      standingPretrialDocumentEventCode =
-        Document.STANDING_PRETRIAL_ORDER.eventCode;
+      standingPretrialDocumentTitle = STANDING_PRETRIAL_ORDER.documentType;
+      standingPretrialDocumentEventCode = STANDING_PRETRIAL_ORDER.eventCode;
     }
 
     const newStandingPretrialDocumentId = applicationContext.getUniqueId();
@@ -173,18 +177,19 @@ exports.setNoticesForCalendaredTrialSessionInteractor = async ({
 
     const standingPretrialDocument = new Document(
       {
-        caseId: caseEntity.caseId,
         documentId: newStandingPretrialDocumentId,
         documentTitle: standingPretrialDocumentTitle,
         documentType: standingPretrialDocumentTitle,
         eventCode: standingPretrialDocumentEventCode,
-        processingStatus: 'complete',
+        processingStatus: DOCUMENT_PROCESSING_STATUS_OPTIONS.COMPLETE,
         userId: user.userId,
       },
       { applicationContext },
     );
 
-    caseEntity.addDocument(standingPretrialDocument, { applicationContext });
+    caseEntity.addDocument(standingPretrialDocument, {
+      applicationContext,
+    });
 
     // Serve notice
     const servedParties = await serveNoticesForCase({

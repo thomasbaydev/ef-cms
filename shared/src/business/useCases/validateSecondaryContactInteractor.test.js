@@ -1,7 +1,9 @@
 const {
   validateSecondaryContactInteractor,
 } = require('./validateSecondaryContactInteractor');
+const { applicationContext } = require('../test/createTestApplicationContext');
 const { ContactFactory } = require('../entities/contacts/ContactFactory');
+const { COUNTRY_TYPES, PARTY_TYPES } = require('../entities/EntityConstants');
 
 describe('validateSecondaryContactInteractor', () => {
   it('runs validation on a contact with no invalid properties', async () => {
@@ -10,7 +12,7 @@ describe('validateSecondaryContactInteractor', () => {
       address2: 'Grand View Apartments',
       address3: 'Apt. #104',
       city: 'Jordan',
-      countryType: 'domestic',
+      countryType: COUNTRY_TYPES.DOMESTIC,
       email: 'night@theroxbury.com',
       name: 'Wilbur Rayou',
       phone: '1111111111',
@@ -18,9 +20,10 @@ describe('validateSecondaryContactInteractor', () => {
       state: 'MN',
     };
 
-    const partyType = ContactFactory.PARTY_TYPES.petitionerSpouse;
+    const partyType = PARTY_TYPES.petitionerSpouse;
 
     const errors = validateSecondaryContactInteractor({
+      applicationContext,
       contactInfo: contactSecondary,
       partyType,
     });
@@ -34,7 +37,7 @@ describe('validateSecondaryContactInteractor', () => {
       address2: 'Grand View Apartments',
       address3: 'Apt. #104',
       city: 'Jordan',
-      countryType: 'domestic',
+      countryType: COUNTRY_TYPES.DOMESTIC,
       email: 'night@theroxbury.com',
       name: 'Wilbur Rayou',
       phone: '1111111111',
@@ -42,9 +45,10 @@ describe('validateSecondaryContactInteractor', () => {
       state: 'MN',
     };
 
-    const partyType = ContactFactory.PARTY_TYPES.petitionerSpouse;
+    const partyType = PARTY_TYPES.petitionerSpouse;
 
     const errors = validateSecondaryContactInteractor({
+      applicationContext,
       contactInfo: contactSecondary,
       partyType,
     });

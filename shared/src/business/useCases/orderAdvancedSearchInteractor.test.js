@@ -1,13 +1,16 @@
 const {
+  ORDER_EVENT_CODES,
+  ROLES,
+} = require('../../business/entities/EntityConstants');
+const {
   orderAdvancedSearchInteractor,
 } = require('./orderAdvancedSearchInteractor');
 const { applicationContext } = require('../test/createTestApplicationContext');
-const { Document } = require('../../business/entities/Document');
 
 describe('orderAdvancedSearchInteractor', () => {
   beforeEach(() => {
     applicationContext.getCurrentUser.mockReturnValue({
-      role: 'petitionsclerk',
+      role: ROLES.petitionsClerk,
     });
 
     applicationContext
@@ -15,7 +18,6 @@ describe('orderAdvancedSearchInteractor', () => {
       .advancedDocumentSearch.mockResolvedValue([
         {
           caseCaption: 'Samson Workman, Petitioner',
-          caseId: '1',
           docketNumber: '103-19',
           docketNumberSuffix: 'AAA',
           documentContents:
@@ -26,7 +28,6 @@ describe('orderAdvancedSearchInteractor', () => {
         },
         {
           caseCaption: 'Samson Workman, Petitioner',
-          caseId: '2',
           docketNumber: '103-19',
           docketNumberSuffix: 'AAA',
           documentContents: 'KitKats are inferior candies',
@@ -39,7 +40,7 @@ describe('orderAdvancedSearchInteractor', () => {
 
   it('returns an unauthorized error on petitioner user role', async () => {
     applicationContext.getCurrentUser.mockReturnValue({
-      role: 'petitioner',
+      role: ROLES.petitioner,
     });
 
     await expect(
@@ -53,12 +54,12 @@ describe('orderAdvancedSearchInteractor', () => {
     const result = await orderAdvancedSearchInteractor({
       applicationContext,
       keyword: 'candy',
+      startDate: '2001-01-01',
     });
 
     expect(result).toMatchObject([
       {
         caseCaption: 'Samson Workman, Petitioner',
-        caseId: '1',
         docketNumber: '103-19',
         docketNumberSuffix: 'AAA',
         documentContents:
@@ -69,7 +70,6 @@ describe('orderAdvancedSearchInteractor', () => {
       },
       {
         caseCaption: 'Samson Workman, Petitioner',
-        caseId: '2',
         docketNumber: '103-19',
         docketNumberSuffix: 'AAA',
         documentContents: 'KitKats are inferior candies',
@@ -86,13 +86,14 @@ describe('orderAdvancedSearchInteractor', () => {
     await orderAdvancedSearchInteractor({
       applicationContext,
       keyword,
+      startDate: '2001-01-01',
     });
 
     expect(
       applicationContext.getPersistenceGateway().advancedDocumentSearch.mock
         .calls[0][0],
     ).toMatchObject({
-      documentEventCodes: Document.ORDER_DOCUMENT_TYPES,
+      documentEventCodes: ORDER_EVENT_CODES,
     });
   });
 });

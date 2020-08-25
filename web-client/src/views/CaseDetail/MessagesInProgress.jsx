@@ -1,19 +1,20 @@
+import { Button } from '../../ustc-ui/Button/Button';
+import { MessagesRowAttachments } from '../Messages/MessagesRowAttachments';
 import { connect } from '@cerebral/react';
 import { state } from 'cerebral';
 import React from 'react';
 
 export const MessagesInProgress = connect(
   {
-    extractedPendingMessagesFromCaseDetail:
-      state.extractedPendingMessagesFromCaseDetail,
+    formattedInProgressMessages: state.formattedCaseMessages.inProgressMessages,
   },
-  function MessagesInProgress({ extractedPendingMessagesFromCaseDetail }) {
+  function MessagesInProgress({ formattedInProgressMessages }) {
     return (
       <>
-        {extractedPendingMessagesFromCaseDetail.length === 0 && (
-          <p className="heading-2 margin-bottom-10">There are no messages.</p>
+        {formattedInProgressMessages.length === 0 && (
+          <p className="margin-bottom-10">There are no messages.</p>
         )}
-        {extractedPendingMessagesFromCaseDetail.length > 0 && (
+        {formattedInProgressMessages.length > 0 && (
           <table className="usa-table row-border-only subsection messages">
             <thead>
               <tr>
@@ -21,31 +22,47 @@ export const MessagesInProgress = connect(
                 <th className="header-fixed-width">From</th>
                 <th className="header-fixed-width">Received</th>
                 <th>Message</th>
+                <th></th>
               </tr>
             </thead>
 
             <tbody>
-              {extractedPendingMessagesFromCaseDetail.map((workItem, idx) => (
+              {formattedInProgressMessages.map((message, idx) => (
                 <tr key={idx}>
                   <td className="responsive-title padding-extra">
-                    {workItem.assigneeName}
+                    {message.to}
                   </td>
-                  <td className="padding-extra">{workItem.messages[0].from}</td>
+                  <td className="padding-extra">{message.from}</td>
                   <td className="padding-extra">
                     <span className="no-wrap">
-                      {workItem.messages[0].createdAtTimeFormattedTZ}
+                      {message.createdAtFormatted}
                     </span>
                   </td>
                   <td className="padding-extra">
-                    <p className="margin-y-0">
-                      <a className="case-link" href={workItem.editLink}>
-                        {workItem.document.documentTitle ||
-                          workItem.document.documentType}
-                      </a>
-                    </p>
-                    <p className="message-detail margin-y-0">
-                      {workItem.messages[0].message}
-                    </p>
+                    <div className="message-document-title">
+                      <Button
+                        link
+                        className="padding-0"
+                        href={`/messages/${message.docketNumber}/message-detail/${message.parentMessageId}`}
+                      >
+                        {message.subject}
+                      </Button>
+                    </div>
+
+                    <div className="message-document-detail">
+                      {message.message}
+                    </div>
+                  </td>
+                  <td>
+                    {message.attachments.length === 0 && (
+                      <span>No attachments</span>
+                    )}
+                    {message.attachments.length > 0 && (
+                      <MessagesRowAttachments
+                        attachments={message.attachments}
+                        docketNumber={message.docketNumber}
+                      />
+                    )}
                   </td>
                 </tr>
               ))}

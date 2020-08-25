@@ -33,14 +33,14 @@ export const EligibleCases = connect(
         >
           <thead>
             <tr>
-              <th>Docket number</th>
+              <th aria-label="Docket Number">Docket No.</th>
               <th aria-label="manually added indicator"></th>
-              <th>Case title</th>
-              <th>Petitioner counsel</th>
-              <th>Respondent counsel</th>
-              <th>Case type</th>
+              <th>Case Title</th>
+              <th>Petitioner Counsel</th>
+              <th>Respondent Counsel</th>
+              <th>Case Type</th>
               {trialSessionDetailsHelper.showQcComplete && (
-                <th>QC complete?</th>
+                <th>QC Complete?</th>
               )}
             </tr>
           </thead>
@@ -77,12 +77,12 @@ export const EligibleCases = connect(
                           item.qcCompleteForTrial[trialSessionId] === true
                         }
                         className="usa-checkbox__input"
-                        id={`${item.caseId}-complete`}
-                        name={`${item.caseId}Complete`}
+                        id={`${item.docketNumber}-complete`}
+                        name={`${item.docketNumber}Complete`}
                         type="checkbox"
                         onChange={() => {
                           updateQcCompleteForTrialSequence({
-                            caseId: item.caseId,
+                            docketNumber: item.docketNumber,
                             qcCompleteForTrial: !item.qcCompleteForTrial[
                               trialSessionId
                             ],
@@ -91,7 +91,7 @@ export const EligibleCases = connect(
                       />
                       <label
                         className="usa-checkbox__label inline-block"
-                        htmlFor={`${item.caseId}-complete`}
+                        htmlFor={`${item.docketNumber}-complete`}
                       ></label>
                     </div>
                   </td>

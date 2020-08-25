@@ -1,9 +1,13 @@
-const joi = require('@hapi/joi');
+const joi = require('joi');
+const {
+  JoiValidationConstants,
+} = require('../../utilities/JoiValidationConstants');
 const {
   joiValidationDecorator,
 } = require('../../utilities/JoiValidationDecorator');
-const { SERVICE_INDICATOR_TYPES } = require('./cases/CaseConstants');
-const { User, userDecorator, userValidation } = require('./User');
+const { ROLES } = require('./EntityConstants');
+const { SERVICE_INDICATOR_TYPES } = require('./EntityConstants');
+const { userDecorator, userValidation } = require('./User');
 
 /**
  * constructor
@@ -16,23 +20,31 @@ function PrivatePractitioner(rawUser) {
   this.entityName = 'PrivatePractitioner';
   this.representingPrimary = rawUser.representingPrimary;
   this.representingSecondary = rawUser.representingSecondary;
+  this.representing = rawUser.representing || [];
   this.serviceIndicator =
     rawUser.serviceIndicator || SERVICE_INDICATOR_TYPES.SI_ELECTRONIC;
 }
 
+PrivatePractitioner.VALIDATION_RULES = joi.object().keys({
+  ...userValidation,
+  entityName: joi.string().valid('PrivatePractitioner').required(),
+  representing: joi
+    .array()
+    .items(JoiValidationConstants.UUID)
+    .optional()
+    .description('List of contact IDs of contacts'),
+  representingPrimary: joi.boolean().optional(),
+  representingSecondary: joi.boolean().optional(),
+  role: joi.string().required().valid(ROLES.privatePractitioner),
+  serviceIndicator: joi
+    .string()
+    .valid(...Object.values(SERVICE_INDICATOR_TYPES))
+    .required(),
+});
+
 joiValidationDecorator(
   PrivatePractitioner,
-  joi.object().keys({
-    ...userValidation,
-    entityName: joi.string().valid('PrivatePractitioner').required(),
-    representingPrimary: joi.boolean().optional(),
-    representingSecondary: joi.boolean().optional(),
-    role: joi.string().required().valid(User.ROLES.privatePractitioner),
-    serviceIndicator: joi
-      .string()
-      .valid(...Object.values(SERVICE_INDICATOR_TYPES))
-      .required(),
-  }),
+  PrivatePractitioner.VALIDATION_RULES,
   {},
 );
 

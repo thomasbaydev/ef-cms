@@ -20,6 +20,7 @@ const files = [
 ];
 
 for (const file of files) {
+  // eslint-disable-next-line security/detect-non-literal-require
   let json = require(file);
   const items = [];
   for (const item of json) {
@@ -30,7 +31,7 @@ for (const file of files) {
         items.push({
           ...record,
           docketRecordId,
-          pk: `case|${item.caseId}`,
+          pk: `case|${item.docketNumber}`,
           sk: `docket-record|${docketRecordId}`,
         });
       });

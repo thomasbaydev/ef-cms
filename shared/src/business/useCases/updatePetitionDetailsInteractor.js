@@ -4,6 +4,7 @@ const {
 } = require('../../authorization/authorizationClientService');
 const { Case } = require('../entities/cases/Case');
 const { DocketRecord } = require('../entities/DocketRecord');
+const { PAYMENT_STATUS } = require('../entities/EntityConstants');
 const { UnauthorizedError } = require('../../errors/errors');
 
 /**
@@ -11,13 +12,13 @@ const { UnauthorizedError } = require('../../errors/errors');
  *
  * @param {object} providers the providers object
  * @param {object} providers.applicationContext the application context
- * @param {string} providers.caseId the id of the case to update
+ * @param {string} providers.docketNumber the docket number of the case to update
  * @param {object} providers.petitionDetails the petition details to update on the case
  * @returns {object} the updated case data
  */
 exports.updatePetitionDetailsInteractor = async ({
   applicationContext,
-  caseId,
+  docketNumber,
   petitionDetails,
 }) => {
   const user = applicationContext.getCurrentUser();
@@ -39,12 +40,11 @@ exports.updatePetitionDetailsInteractor = async ({
 
   const oldCase = await applicationContext
     .getPersistenceGateway()
-    .getCaseByCaseId({ applicationContext, caseId });
+    .getCaseByDocketNumber({ applicationContext, docketNumber });
 
-  const isPaid =
-    editableFields.petitionPaymentStatus === Case.PAYMENT_STATUS.PAID;
+  const isPaid = editableFields.petitionPaymentStatus === PAYMENT_STATUS.PAID;
   const isWaived =
-    editableFields.petitionPaymentStatus === Case.PAYMENT_STATUS.WAIVED;
+    editableFields.petitionPaymentStatus === PAYMENT_STATUS.WAIVED;
 
   const newCase = new Case(
     {
@@ -61,7 +61,7 @@ exports.updatePetitionDetailsInteractor = async ({
     { applicationContext },
   );
 
-  if (oldCase.petitionPaymentStatus === Case.PAYMENT_STATUS.UNPAID) {
+  if (oldCase.petitionPaymentStatus === PAYMENT_STATUS.UNPAID) {
     if (isPaid) {
       newCase.addDocketRecord(
         new DocketRecord(

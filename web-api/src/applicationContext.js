@@ -1,19 +1,11 @@
 /* eslint-disable security/detect-object-injection, security/detect-child-process, spellcheck/spell-checker */
-const AWSXRay = require('aws-xray-sdk');
-const Honeybadger = require('honeybadger'); // node version
-
-const AWS =
-  process.env.NODE_ENV === 'production'
-    ? AWSXRay.captureAWS(require('aws-sdk'))
-    : require('aws-sdk');
-
-const { getUniqueId } = require('../../shared/src/sharedAppContext.js');
-
+const AWS = require('aws-sdk');
 const barNumberGenerator = require('../../shared/src/persistence/dynamo/users/barNumberGenerator');
 const connectionClass = require('http-aws-es');
 const docketNumberGenerator = require('../../shared/src/persistence/dynamo/cases/docketNumberGenerator');
 const elasticsearch = require('elasticsearch');
-const elasticsearchIndexes = require('../elasticsearch/elasticsearch-indexes');
+const Honeybadger = require('honeybadger');
+const pdfLib = require('pdf-lib');
 const util = require('util');
 const {
   addCaseToTrialSessionInteractor,
@@ -31,8 +23,11 @@ const {
   addressLabelCoverSheet,
   caseInventoryReport,
   changeOfAddress,
+  coverSheet,
   docketRecord,
   noticeOfDocketChange,
+  noticeOfReceiptOfPetition,
+  noticeOfTrialIssued,
   order,
   pendingReport,
   receiptOfFiling,
@@ -41,6 +36,9 @@ const {
   trialCalendar,
   trialSessionPlanningReport,
 } = require('../../shared/src/business/utilities/documentGenerators');
+const {
+  addServedStampToDocument,
+} = require('../../shared/src/business/useCases/courtIssuedDocument/addServedStampToDocument');
 const {
   addWorkItemToSectionInbox,
 } = require('../../shared/src/persistence/dynamo/workitems/addWorkItemToSectionInbox');
@@ -75,8 +73,15 @@ const {
   blockCaseFromTrialInteractor,
 } = require('../../shared/src/business/useCases/blockCaseFromTrialInteractor');
 const {
+  bulkDeleteRecords,
+} = require('../../shared/src/persistence/elasticsearch/bulkDeleteRecords');
+const {
   bulkIndexRecords,
 } = require('../../shared/src/persistence/elasticsearch/bulkIndexRecords');
+const {
+  CASE_STATUS_TYPES,
+  SESSION_STATUS_GROUPS,
+} = require('../../shared/src/business/entities/EntityConstants');
 const {
   caseAdvancedSearch,
 } = require('../../shared/src/persistence/elasticsearch/caseAdvancedSearch');
@@ -104,6 +109,9 @@ const {
 const {
   completeDocketEntryQCInteractor,
 } = require('../../shared/src/business/useCases/editDocketEntry/completeDocketEntryQCInteractor');
+const {
+  completeMessageInteractor,
+} = require('../../shared/src/business/useCases/messages/completeMessageInteractor');
 const {
   completeWorkItemInteractor,
 } = require('../../shared/src/business/useCases/workitems/completeWorkItemInteractor');
@@ -144,6 +152,15 @@ const {
   prepareDateFromString,
 } = require('../../shared/src/business/utilities/DateHandler');
 const {
+  createMessage,
+} = require('../../shared/src/persistence/dynamo/messages/createMessage');
+const {
+  createMessageInteractor,
+} = require('../../shared/src/business/useCases/messages/createMessageInteractor');
+const {
+  createPetitionerAccountInteractor,
+} = require('../../shared/src/business/useCases/users/createPetitionerAccountInteractor');
+const {
   createPractitionerUser,
 } = require('../../shared/src/persistence/dynamo/users/createPractitionerUser');
 const {
@@ -171,11 +188,8 @@ const {
   createUserInteractor,
 } = require('../../shared/src/business/useCases/users/createUserInteractor');
 const {
-  createWorkItem,
-} = require('../../shared/src/persistence/dynamo/workitems/createWorkItem');
-const {
-  createWorkItemInteractor,
-} = require('../../shared/src/business/useCases/workitems/createWorkItemInteractor');
+  deleteCaseByDocketNumber,
+} = require('../../shared/src/persistence/dynamo/cases/deleteCaseByDocketNumber');
 const {
   deleteCaseCorrespondence,
 } = require('../../shared/src/persistence/dynamo/correspondence/deleteCaseCorrespondence');
@@ -202,10 +216,19 @@ const {
 } = require('../../shared/src/business/useCases/caseStatistics/deleteDeficiencyStatisticInteractor');
 const {
   deleteDocument,
-} = require('../../shared/src/persistence/s3/deleteDocument');
+} = require('../../shared/src/persistence/dynamo/documents/deleteDocument');
+const {
+  deleteDocumentFromS3,
+} = require('../../shared/src/persistence/s3/deleteDocumentFromS3');
+const {
+  deleteDocumentInteractor,
+} = require('../../shared/src/business/useCases/deleteDocumentInteractor');
 const {
   deleteElasticsearchReindexRecord,
 } = require('../../shared/src/persistence/dynamo/elasticsearch/deleteElasticsearchReindexRecord');
+const {
+  deleteRecord,
+} = require('../../shared/src/persistence/elasticsearch/deleteRecord');
 const {
   deleteSectionOutboxRecord,
 } = require('../../shared/src/persistence/dynamo/workitems/deleteSectionOutboxRecord');
@@ -240,6 +263,9 @@ const {
   deleteWorkItemFromSection,
 } = require('../../shared/src/persistence/dynamo/workitems/deleteWorkItemFromSection');
 const {
+  elasticsearchIndexes,
+} = require('../elasticsearch/elasticsearch-indexes');
+const {
   fetchPendingItems,
 } = require('../../shared/src/business/useCaseHelper/pendingItems/fetchPendingItems');
 const {
@@ -270,28 +296,26 @@ const {
   fileExternalDocumentInteractor,
 } = require('../../shared/src/business/useCases/externalDocument/fileExternalDocumentInteractor');
 const {
+  formatAndSortConsolidatedCases,
+} = require('../../shared/src/business/useCaseHelper/consolidatedCases/formatAndSortConsolidatedCases');
+const {
   formatJudgeName,
 } = require('../../shared/src/business/utilities/getFormattedJudgeName');
 const {
-  forwardWorkItemInteractor,
-} = require('../../shared/src/business/useCases/workitems/forwardWorkItemInteractor');
-const {
-  generateCaseConfirmationPdf,
-} = require('../../shared/src/business/useCaseHelper/caseConfirmation/generateCaseConfirmationPdf');
+  forwardMessageInteractor,
+} = require('../../shared/src/business/useCases/messages/forwardMessageInteractor');
 const {
   generateCaseInventoryReportPdf,
 } = require('../../shared/src/business/useCaseHelper/caseInventoryReport/generateCaseInventoryReportPdf');
-const {
-  generateChangeOfAddressTemplate,
-  generateNoticeOfTrialIssuedTemplate,
-  generatePrintableDocketRecordTemplate,
-} = require('../../shared/src/business/utilities/generateHTMLTemplateForPDF/');
 const {
   generateDocketRecordPdfInteractor,
 } = require('../../shared/src/business/useCases/generateDocketRecordPdfInteractor');
 const {
   generateNoticeOfTrialIssuedInteractor,
 } = require('../../shared/src/business/useCases/trialSessions/generateNoticeOfTrialIssuedInteractor');
+const {
+  generateNoticeOfTrialIssuedTemplate,
+} = require('../../shared/src/business/utilities/generateHTMLTemplateForPDF/');
 const {
   generatePdfFromHtmlInteractor,
 } = require('../../shared/src/business/useCases/generatePdfFromHtmlInteractor');
@@ -321,7 +345,7 @@ const {
 } = require('../../shared/src/persistence/dynamo/caseDeadlines/getAllCaseDeadlines');
 const {
   getAllCaseDeadlinesInteractor,
-} = require('../../shared/src/business/useCases/caseDeadline/getAllCaseDeadlinesInteractor');
+} = require('../../shared/src/business/useCases/getAllCaseDeadlinesInteractor');
 const {
   getAllCatalogCases,
 } = require('../../shared/src/persistence/dynamo/cases/getAllCatalogCases');
@@ -338,14 +362,11 @@ const {
   getCalendaredCasesForTrialSessionInteractor,
 } = require('../../shared/src/business/useCases/trialSessions/getCalendaredCasesForTrialSessionInteractor');
 const {
-  getCaseByCaseId,
-} = require('../../shared/src/persistence/dynamo/cases/getCaseByCaseId');
-const {
   getCaseByDocketNumber,
 } = require('../../shared/src/persistence/dynamo/cases/getCaseByDocketNumber');
 const {
-  getCaseDeadlinesByCaseId,
-} = require('../../shared/src/persistence/dynamo/caseDeadlines/getCaseDeadlinesByCaseId');
+  getCaseDeadlinesByDocketNumber,
+} = require('../../shared/src/persistence/dynamo/caseDeadlines/getCaseDeadlinesByDocketNumber');
 const {
   getCaseDeadlinesForCaseInteractor,
 } = require('../../shared/src/business/useCases/caseDeadline/getCaseDeadlinesForCaseInteractor');
@@ -362,11 +383,11 @@ const {
   getCaseInventoryReportInteractor,
 } = require('../../shared/src/business/useCases/caseInventoryReport/getCaseInventoryReportInteractor');
 const {
-  getCasesByCaseIds,
-} = require('../../shared/src/persistence/dynamo/cases/getCasesByCaseIds');
+  getCasesByDocketNumbers,
+} = require('../../shared/src/persistence/dynamo/cases/getCasesByDocketNumbers');
 const {
-  getCasesByLeadCaseId,
-} = require('../../shared/src/persistence/dynamo/cases/getCasesByLeadCaseId');
+  getCasesByLeadDocketNumber,
+} = require('../../shared/src/persistence/dynamo/cases/getCasesByLeadDocketNumber');
 const {
   getCasesByUser,
 } = require('../../shared/src/persistence/dynamo/cases/getCasesByUser');
@@ -377,11 +398,29 @@ const {
   getChromiumBrowser,
 } = require('../../shared/src/business/utilities/getChromiumBrowser');
 const {
+  getClosedCasesByUser,
+} = require('../../shared/src/persistence/dynamo/cases/getClosedCasesByUser');
+const {
+  getClosedCasesInteractor,
+} = require('../../shared/src/business/useCases/getClosedCasesInteractor');
+const {
+  getCompletedMessagesForSectionInteractor,
+} = require('../../shared/src/business/useCases/messages/getCompletedMessagesForSectionInteractor');
+const {
+  getCompletedMessagesForUserInteractor,
+} = require('../../shared/src/business/useCases/messages/getCompletedMessagesForUserInteractor');
+const {
+  getCompletedSectionInboxMessages,
+} = require('../../shared/src/persistence/elasticsearch/messages/getCompletedSectionInboxMessages');
+const {
+  getCompletedUserInboxMessages,
+} = require('../../shared/src/persistence/elasticsearch/messages/getCompletedUserInboxMessages');
+const {
   getConsolidatedCasesByCaseInteractor,
 } = require('../../shared/src/business/useCases/getConsolidatedCasesByCaseInteractor');
 const {
-  getConsolidatedCasesByUserInteractor,
-} = require('../../shared/src/business/useCases/getConsolidatedCasesByUserInteractor');
+  getConsolidatedCasesForLeadCase,
+} = require('../../shared/src/business/useCaseHelper/consolidatedCases/getConsolidatedCasesForLeadCase');
 const {
   getDocumentQCInboxForSection,
 } = require('../../shared/src/persistence/dynamo/workitems/getDocumentQCInboxForSection');
@@ -431,17 +470,14 @@ const {
   getFormattedCaseDetail,
 } = require('../../shared/src/business/utilities/getFormattedCaseDetail');
 const {
-  getInboxMessagesForSection,
-} = require('../../shared/src/persistence/dynamo/workitems/getInboxMessagesForSection');
-const {
   getInboxMessagesForSectionInteractor,
-} = require('../../shared/src/business/useCases/workitems/getInboxMessagesForSectionInteractor');
-const {
-  getInboxMessagesForUser,
-} = require('../../shared/src/persistence/dynamo/workitems/getInboxMessagesForUser');
+} = require('../../shared/src/business/useCases/messages/getInboxMessagesForSectionInteractor');
 const {
   getInboxMessagesForUserInteractor,
-} = require('../../shared/src/business/useCases/workitems/getInboxMessagesForUserInteractor');
+} = require('../../shared/src/business/useCases/messages/getInboxMessagesForUserInteractor');
+const {
+  getIndexedCasesForUser,
+} = require('../../shared/src/persistence/elasticsearch/getIndexedCasesForUser');
 const {
   getIndexMappingFields,
 } = require('../../shared/src/persistence/elasticsearch/getIndexMappingFields');
@@ -464,14 +500,32 @@ const {
   getJudgesForPublicSearchInteractor,
 } = require('../../shared/src/business/useCases/public/getJudgesForPublicSearchInteractor');
 const {
+  getMessagesByDocketNumber,
+} = require('../../shared/src/persistence/dynamo/messages/getMessagesByDocketNumber');
+const {
+  getMessagesForCaseInteractor,
+} = require('../../shared/src/business/useCases/messages/getMessagesForCaseInteractor');
+const {
+  getMessageThreadByParentId,
+} = require('../../shared/src/persistence/dynamo/messages/getMessageThreadByParentId');
+const {
+  getMessageThreadInteractor,
+} = require('../../shared/src/business/useCases/messages/getMessageThreadInteractor');
+const {
   getNotificationsInteractor,
 } = require('../../shared/src/business/useCases/getNotificationsInteractor');
 const {
   getOpenCasesByUser,
 } = require('../../shared/src/persistence/dynamo/cases/getOpenCasesByUser');
 const {
-  getOpenCasesInteractor,
-} = require('../../shared/src/business/useCases/getOpenCasesInteractor');
+  getOpenConsolidatedCasesInteractor,
+} = require('../../shared/src/business/useCases/getOpenConsolidatedCasesInteractor');
+const {
+  getOutboxMessagesForSectionInteractor,
+} = require('../../shared/src/business/useCases/messages/getOutboxMessagesForSectionInteractor');
+const {
+  getOutboxMessagesForUserInteractor,
+} = require('../../shared/src/business/useCases/messages/getOutboxMessagesForUserInteractor');
 const {
   getPractitionerByBarNumber,
 } = require('../../shared/src/persistence/dynamo/users/getPractitionerByBarNumber');
@@ -500,17 +554,14 @@ const {
   getRecord,
 } = require('../../shared/src/persistence/dynamo/elasticsearch/getRecord');
 const {
-  getSentMessagesForSection,
-} = require('../../shared/src/persistence/dynamo/workitems/getSentMessagesForSection');
+  getSectionInboxMessages,
+} = require('../../shared/src/persistence/elasticsearch/messages/getSectionInboxMessages');
 const {
-  getSentMessagesForSectionInteractor,
-} = require('../../shared/src/business/useCases/workitems/getSentMessagesForSectionInteractor');
+  getSectionOutboxMessages,
+} = require('../../shared/src/persistence/elasticsearch/messages/getSectionOutboxMessages');
 const {
-  getSentMessagesForUser,
-} = require('../../shared/src/persistence/dynamo/workitems/getSentMessagesForUser');
-const {
-  getSentMessagesForUserInteractor,
-} = require('../../shared/src/business/useCases/workitems/getSentMessagesForUserInteractor');
+  getTodaysOpinionsInteractor,
+} = require('../../shared/src/business/useCases/public/getTodaysOpinionsInteractor');
 const {
   getTrialSessionById,
 } = require('../../shared/src/persistence/dynamo/trialSessions/getTrialSessionById');
@@ -529,6 +580,9 @@ const {
 const {
   getTrialSessionWorkingCopyInteractor,
 } = require('../../shared/src/business/useCases/trialSessions/getTrialSessionWorkingCopyInteractor');
+const {
+  getUnassociatedLeadCase,
+} = require('../../shared/src/business/useCaseHelper/consolidatedCases/getUnassociatedLeadCase');
 const {
   getUploadPolicy,
 } = require('../../shared/src/persistence/s3/getUploadPolicy');
@@ -554,11 +608,17 @@ const {
   getUserCaseNoteInteractor,
 } = require('../../shared/src/business/useCases/caseNote/getUserCaseNoteInteractor');
 const {
-  getUserDashboardCases,
-} = require('../../shared/src/persistence/dynamo/cases/getUserDashboardCases');
+  getUserCases,
+} = require('../../shared/src/persistence/dynamo/cases/getUserCases');
+const {
+  getUserInboxMessages,
+} = require('../../shared/src/persistence/elasticsearch/messages/getUserInboxMessages');
 const {
   getUserInteractor,
 } = require('../../shared/src/business/useCases/getUserInteractor');
+const {
+  getUserOutboxMessages,
+} = require('../../shared/src/persistence/elasticsearch/messages/getUserOutboxMessages');
 const {
   getUsersBySearchKey,
 } = require('../../shared/src/persistence/dynamo/users/getUsersBySearchKey');
@@ -591,11 +651,16 @@ const {
 } = require('../../shared/src/business/entities/IrsPractitioner');
 const {
   isAuthorized,
-  ROLE_PERMISSIONS,
 } = require('../../shared/src/authorization/authorizationClientService');
 const {
   isFileExists,
 } = require('../../shared/src/persistence/s3/isFileExists');
+const {
+  markMessageThreadRepliedTo,
+} = require('../../shared/src/persistence/dynamo/messages/markMessageThreadRepliedTo');
+const {
+  migrateCaseDeadlineInteractor,
+} = require('../../shared/src/business/useCases/migrateCaseDeadlineInteractor');
 const {
   migrateCaseInteractor,
 } = require('../../shared/src/business/useCases/migrateCaseInteractor');
@@ -612,11 +677,17 @@ const {
   opinionPublicSearchInteractor,
 } = require('../../shared/src/business/useCases/public/opinionPublicSearchInteractor');
 const {
+  ORDER_TYPES,
+} = require('../../shared/src/business/entities/EntityConstants');
+const {
   orderAdvancedSearchInteractor,
 } = require('../../shared/src/business/useCases/orderAdvancedSearchInteractor');
 const {
   orderPublicSearchInteractor,
 } = require('../../shared/src/business/useCases/public/orderPublicSearchInteractor');
+const {
+  persistUser,
+} = require('../../shared/src/persistence/dynamo/users/persistUser');
 const {
   Practitioner,
 } = require('../../shared/src/business/entities/Practitioner');
@@ -629,6 +700,9 @@ const {
 const {
   processStreamRecordsInteractor,
 } = require('../../shared/src/business/useCases/processStreamRecordsInteractor');
+const {
+  processUserAssociatedCases,
+} = require('../../shared/src/business/useCaseHelper/consolidatedCases/processUserAssociatedCases');
 const {
   putWorkItemInOutbox,
 } = require('../../shared/src/persistence/dynamo/workitems/putWorkItemInOutbox');
@@ -644,6 +718,12 @@ const {
 const {
   removeConsolidatedCasesInteractor,
 } = require('../../shared/src/business/useCases/caseConsolidation/removeConsolidatedCasesInteractor');
+const {
+  removeSignatureFromDocumentInteractor,
+} = require('../../shared/src/business/useCases/removeSignatureFromDocumentInteractor');
+const {
+  replyToMessageInteractor,
+} = require('../../shared/src/business/useCases/messages/replyToMessageInteractor');
 const {
   reprocessFailedRecordsInteractor,
 } = require('../../shared/src/business/useCases/reprocessFailedRecordsInteractor');
@@ -672,8 +752,8 @@ const {
   saveWorkItemForDocketClerkFilingExternalDocument,
 } = require('../../shared/src/persistence/dynamo/workitems/saveWorkItemForDocketClerkFilingExternalDocument');
 const {
-  saveWorkItemForDocketEntryWithoutFile,
-} = require('../../shared/src/persistence/dynamo/workitems/saveWorkItemForDocketEntryWithoutFile');
+  saveWorkItemForDocketEntryInProgress,
+} = require('../../shared/src/persistence/dynamo/workitems/saveWorkItemForDocketEntryInProgress');
 const {
   saveWorkItemForNonPaper,
 } = require('../../shared/src/persistence/dynamo/workitems/saveWorkItemForNonPaper');
@@ -705,6 +785,9 @@ const {
   serveCourtIssuedDocumentInteractor,
 } = require('../../shared/src/business/useCases/courtIssuedDocument/serveCourtIssuedDocumentInteractor');
 const {
+  serveExternallyFiledDocumentInteractor,
+} = require('../../shared/src/business/useCases/document/serveExternallyFiledDocumentInteractor');
+const {
   setNoticesForCalendaredTrialSessionInteractor,
 } = require('../../shared/src/business/useCases/trialSessions/setNoticesForCalendaredTrialSessionInteractor');
 const {
@@ -731,9 +814,6 @@ const {
 const {
   submitPendingCaseAssociationRequestInteractor,
 } = require('../../shared/src/business/useCases/caseAssociationRequest/submitPendingCaseAssociationRequestInteractor');
-const {
-  TrialSession,
-} = require('../../shared/src/business/entities/trialSessions/TrialSession');
 const {
   unblockCaseFromTrialInteractor,
 } = require('../../shared/src/business/useCases/unblockCaseFromTrialInteractor');
@@ -794,6 +874,12 @@ const {
 const {
   updateHighPriorityCaseTrialSortMappingRecords,
 } = require('../../shared/src/persistence/dynamo/cases/updateHighPriorityCaseTrialSortMappingRecords');
+const {
+  updateInitialFilingDocuments,
+} = require('../../shared/src/business/useCaseHelper/initialFilingDocuments/updateInitialFilingDocuments');
+const {
+  updateMessage,
+} = require('../../shared/src/persistence/dynamo/messages/updateMessage');
 const {
   updateOtherStatisticsInteractor,
 } = require('../../shared/src/business/useCases/caseStatistics/updateOtherStatisticsInteractor');
@@ -873,11 +959,8 @@ const { Case } = require('../../shared/src/business/entities/cases/Case');
 const { Document } = require('../../shared/src/business/entities/Document');
 const { exec } = require('child_process');
 const { getDocument } = require('../../shared/src/persistence/s3/getDocument');
-const { Order } = require('../../shared/src/business/entities/orders/Order');
+const { getUniqueId } = require('../../shared/src/sharedAppContext.js');
 const { User } = require('../../shared/src/business/entities/User');
-
-const pdfLib = require('pdf-lib');
-
 const { v4: uuidv4 } = require('uuid');
 
 // increase the timeout for zip uploads to S3
@@ -957,8 +1040,8 @@ const entitiesByName = {
   User,
 };
 
-module.exports = (appContextUser = {}) => {
-  setCurrentUser(appContextUser);
+module.exports = appContextUser => {
+  if (appContextUser) setCurrentUser(appContextUser);
 
   return {
     barNumberGenerator,
@@ -993,8 +1076,11 @@ module.exports = (appContextUser = {}) => {
     },
     getConstants: () => ({
       CASE_INVENTORY_MAX_PAGE_SIZE: 5000,
-      ORDER_TYPES_MAP: Order.ORDER_TYPES,
-      SESSION_STATUS_GROUPS: TrialSession.SESSION_STATUS_GROUPS,
+      OPEN_CASE_STATUSES: Object.values(CASE_STATUS_TYPES).filter(
+        status => status !== CASE_STATUS_TYPES.closed,
+      ),
+      ORDER_TYPES_MAP: ORDER_TYPES,
+      SESSION_STATUS_GROUPS,
     }),
     getCurrentUser,
     getDispatchers: () => ({
@@ -1005,8 +1091,11 @@ module.exports = (appContextUser = {}) => {
       addressLabelCoverSheet,
       caseInventoryReport,
       changeOfAddress,
+      coverSheet,
       docketRecord,
       noticeOfDocketChange,
+      noticeOfReceiptOfPetition,
+      noticeOfTrialIssued,
       order,
       pendingReport,
       receiptOfFiling,
@@ -1058,6 +1147,7 @@ module.exports = (appContextUser = {}) => {
     },
     getIrsSuperuserEmail: () => process.env.IRS_SUPERUSER_EMAIL,
     getMigrations: () => ({
+      migrateCaseDeadlineInteractor,
       migrateCaseInteractor,
     }),
     getNodeSass: () => {
@@ -1082,9 +1172,10 @@ module.exports = (appContextUser = {}) => {
     getNotificationGateway: () => ({
       sendNotificationToUser,
     }),
-    getPdfJs: () => {
+    getPdfJs: async () => {
       const pdfjsLib = require('pdfjs-dist');
       pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+
       return pdfjsLib;
     },
     getPdfLib: () => {
@@ -1096,6 +1187,7 @@ module.exports = (appContextUser = {}) => {
         advancedDocumentSearch,
         associateUserWithCase,
         associateUserWithCasePending,
+        bulkDeleteRecords,
         bulkIndexRecords,
         caseAdvancedSearch,
         casePublicSearch: casePublicSearchPersistence,
@@ -1104,18 +1196,21 @@ module.exports = (appContextUser = {}) => {
         createCaseDeadline,
         createCaseTrialSortMappingRecords,
         createElasticsearchReindexRecord,
+        createMessage,
         createPractitionerUser,
         createSectionInboxRecord,
         createTrialSession,
         createTrialSessionWorkingCopy,
         createUser,
         createUserInboxRecord,
-        createWorkItem,
+        deleteCaseByDocketNumber,
         deleteCaseCorrespondence,
         deleteCaseDeadline,
         deleteCaseTrialSortMappingRecords,
         deleteDocument,
+        deleteDocumentFromS3,
         deleteElasticsearchReindexRecord,
+        deleteRecord,
         deleteSectionOutboxRecord,
         deleteTrialSession,
         deleteTrialSessionWorkingCopy,
@@ -1131,13 +1226,15 @@ module.exports = (appContextUser = {}) => {
         getAllCatalogCases,
         getBlockedCases,
         getCalendaredCasesForTrialSession,
-        getCaseByCaseId,
         getCaseByDocketNumber,
-        getCaseDeadlinesByCaseId,
+        getCaseDeadlinesByDocketNumber,
         getCaseInventoryReport,
-        getCasesByCaseIds,
-        getCasesByLeadCaseId,
+        getCasesByDocketNumbers,
+        getCasesByLeadDocketNumber,
         getCasesByUser,
+        getClosedCasesByUser,
+        getCompletedSectionInboxMessages,
+        getCompletedUserInboxMessages,
         getDocument,
         getDocumentQCInboxForSection,
         getDocumentQCInboxForUser,
@@ -1147,18 +1244,19 @@ module.exports = (appContextUser = {}) => {
         getElasticsearchReindexRecords,
         getEligibleCasesForTrialCity,
         getEligibleCasesForTrialSession,
-        getInboxMessagesForSection,
-        getInboxMessagesForUser,
         getIndexMappingFields,
         getIndexMappingLimit,
+        getIndexedCasesForUser,
         getInternalUsers,
+        getMessageThreadByParentId,
+        getMessagesByDocketNumber,
         getOpenCasesByUser,
         getPractitionerByBarNumber,
         getPractitionersByName,
         getPublicDownloadPolicyUrl,
         getRecord,
-        getSentMessagesForSection,
-        getSentMessagesForUser,
+        getSectionInboxMessages,
+        getSectionOutboxMessages,
         getTrialSessionById,
         getTrialSessionWorkingCopy,
         getTrialSessions,
@@ -1166,7 +1264,9 @@ module.exports = (appContextUser = {}) => {
         getUserById,
         getUserCaseNote,
         getUserCaseNoteForCases,
-        getUserDashboardCases,
+        getUserCases,
+        getUserInboxMessages,
+        getUserOutboxMessages,
         getUsersBySearchKey,
         getUsersInSection,
         getWebSocketConnectionByConnectionId,
@@ -1175,12 +1275,14 @@ module.exports = (appContextUser = {}) => {
         incrementCounter,
         indexRecord,
         isFileExists,
+        markMessageThreadRepliedTo,
+        persistUser,
         putWorkItemInOutbox,
         putWorkItemInUsersOutbox,
         saveDocumentFromLambda,
         saveUserConnection,
         saveWorkItemForDocketClerkFilingExternalDocument,
-        saveWorkItemForDocketEntryWithoutFile,
+        saveWorkItemForDocketEntryInProgress,
         saveWorkItemForNonPaper,
         saveWorkItemForPaper,
         setPriorityOnAllWorkItems,
@@ -1192,6 +1294,7 @@ module.exports = (appContextUser = {}) => {
         updateDocument,
         updateDocumentProcessingStatus,
         updateHighPriorityCaseTrialSortMappingRecords,
+        updateMessage,
         updatePractitionerUser,
         updateTrialSession,
         updateTrialSessionWorkingCopy,
@@ -1253,27 +1356,29 @@ module.exports = (appContextUser = {}) => {
     getTempDocumentsBucketName: () => {
       return environment.tempDocumentsBucketName;
     },
-    // TODO: replace external calls to environment
     getTemplateGenerators: () => {
       return {
-        generateChangeOfAddressTemplate,
         generateNoticeOfTrialIssuedTemplate,
-        generatePrintableDocketRecordTemplate,
       };
     },
     getUniqueId,
     getUseCaseHelpers: () => {
       return {
+        addServedStampToDocument,
         appendPaperServiceAddressPageToPdf,
         countPagesInDocument,
         fetchPendingItems,
-        generateCaseConfirmationPdf,
+        formatAndSortConsolidatedCases,
         generateCaseInventoryReportPdf,
         getCaseInventoryReport,
+        getConsolidatedCasesForLeadCase,
+        getUnassociatedLeadCase,
+        processUserAssociatedCases,
         saveFileAndGenerateUrl,
         sendIrsSuperuserPetitionEmail,
         sendServedPartiesEmails,
         updateCaseAutomaticBlock,
+        updateInitialFilingDocuments,
       };
     },
     getUseCases: () => {
@@ -1292,20 +1397,23 @@ module.exports = (appContextUser = {}) => {
         casePublicSearchInteractor,
         checkForReadyForTrialCasesInteractor,
         completeDocketEntryQCInteractor,
+        completeMessageInteractor,
         completeWorkItemInteractor,
         createCaseDeadlineInteractor,
         createCaseFromPaperInteractor,
         createCaseInteractor,
         createCourtIssuedOrderPdfFromHtmlInteractor,
+        createMessageInteractor,
+        createPetitionerAccountInteractor,
         createPractitionerUserInteractor,
         createTrialSessionInteractor,
         createUserInteractor,
-        createWorkItemInteractor,
         deleteCaseDeadlineInteractor,
         deleteCaseNoteInteractor,
         deleteCorrespondenceDocumentInteractor,
         deleteCounselFromCaseInteractor,
         deleteDeficiencyStatisticInteractor,
+        deleteDocumentInteractor,
         deleteTrialSessionInteractor,
         deleteUserCaseNoteInteractor,
         fetchPendingItemsInteractor,
@@ -1315,7 +1423,7 @@ module.exports = (appContextUser = {}) => {
         fileDocketEntryInteractor,
         fileExternalDocumentForConsolidatedInteractor,
         fileExternalDocumentInteractor,
-        forwardWorkItemInteractor,
+        forwardMessageInteractor,
         generateDocketRecordPdfInteractor,
         generateNoticeOfTrialIssuedInteractor,
         generatePDFFromJPGDataInteractor,
@@ -1334,8 +1442,10 @@ module.exports = (appContextUser = {}) => {
         getCaseInteractor,
         getCaseInventoryReportInteractor,
         getCasesByUserInteractor,
+        getClosedCasesInteractor,
+        getCompletedMessagesForSectionInteractor,
+        getCompletedMessagesForUserInteractor,
         getConsolidatedCasesByCaseInteractor,
-        getConsolidatedCasesByUserInteractor,
         getDocumentQCInboxForSectionInteractor,
         getDocumentQCInboxForUserInteractor,
         getDocumentQCServedForSectionInteractor,
@@ -1348,15 +1458,18 @@ module.exports = (appContextUser = {}) => {
         getIrsPractitionersBySearchKeyInteractor,
         getJudgeForUserChambersInteractor,
         getJudgesForPublicSearchInteractor,
+        getMessageThreadInteractor,
+        getMessagesForCaseInteractor,
         getNotificationsInteractor,
-        getOpenCasesInteractor,
+        getOpenConsolidatedCasesInteractor,
+        getOutboxMessagesForSectionInteractor,
+        getOutboxMessagesForUserInteractor,
         getPractitionerByBarNumberInteractor,
         getPractitionersByNameInteractor,
         getPrivatePractitionersBySearchKeyInteractor,
         getPublicCaseInteractor,
         getPublicDownloadPolicyUrlInteractor,
-        getSentMessagesForSectionInteractor,
-        getSentMessagesForUserInteractor,
+        getTodaysOpinionsInteractor,
         getTrialSessionDetailsInteractor,
         getTrialSessionWorkingCopyInteractor,
         getTrialSessionsInteractor,
@@ -1378,6 +1491,8 @@ module.exports = (appContextUser = {}) => {
         removeCaseFromTrialInteractor,
         removeCasePendingItemInteractor,
         removeConsolidatedCasesInteractor,
+        removeSignatureFromDocumentInteractor,
+        replyToMessageInteractor,
         reprocessFailedRecordsInteractor,
         runTrialSessionPlanningReportInteractor,
         saveCaseDetailInternalEditInteractor,
@@ -1386,6 +1501,7 @@ module.exports = (appContextUser = {}) => {
         sealCaseInteractor,
         serveCaseToIrsInteractor,
         serveCourtIssuedDocumentInteractor,
+        serveExternallyFiledDocumentInteractor,
         setNoticesForCalendaredTrialSessionInteractor,
         setTrialSessionAsSwingSessionInteractor,
         setTrialSessionCalendarInteractor,
@@ -1442,12 +1558,10 @@ module.exports = (appContextUser = {}) => {
     },
     initHoneybadger,
     isAuthorized,
-    isAuthorizedForWorkItems: () =>
-      isAuthorized(user, ROLE_PERMISSIONS.WORKITEM),
     logger: {
       error: value => {
         // eslint-disable-next-line no-console
-        console.error(JSON.stringify(value));
+        console.error(value);
       },
       info: (key, value) => {
         // eslint-disable-next-line no-console
@@ -1462,7 +1576,7 @@ module.exports = (appContextUser = {}) => {
         console.timeEnd(key);
       },
     },
-    notifyHoneybadger: async message => {
+    notifyHoneybadger: async (message, context) => {
       const honeybadger = initHoneybadger();
 
       const notifyAsync = message => {
@@ -1472,6 +1586,19 @@ module.exports = (appContextUser = {}) => {
       };
 
       if (honeybadger) {
+        const { role, userId } = getCurrentUser() || {};
+
+        const errorContext = {
+          role,
+          userId,
+        };
+
+        if (context) {
+          Object.assign(errorContext, context);
+        }
+
+        honeybadger.setContext(errorContext);
+
         await notifyAsync(message);
       }
     },

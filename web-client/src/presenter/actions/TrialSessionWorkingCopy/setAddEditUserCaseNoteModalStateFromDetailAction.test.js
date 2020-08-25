@@ -6,6 +6,8 @@ import { setAddEditUserCaseNoteModalStateFromDetailAction } from './setAddEditUs
 describe('setAddEditUserCaseNoteModalStateFromDetailAction', () => {
   presenter.providers.applicationContext = applicationContext;
 
+  const { DOCKET_NUMBER_SUFFIXES } = applicationContext.getConstants();
+
   it('should set the modal state from caseDetail and props', async () => {
     const result = await runAction(
       setAddEditUserCaseNoteModalStateFromDetailAction,
@@ -13,12 +15,12 @@ describe('setAddEditUserCaseNoteModalStateFromDetailAction', () => {
         modules: {
           presenter,
         },
-        props: { caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb' },
+        props: { docketNumber: '101-19' },
         state: {
           caseDetail: {
             caseCaption: 'Sisqo, Petitioner',
             docketNumber: '101-19',
-            docketNumberSuffix: 'L',
+            docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.LIEN_LEVY,
             judgesNote: { notes: 'i got some notes' },
           },
         },
@@ -26,9 +28,6 @@ describe('setAddEditUserCaseNoteModalStateFromDetailAction', () => {
     );
 
     expect(result.state.modal.caseTitle).toEqual('Sisqo');
-    expect(result.state.modal.caseId).toEqual(
-      'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-    );
     expect(result.state.modal.docketNumber).toEqual('101-19L');
     expect(result.state.modal.notes).toEqual('i got some notes');
   });
@@ -40,7 +39,7 @@ describe('setAddEditUserCaseNoteModalStateFromDetailAction', () => {
         modules: {
           presenter,
         },
-        props: { caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb' },
+        props: { docketNumber: '101-19' },
         state: {
           caseDetail: {
             docketNumber: '101-19',
@@ -51,9 +50,6 @@ describe('setAddEditUserCaseNoteModalStateFromDetailAction', () => {
     );
 
     expect(result.state.modal.caseTitle).toEqual('');
-    expect(result.state.modal.caseId).toEqual(
-      'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-    );
     expect(result.state.modal.docketNumber).toEqual('101-19');
     expect(result.state.modal.notes).toEqual('i got some notes');
   });

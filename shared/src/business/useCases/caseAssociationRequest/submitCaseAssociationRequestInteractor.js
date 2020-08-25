@@ -8,15 +8,15 @@ const {
   isAuthorized,
   ROLE_PERMISSIONS,
 } = require('../../../authorization/authorizationClientService');
+const { ROLES } = require('../../entities/EntityConstants');
 const { UnauthorizedError } = require('../../../errors/errors');
-const { User } = require('../../entities/User');
 
 /**
  * submitCaseAssociationRequestInteractor
  *
  * @param {object} providers the providers object
  * @param {object} providers.applicationContext the application context
- * @param {string} providers.caseId the case id
+ * @param {string} providers.docketNumber the docket number of the case
  * @param {string} providers.representingPrimary true if the user is representing
  * the primary contact on the case, false otherwise
  * @param {string} providers.representingSecondary true if the user is representing
@@ -25,7 +25,7 @@ const { User } = require('../../entities/User');
  */
 exports.submitCaseAssociationRequestInteractor = async ({
   applicationContext,
-  caseId,
+  docketNumber,
   representingPrimary,
   representingSecondary,
 }) => {
@@ -42,13 +42,13 @@ exports.submitCaseAssociationRequestInteractor = async ({
     .getUserById({ applicationContext, userId: authorizedUser.userId });
 
   const isPrivatePractitioner =
-    authorizedUser.role === User.ROLES.privatePractitioner;
-  const isIrsPractitioner = authorizedUser.role === User.ROLES.irsPractitioner;
+    authorizedUser.role === ROLES.privatePractitioner;
+  const isIrsPractitioner = authorizedUser.role === ROLES.irsPractitioner;
 
   if (isPrivatePractitioner) {
     return await associatePrivatePractitionerToCase({
       applicationContext,
-      caseId,
+      docketNumber,
       representingPrimary,
       representingSecondary,
       user,
@@ -56,7 +56,7 @@ exports.submitCaseAssociationRequestInteractor = async ({
   } else if (isIrsPractitioner) {
     return await associateIrsPractitionerToCase({
       applicationContext,
-      caseId,
+      docketNumber,
       user,
     });
   }

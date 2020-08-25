@@ -8,6 +8,7 @@ import { getCaseDeadlinesForCaseAction } from '../actions/CaseDeadline/getCaseDe
 import { getConsolidatedCasesByCaseAction } from '../actions/caseConsolidation/getConsolidatedCasesByCaseAction';
 import { getConstants } from '../../getConstants';
 import { getJudgesCaseNoteForCaseAction } from '../actions/TrialSession/getJudgesCaseNoteForCaseAction';
+import { getMessagesForCaseAction } from '../actions/CaseDetail/getMessagesForCaseAction';
 import { parallel, set } from 'cerebral/factories';
 import { runPathForUserRoleAction } from '../actions/runPathForUserRoleAction';
 import { setCaseAction } from '../actions/setCaseAction';
@@ -16,7 +17,10 @@ import { setCaseDetailPageTabUnfrozenAction } from '../actions/CaseDetail/setCas
 import { setConsolidatedCasesForCaseAction } from '../actions/caseConsolidation/setConsolidatedCasesForCaseAction';
 import { setCurrentPageAction } from '../actions/setCurrentPageAction';
 import { setDefaultCaseDetailTabAction } from '../actions/setDefaultCaseDetailTabAction';
+import { setDefaultCorrespondenceDocumentIdAction } from '../actions/setDefaultCorrespondenceDocumentIdAction';
 import { setDefaultDocketRecordSortAction } from '../actions/DocketRecord/setDefaultDocketRecordSortAction';
+import { setDefaultDraftDocumentIdAction } from '../actions/setDefaultDraftDocumentIdAction';
+import { setDocumentIdAction } from '../actions/setDocumentIdAction';
 import { setIsPrimaryTabAction } from '../actions/setIsPrimaryTabAction';
 import { setJudgesCaseNoteOnCaseDetailAction } from '../actions/TrialSession/setJudgesCaseNoteOnCaseDetailAction';
 import { showModalFromQueryAction } from '../actions/showModalFromQueryAction';
@@ -26,8 +30,12 @@ import { takePathForRoles } from './takePathForRoles';
 const { USER_ROLES } = getConstants();
 
 const gotoCaseDetailInternal = [
+  setDefaultDraftDocumentIdAction,
+  setDefaultCorrespondenceDocumentIdAction,
+  setDocumentIdAction,
   showModalFromQueryAction,
   getCaseDeadlinesForCaseAction,
+  getMessagesForCaseAction,
   setCurrentPageAction('CaseDetailInternal'),
 ];
 
@@ -38,6 +46,7 @@ const gotoCaseDetailExternal = [
 ];
 
 const gotoCaseDetailInternalWithNotes = [
+  setDocumentIdAction,
   getJudgesCaseNoteForCaseAction,
   setJudgesCaseNoteOnCaseDetailAction,
   gotoCaseDetailInternal,

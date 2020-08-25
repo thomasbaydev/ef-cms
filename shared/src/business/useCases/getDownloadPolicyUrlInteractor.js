@@ -6,6 +6,7 @@ const {
   ROLE_PERMISSIONS,
 } = require('../../authorization/authorizationClientService');
 const { Case } = require('../entities/cases/Case');
+const { ROLES } = require('../entities/EntityConstants');
 const { UnauthorizedError } = require('../../errors/errors');
 const { User } = require('../entities/User');
 
@@ -13,11 +14,13 @@ const { User } = require('../entities/User');
  *
  * @param {object} providers the providers object
  * @param {object} providers.applicationContext the application context
+ * @param {string} providers.docketNumber the docket number of the case containing the document
+ * @param {string} providers.documentId the id of the document
  * @returns {Array<string>} the filing type options based on user role
  */
 exports.getDownloadPolicyUrlInteractor = async ({
   applicationContext,
-  caseId,
+  docketNumber,
   documentId,
 }) => {
   const user = applicationContext.getCurrentUser();
@@ -27,25 +30,14 @@ exports.getDownloadPolicyUrlInteractor = async ({
   }
 
   const isInternalUser = User.isInternalUser(user && user.role);
-  const isIrsSuperuser =
-    user && user.role && user.role === User.ROLES.irsSuperuser;
+  const isIrsSuperuser = user && user.role && user.role === ROLES.irsSuperuser;
 
   if (!isInternalUser && !isIrsSuperuser) {
-    //verify that the user has access to this document
-    const userAssociatedWithCase = await applicationContext
-      .getPersistenceGateway()
-      .verifyCaseForUser({ applicationContext, caseId, userId: user.userId });
-
-    if (!userAssociatedWithCase) {
-      throw new UnauthorizedError('Unauthorized');
-    }
-
-    //verify that the document is available
     const caseData = await applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId({
+      .getCaseByDocketNumber({
         applicationContext,
-        caseId,
+        docketNumber,
       });
 
     const caseEntity = new Case(caseData, { applicationContext });
@@ -58,6 +50,9 @@ exports.getDownloadPolicyUrlInteractor = async ({
       const selectedDocument = caseData.documents.find(
         document => document.documentId === documentId,
       );
+
+      const documentEntity = caseEntity.getDocumentById({ documentId });
+
       const documentIsAvailable = documentMeetsAgeRequirements(
         selectedDocument,
       );
@@ -67,13 +62,33 @@ exports.getDownloadPolicyUrlInteractor = async ({
           'Unauthorized to view document at this time',
         );
       }
+
+      if (documentEntity.isCourtIssued()) {
+        if (!documentEntity.servedAt) {
+          throw new UnauthorizedError(
+            'Unauthorized to view document at this time',
+          );
+        }
+      } else {
+        const userAssociatedWithCase = await applicationContext
+          .getPersistenceGateway()
+          .verifyCaseForUser({
+            applicationContext,
+            docketNumber: caseEntity.docketNumber,
+            userId: user.userId,
+          });
+
+        if (!userAssociatedWithCase) {
+          throw new UnauthorizedError('Unauthorized');
+        }
+      }
     }
   } else if (isIrsSuperuser) {
     const caseData = await applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId({
+      .getCaseByDocketNumber({
         applicationContext,
-        caseId,
+        docketNumber,
       });
 
     const caseEntity = new Case(caseData, { applicationContext });

@@ -1,3 +1,7 @@
+import { applicationContextForClient as applicationContext } from '../../../shared/src/business/test/createTestApplicationContext';
+
+const { DOCKET_NUMBER_SUFFIXES } = applicationContext.getConstants();
+
 export const petitionsClerkChangesCaseCaptionDuringQC = test => {
   return it('Petitions clerk changes case caption for an e-filed petition during petition QC, serves it, and verifies that a docket entry is added', async () => {
     await test.runSequence('gotoPetitionQcSequence', {
@@ -24,10 +28,9 @@ export const petitionsClerkChangesCaseCaptionDuringQC = test => {
 
     await test.runSequence('serveCaseToIrsSequence');
 
-    await test.runSequence('gotoMessagesSequence', {
+    await test.runSequence('gotoWorkQueueSequence', {
       box: 'outbox',
       queue: 'my',
-      workQueueIsInternal: false,
     });
 
     const workItems = test.getState('workQueue');
@@ -35,7 +38,9 @@ export const petitionsClerkChangesCaseCaptionDuringQC = test => {
       workItem => workItem.docketNumber === test.docketNumber,
     );
 
-    expect(thisWorkItem.docketNumberWithSuffix).not.toContain('L');
+    expect(thisWorkItem.docketNumberWithSuffix).not.toContain(
+      DOCKET_NUMBER_SUFFIXES.LIEN_LEVY,
+    );
     expect(thisWorkItem.caseTitle).toContain('A brand new name');
 
     await test.runSequence('gotoCaseDetailSequence', {
@@ -44,12 +49,16 @@ export const petitionsClerkChangesCaseCaptionDuringQC = test => {
 
     const docketRecord = test.getState('caseDetail.docketRecord');
 
+    const caseAmended = docketRecord.find(entry =>
+      entry.description.startsWith('Caption of case is amended'),
+    );
+
+    const docketNumberAmended = docketRecord.find(entry =>
+      entry.description.startsWith('Docket Number is amended'),
+    );
+
     //case type was changed in an earlier test
-    expect(docketRecord.pop().description).toContain(
-      'Docket Number is amended',
-    );
-    expect(docketRecord.pop().description).toContain(
-      'Caption of case is amended',
-    );
+    expect(caseAmended).toBeTruthy();
+    expect(docketNumberAmended).toBeTruthy();
   });
 };

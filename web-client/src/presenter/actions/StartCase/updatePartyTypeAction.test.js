@@ -1,28 +1,32 @@
-import { ContactFactory } from '../../../../../shared/src/business/entities/contacts/ContactFactory';
-import { User } from '../../../../../shared/src/business/entities/User';
 import { applicationContextForClient as applicationContext } from '../../../../../shared/src/business/test/createTestApplicationContext';
 import { presenter } from '../../presenter-mock';
 import { runAction } from 'cerebral/test';
 import { updatePartyTypeAction } from './updatePartyTypeAction';
 
-applicationContext.getUseCases().updateCase.mockReturnValue({});
-
-presenter.providers.applicationContext = applicationContext;
-
-const getFixtures = (props, state = {}) => ({
-  modules: {
-    presenter,
-  },
-  props,
-  state: {
-    ...state,
-    user: {
-      role: User.ROLES.petitioner,
-    },
-  },
-});
-
 describe('updatePartyTypeAction', () => {
+  applicationContext.getUseCases().updateCase.mockReturnValue({});
+
+  presenter.providers.applicationContext = applicationContext;
+
+  const {
+    COUNTRY_TYPES,
+    PARTY_TYPES,
+    USER_ROLES,
+  } = applicationContext.getConstants();
+
+  const getFixtures = (props, state = {}) => ({
+    modules: {
+      presenter,
+    },
+    props,
+    state: {
+      ...state,
+      user: {
+        role: USER_ROLES.petitioner,
+      },
+    },
+  });
+
   it('sets the partyType to Petitioner when filingType is updated to Myself', async () => {
     const { state } = await runAction(
       updatePartyTypeAction,
@@ -31,7 +35,7 @@ describe('updatePartyTypeAction', () => {
         value: 'Myself',
       }),
     );
-    expect(state.form.partyType).toEqual(ContactFactory.PARTY_TYPES.petitioner);
+    expect(state.form.partyType).toEqual(PARTY_TYPES.petitioner);
   });
 
   it('sets the partyType to "Petitioner & Deceased Spouse" when "isSpouseDeceased" is updated to "Yes"', async () => {
@@ -42,9 +46,7 @@ describe('updatePartyTypeAction', () => {
         value: 'Yes',
       }),
     );
-    expect(state.form.partyType).toEqual(
-      ContactFactory.PARTY_TYPES.petitionerDeceasedSpouse,
-    );
+    expect(state.form.partyType).toEqual(PARTY_TYPES.petitionerDeceasedSpouse);
   });
 
   it('sets the partyType to "Petitioner & Spouse" when "isSpouseDeceased" is updated to "No"', async () => {
@@ -55,9 +57,7 @@ describe('updatePartyTypeAction', () => {
         value: 'No',
       }),
     );
-    expect(state.form.partyType).toEqual(
-      ContactFactory.PARTY_TYPES.petitionerSpouse,
-    );
+    expect(state.form.partyType).toEqual(PARTY_TYPES.petitionerSpouse);
   });
 
   it('sets the partyType to "Donor" when "otherType" is updated to "Donor"', async () => {
@@ -65,10 +65,10 @@ describe('updatePartyTypeAction', () => {
       updatePartyTypeAction,
       getFixtures({
         key: 'otherType',
-        value: 'Donor',
+        value: PARTY_TYPES.donor,
       }),
     );
-    expect(state.form.partyType).toEqual(ContactFactory.PARTY_TYPES.donor);
+    expect(state.form.partyType).toEqual(PARTY_TYPES.donor);
   });
 
   it('sets the partyType to "Transferee" when "otherType" is updated to "Transferee"', async () => {
@@ -76,10 +76,10 @@ describe('updatePartyTypeAction', () => {
       updatePartyTypeAction,
       getFixtures({
         key: 'otherType',
-        value: 'Transferee',
+        value: PARTY_TYPES.transferee,
       }),
     );
-    expect(state.form.partyType).toEqual(ContactFactory.PARTY_TYPES.transferee);
+    expect(state.form.partyType).toEqual(PARTY_TYPES.transferee);
   });
 
   it('sets the partyType to "Surviving Spouse" when "otherType" is updated to "Deceased Spouse"', async () => {
@@ -90,9 +90,7 @@ describe('updatePartyTypeAction', () => {
         value: 'Deceased Spouse',
       }),
     );
-    expect(state.form.partyType).toEqual(
-      ContactFactory.PARTY_TYPES.survivingSpouse,
-    );
+    expect(state.form.partyType).toEqual(PARTY_TYPES.survivingSpouse);
   });
 
   it('sets the partyType to the props.value passed in when key is "businessType"', async () => {
@@ -115,7 +113,7 @@ describe('updatePartyTypeAction', () => {
           value: 'A business',
         },
         {
-          partyType: 'Petitioner',
+          partyType: PARTY_TYPES.petitioner,
         },
       ),
     );
@@ -158,7 +156,7 @@ describe('updatePartyTypeAction', () => {
         },
         {
           constants: {
-            COUNTRY_TYPES: ContactFactory.COUNTRY_TYPES,
+            COUNTRY_TYPES: COUNTRY_TYPES,
             PARTY_TYPES: [],
           },
           form: {
@@ -183,7 +181,7 @@ describe('updatePartyTypeAction', () => {
         },
         {
           constants: {
-            COUNTRY_TYPES: ContactFactory.COUNTRY_TYPES,
+            COUNTRY_TYPES: COUNTRY_TYPES,
             PARTY_TYPES: [],
           },
           form: {
@@ -208,7 +206,7 @@ describe('updatePartyTypeAction', () => {
         },
         {
           constants: {
-            COUNTRY_TYPES: ContactFactory.COUNTRY_TYPES,
+            COUNTRY_TYPES: COUNTRY_TYPES,
             PARTY_TYPES: [],
           },
           form: {
@@ -218,7 +216,9 @@ describe('updatePartyTypeAction', () => {
         },
       ),
     );
-    expect(state.form.contactPrimary).toEqual({ countryType: 'domestic' });
+    expect(state.form.contactPrimary).toEqual({
+      countryType: COUNTRY_TYPES.DOMESTIC,
+    });
     expect(state.form.contactSecondary).toEqual({});
   });
 });

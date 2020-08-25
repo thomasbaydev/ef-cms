@@ -1,8 +1,10 @@
-import { ContactFactory } from '../../shared/src/business/entities/contacts/ContactFactory';
+import { applicationContextForClient as applicationContext } from '../../shared/src/business/test/createTestApplicationContext';
 import {
   assignWorkItems,
-  findWorkItemByCaseId,
+  findWorkItemByDocketNumber,
+  getCaseMessagesForCase,
   getFormattedDocumentQCMyInbox,
+  getFormattedDocumentQCMyOutbox,
   getFormattedDocumentQCSectionInbox,
   getInboxCount,
   getNotifications,
@@ -10,10 +12,10 @@ import {
   setupTest,
   uploadExternalDecisionDocument,
   uploadPetition,
-  viewDocumentDetailMessage,
 } from './helpers';
 
 const test = setupTest();
+const { COUNTRY_TYPES, PARTY_TYPES } = applicationContext.getConstants();
 
 describe('Create a work item', () => {
   beforeEach(() => {
@@ -26,7 +28,7 @@ describe('Create a work item', () => {
   let notificationsBefore;
   let decisionWorkItem;
 
-  loginAs(test, 'docketclerk');
+  loginAs(test, 'docketclerk@example.com');
 
   it('login as the docketclerk and cache the initial inbox counts', async () => {
     await getFormattedDocumentQCMyInbox(test);
@@ -38,20 +40,21 @@ describe('Create a work item', () => {
     notificationsBefore = getNotifications(test);
   });
 
-  loginAs(test, 'petitioner');
+  loginAs(test, 'petitioner@example.com');
   it('login as a tax payer and create a case', async () => {
     caseDetail = await uploadPetition(test, {
       contactSecondary: {
         address1: '734 Cowley Parkway',
         city: 'Somewhere',
-        countryType: 'domestic',
+        countryType: COUNTRY_TYPES.DOMESTIC,
         name: 'Secondary Person',
         phone: '+1 (884) 358-9729',
         postalCode: '77546',
         state: 'CT',
       },
-      partyType: ContactFactory.PARTY_TYPES.petitionerSpouse,
+      partyType: PARTY_TYPES.petitionerSpouse,
     });
+    test.docketNumber = caseDetail.docketNumber;
     expect(caseDetail.docketNumber).toBeDefined();
   });
 
@@ -65,14 +68,14 @@ describe('Create a work item', () => {
     await uploadExternalDecisionDocument(test);
   });
 
-  loginAs(test, 'docketclerk');
+  loginAs(test, 'docketclerk@example.com');
   it('login as the docketclerk and verify there are 3 document qc section inbox entries', async () => {
     const documentQCSectionInbox = await getFormattedDocumentQCSectionInbox(
       test,
     );
 
     const decisionWorkItem = documentQCSectionInbox.find(
-      workItem => workItem.caseId === caseDetail.caseId,
+      workItem => workItem.docketNumber === caseDetail.docketNumber,
     );
     expect(decisionWorkItem).toMatchObject({
       document: {
@@ -90,16 +93,16 @@ describe('Create a work item', () => {
       test,
     );
     const decisionWorkItems = documentQCSectionInbox.filter(
-      workItem => workItem.caseId === caseDetail.caseId,
+      workItem => workItem.docketNumber === caseDetail.docketNumber,
     );
     await assignWorkItems(test, 'docketclerk', decisionWorkItems);
   });
 
   it('verify the docketclerk has 3 messages in document qc my inbox', async () => {
     const documentQCMyInbox = await getFormattedDocumentQCMyInbox(test);
-    decisionWorkItem = findWorkItemByCaseId(
+    decisionWorkItem = findWorkItemByDocketNumber(
       documentQCMyInbox,
-      caseDetail.caseId,
+      caseDetail.docketNumber,
     );
     expect(decisionWorkItem).toMatchObject({
       document: {
@@ -114,33 +117,7 @@ describe('Create a work item', () => {
   it('verify the docketclerk has the expected unread count', async () => {
     const notifications = getNotifications(test);
     expect(notifications).toMatchObject({
-      myInboxUnreadCount: notificationsBefore.myInboxUnreadCount,
       qcUnreadCount: notificationsBefore.qcUnreadCount + 3,
-    });
-  });
-
-  it('the unread counts should decrease by one after a docketclerk reads one of those messages', async () => {
-    await viewDocumentDetailMessage({
-      docketNumber: caseDetail.docketNumber,
-      documentId: decisionWorkItem.document.documentId,
-      messageId: decisionWorkItem.currentMessage.messageId,
-      test,
-      workItemIdToMarkAsRead: decisionWorkItem.workItemId,
-    });
-    const documentQCMyInbox = await getFormattedDocumentQCMyInbox(test);
-    decisionWorkItem = documentQCMyInbox.find(
-      workItem => workItem.workItemId === decisionWorkItem.workItemId,
-    );
-    expect(decisionWorkItem).toMatchObject({
-      showUnreadIndicators: false,
-      showUnreadStatusIcon: false,
-    });
-    const qcMyInboxCountAfter = getInboxCount(test);
-    expect(qcMyInboxCountAfter).toEqual(qcMyInboxCountBefore + 2);
-    const notifications = getNotifications(test);
-    expect(notifications).toMatchObject({
-      myInboxUnreadCount: notificationsBefore.myInboxUnreadCount,
-      qcUnreadCount: notificationsBefore.qcUnreadCount + 2,
     });
   });
 
@@ -163,5 +140,73 @@ describe('Create a work item', () => {
     expect(test.getState('modal.showModal')).toEqual(
       'PaperServiceConfirmModal',
     );
+  });
+
+  it('docket clerk completes QC of a document and sends a message', async () => {
+    test.setState('modal.showModal', '');
+
+    await test.runSequence('openCompleteAndSendMessageModalSequence');
+
+    expect(test.getState('modal.showModal')).toEqual(
+      'CreateMessageModalDialog',
+    );
+
+    await test.runSequence('completeDocketEntryQCAndSendMessageSequence');
+
+    let errors = test.getState('validationErrors');
+
+    expect(errors).toEqual({
+      message: 'Enter a message',
+      toSection: 'Select a section',
+      toUserId: 'Select a recipient',
+    });
+
+    const updatedDocumentTitle = 'Motion in Limine';
+    const messageBody = 'This is a message in a bottle';
+
+    await test.runSequence('updateDocketEntryFormValueSequence', {
+      key: 'documentTitle',
+      value: updatedDocumentTitle,
+    });
+
+    await test.runSequence('updateModalFormValueSequence', {
+      key: 'message',
+      value: messageBody,
+    });
+
+    await test.runSequence('updateModalFormValueSequence', {
+      key: 'toSection',
+      value: 'petitions',
+    });
+
+    await test.runSequence('updateModalFormValueSequence', {
+      key: 'toUserId',
+      value: '7805d1ab-18d0-43ec-bafb-654e83405416',
+    });
+
+    await test.runSequence('completeDocketEntryQCAndSendMessageSequence');
+
+    errors = test.getState('validationErrors');
+
+    expect(errors).toEqual({});
+
+    expect(test.getState('alertSuccess')).toMatchObject({
+      message: 'Motion in Limine QC completed and message sent.',
+    });
+
+    expect(test.getState('currentPage')).toBe('WorkQueue');
+
+    const myOutbox = (await getFormattedDocumentQCMyOutbox(test)).filter(
+      item => item.docketNumber === caseDetail.docketNumber,
+    );
+    const qcDocumentTitleMyOutbox = myOutbox[0].document.documentTitle;
+
+    expect(qcDocumentTitleMyOutbox).toBe(updatedDocumentTitle);
+
+    const formattedCaseMessages = await getCaseMessagesForCase(test);
+    const qcDocumentMessage =
+      formattedCaseMessages.inProgressMessages[0].message;
+
+    expect(qcDocumentMessage).toBe(messageBody);
   });
 });

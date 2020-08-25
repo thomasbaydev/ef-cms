@@ -1,4 +1,4 @@
-const joi = require('@hapi/joi');
+const joi = require('joi');
 const { ContactFactory } = require('./ContactFactory');
 
 /**
@@ -10,7 +10,8 @@ exports.getNextFriendForIncompetentPersonContact = ContactFactory.createContactF
       secondaryName: 'Enter name of next friend',
     },
     additionalValidation: {
-      secondaryName: joi.string().required(),
+      secondaryName: joi.string().max(500).required(),
     },
+    contactName: 'NextFriendForIncompetentPersonContact',
   },
 );

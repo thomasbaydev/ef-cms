@@ -5,82 +5,79 @@ const {
 const {
   applicationContext,
 } = require('../../test/createTestApplicationContext');
+const {
+  CASE_STATUS_TYPES,
+  DOCKET_NUMBER_SUFFIXES,
+  INITIAL_DOCUMENT_TYPES,
+  PARTY_TYPES,
+  PAYMENT_STATUS,
+} = require('../../entities/EntityConstants');
 const { Case } = require('../../entities/cases/Case');
-const { Document } = require('../../entities/Document');
 const { MOCK_CASE } = require('../../../test/mockCase');
+const { ROLES } = require('../../entities/EntityConstants');
 const { User } = require('../../entities/User');
 
 describe('serveCaseToIrsInteractor', () => {
-  const MOCK_WORK_ITEMS = [
-    {
-      assigneeId: null,
-      assigneeName: 'IRSBatchSystem',
-      caseId: 'e631d81f-a579-4de5-b8a8-b3f10ef619fd',
-      caseStatus: Case.STATUS_TYPES.new,
-      completedAt: '2018-12-27T18:06:02.968Z',
-      completedBy: 'Petitioner',
-      completedByUserId: '6805d1ab-18d0-43ec-bafb-654e83405416',
-      createdAt: '2018-12-27T18:06:02.971Z',
-      docketNumber: '101-18',
-      docketNumberSuffix: 'S',
-      document: {
-        createdAt: '2018-12-27T18:06:02.968Z',
-        documentId: 'b6238482-5f0e-48a8-bb8e-da2957074a08',
-        documentType: Document.INITIAL_DOCUMENT_TYPES.petition.documentType,
-      },
-      isInitializeCase: true,
-      isQC: true,
-      messages: [
-        {
-          createdAt: '2018-12-27T18:06:02.968Z',
-          from: 'Petitioner',
-          fromUserId: '6805d1ab-18d0-43ec-bafb-654e83405416',
-          message: 'Petition ready for review',
-          messageId: '343f5b21-a3a9-4657-8e2b-df782f920e45',
-          role: User.ROLES.petitioner,
-          to: null,
-        },
-      ],
-      section: 'irsBatchSection',
-      sentBy: 'petitioner',
-      updatedAt: '2018-12-27T18:06:02.968Z',
-      workItemId: '78de1ba3-add3-4329-8372-ce37bda6bc93',
+  const MOCK_WORK_ITEM = {
+    assigneeId: null,
+    assigneeName: 'IRSBatchSystem',
+    caseStatus: CASE_STATUS_TYPES.new,
+    completedAt: '2018-12-27T18:06:02.968Z',
+    completedBy: PARTY_TYPES.petitioner,
+    completedByUserId: '6805d1ab-18d0-43ec-bafb-654e83405416',
+    createdAt: '2018-12-27T18:06:02.971Z',
+    docketNumber: '101-18',
+    docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.SMALL,
+    document: {
+      createdAt: '2018-12-27T18:06:02.968Z',
+      documentId: 'b6238482-5f0e-48a8-bb8e-da2957074a08',
+      documentType: INITIAL_DOCUMENT_TYPES.petition.documentType,
     },
-  ];
-
-  const MOCK_PDF_DATA =
-    'JVBERi0xLjcKJYGBgYEKCjUgMCBvYmoKPDwKL0ZpbHRlciAvRmxhdGVEZWNvZGUKL0xlbm' +
-    'd0aCAxMDQKPj4Kc3RyZWFtCniccwrhMlAAwaJ0Ln2P1Jyy1JLM5ERdc0MjCwUjE4WQNC4Q' +
-    '6cNlCFZkqGCqYGSqEJLLZWNuYGZiZmbkYuZsZmlmZGRgZmluDCQNzc3NTM2NzdzMXMxMjQ' +
-    'ztFEKyuEK0uFxDuAAOERdVCmVuZHN0cmVhbQplbmRvYmoKCjYgMCBvYmoKPDwKL0ZpbHRl' +
-    'ciAvRmxhdGVEZWNvZGUKL1R5cGUgL09ialN0bQovTiA0Ci9GaXJzdCAyMAovTGVuZ3RoID' +
-    'IxNQo+PgpzdHJlYW0KeJxVj9GqwjAMhu/zFHkBzTo3nCCCiiKIHPEICuJF3cKoSCu2E8/b' +
-    '20wPIr1p8v9/8kVhgilmGfawX2CGaVrgcAi0/bsy0lrX7IGWpvJ4iJYEN3gEmrrGBlQwGs' +
-    'HHO9VBX1wNrxAqMX87RBD5xpJuddqwd82tjAHxzV1U5LPgy52DKXWnr1Lheg+j/c/pzGVr' +
-    'iqV0VlwZPXGPCJjElw/ybkwUmeoWgxesDXGhHJC/D/iikp1Av80ptKU0FdBEe25pPihAM1' +
-    'u6ytgaaWfs2Hrz35CJT1+EWmAKZW5kc3RyZWFtCmVuZG9iagoKNyAwIG9iago8PAovU2l6' +
-    'ZSA4Ci9Sb290IDIgMCBSCi9GaWx0ZXIgL0ZsYXRlRGVjb2RlCi9UeXBlIC9YUmVmCi9MZW' +
-    '5ndGggMzgKL1cgWyAxIDIgMiBdCi9JbmRleCBbIDAgOCBdCj4+CnN0cmVhbQp4nBXEwREA' +
-    'EBAEsCwz3vrvRmOOyyOoGhZdutHN2MT55fIAVocD+AplbmRzdHJlYW0KZW5kb2JqCgpzdG' +
-    'FydHhyZWYKNTEwCiUlRU9G';
+    isInitializeCase: true,
+    messages: [
+      {
+        createdAt: '2018-12-27T18:06:02.968Z',
+        from: PARTY_TYPES.petitioner,
+        fromUserId: '6805d1ab-18d0-43ec-bafb-654e83405416',
+        message: 'Petition ready for review',
+        messageId: '343f5b21-a3a9-4657-8e2b-df782f920e45',
+        role: ROLES.petitioner,
+        to: null,
+      },
+    ],
+    section: 'docket',
+    sentBy: 'petitioner',
+    updatedAt: '2018-12-27T18:06:02.968Z',
+    workItemId: '78de1ba3-add3-4329-8372-ce37bda6bc93',
+  };
 
   let mockCase;
 
   beforeAll(() => {
     mockCase = MOCK_CASE;
-    mockCase.documents[0].workItems = MOCK_WORK_ITEMS;
+    mockCase.documents[0].workItem = MOCK_WORK_ITEM;
     applicationContext.getPersistenceGateway().updateWorkItem = jest.fn();
+
+    applicationContext.getStorageClient.mockReturnValue({
+      upload: (params, cb) => {
+        return cb(true);
+      },
+    });
+    applicationContext
+      .getPersistenceGateway()
+      .getDownloadPolicyUrl.mockReturnValue({ url: 'www.example.com' });
   });
 
   it('should throw unauthorized error when user is unauthorized', async () => {
     applicationContext.getCurrentUser.mockReturnValue({
+      role: ROLES.docketClerk,
       userId: 'b88a8284-b859-4641-a270-b3ee26c6c068',
     });
 
     await expect(
       serveCaseToIrsInteractor({
         applicationContext,
-        caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+        docketNumber: MOCK_CASE.docketNumber,
       }),
     ).rejects.toThrow('Unauthorized');
   });
@@ -94,20 +91,17 @@ describe('serveCaseToIrsInteractor', () => {
     applicationContext.getCurrentUser.mockReturnValue(
       new User({
         name: 'bob',
-        role: User.ROLES.petitionsClerk,
+        role: ROLES.petitionsClerk,
         userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
       }),
     );
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(mockCase);
-    applicationContext
-      .getUseCaseHelpers()
-      .generateCaseConfirmationPdf.mockReturnValue(MOCK_PDF_DATA);
+      .getCaseByDocketNumber.mockReturnValue(mockCase);
 
     await serveCaseToIrsInteractor({
       applicationContext,
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      docketNumber: MOCK_CASE.docketNumber,
     });
 
     expect(
@@ -120,24 +114,58 @@ describe('serveCaseToIrsInteractor', () => {
     });
   });
 
+  it('should count number of pages for the documents in the case to be served', async () => {
+    mockCase = {
+      ...MOCK_CASE,
+      isPaper: true,
+      mailingDate: 'some day',
+    };
+
+    applicationContext.getCurrentUser.mockReturnValue(
+      new User({
+        name: 'bob',
+        role: ROLES.petitionsClerk,
+        userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
+      }),
+    );
+    expect(mockCase.documents[0].numberOfPages).toBeUndefined();
+
+    applicationContext
+      .getUseCaseHelpers()
+      .countPagesInDocument.mockResolvedValue(2);
+    applicationContext
+      .getPersistenceGateway()
+      .getCaseByDocketNumber.mockResolvedValue(mockCase);
+
+    await serveCaseToIrsInteractor({
+      applicationContext,
+      docketNumber: MOCK_CASE.docketNumber,
+    });
+
+    expect(
+      applicationContext.getUseCaseHelpers().countPagesInDocument,
+    ).toHaveBeenCalled();
+    expect(
+      applicationContext.getPersistenceGateway().updateCase.mock.calls[0][0]
+        .caseToUpdate.documents[0],
+    ).toMatchObject({ numberOfPages: 2 });
+  });
+
   it('should replace coversheet on the served petition if the case is not paper', async () => {
     applicationContext.getCurrentUser.mockReturnValue(
       new User({
         name: 'bob',
-        role: User.ROLES.petitionsClerk,
+        role: ROLES.petitionsClerk,
         userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
       }),
     );
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(MOCK_CASE);
-    applicationContext
-      .getUseCaseHelpers()
-      .generateCaseConfirmationPdf.mockReturnValue(MOCK_PDF_DATA);
+      .getCaseByDocketNumber.mockReturnValue(MOCK_CASE);
 
     await serveCaseToIrsInteractor({
       applicationContext,
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      docketNumber: MOCK_CASE.docketNumber,
     });
 
     expect(
@@ -150,6 +178,61 @@ describe('serveCaseToIrsInteractor', () => {
     });
   });
 
+  it('should preserve original case caption and docket number on the coversheet if the case is not paper', async () => {
+    applicationContext.getCurrentUser.mockReturnValue(
+      new User({
+        name: 'bob',
+        role: ROLES.petitionsClerk,
+        userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
+      }),
+    );
+    applicationContext
+      .getPersistenceGateway()
+      .getCaseByDocketNumber.mockReturnValue(MOCK_CASE);
+
+    await serveCaseToIrsInteractor({
+      applicationContext,
+      docketNumber: MOCK_CASE.docketNumber,
+    });
+
+    expect(
+      applicationContext.getUseCases().addCoversheetInteractor,
+    ).toHaveBeenCalled();
+    expect(
+      applicationContext.getUseCases().addCoversheetInteractor.mock.calls[0][0],
+    ).toMatchObject({
+      replaceCoversheet: true,
+      useInitialData: true,
+    });
+  });
+
+  it('should generate a notice of receipt of petition document and upload it to s3', async () => {
+    mockCase = {
+      ...MOCK_CASE,
+      isPaper: false,
+    };
+    applicationContext.getCurrentUser.mockReturnValue(
+      new User({
+        name: 'bob',
+        role: ROLES.petitionsClerk,
+        userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
+      }),
+    );
+    applicationContext
+      .getPersistenceGateway()
+      .getCaseByDocketNumber.mockReturnValue(mockCase);
+
+    await serveCaseToIrsInteractor({
+      applicationContext,
+      docketNumber: MOCK_CASE.docketNumber,
+    });
+
+    expect(
+      applicationContext.getDocumentGenerators().noticeOfReceiptOfPetition,
+    ).toHaveBeenCalled();
+    expect(applicationContext.getStorageClient).toHaveBeenCalled();
+  });
+
   it('should not return a paper service pdf when the case is electronic', async () => {
     mockCase = {
       ...MOCK_CASE,
@@ -158,17 +241,17 @@ describe('serveCaseToIrsInteractor', () => {
     applicationContext.getCurrentUser.mockReturnValue(
       new User({
         name: 'bob',
-        role: User.ROLES.petitionsClerk,
+        role: ROLES.petitionsClerk,
         userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
       }),
     );
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(mockCase);
+      .getCaseByDocketNumber.mockReturnValue(mockCase);
 
     const result = await serveCaseToIrsInteractor({
       applicationContext,
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      docketNumber: MOCK_CASE.docketNumber,
     });
 
     expect(result).toBeUndefined();
@@ -183,17 +266,17 @@ describe('serveCaseToIrsInteractor', () => {
     applicationContext.getCurrentUser.mockReturnValue(
       new User({
         name: 'bob',
-        role: User.ROLES.petitionsClerk,
+        role: ROLES.petitionsClerk,
         userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
       }),
     );
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(mockCase);
+      .getCaseByDocketNumber.mockReturnValue(mockCase);
 
     const result = await serveCaseToIrsInteractor({
       applicationContext,
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      docketNumber: MOCK_CASE.docketNumber,
     });
 
     expect(result).toBeDefined();
@@ -211,9 +294,9 @@ describe('serveCaseToIrsInteractor', () => {
           documentTitle: 'Request for Place of Trial Flavortown, AR',
           documentType: 'Request for Place of Trial',
           eventCode: 'RPT',
+          filedBy: 'Test Petitioner',
           processingStatus: 'pending',
           userId: 'b88a8284-b859-4641-a270-b3ee26c6c068',
-          workItems: [],
         },
         {
           createdAt: '2018-11-21T20:49:28.192Z',
@@ -222,9 +305,9 @@ describe('serveCaseToIrsInteractor', () => {
           documentTitle: 'Application for Waiver of Filing Fee',
           documentType: 'Application for Waiver of Filing Fee',
           eventCode: 'APW',
+          filedBy: 'Test Petitioner',
           processingStatus: 'pending',
           userId: 'b88a8284-b859-4641-a270-b3ee26c6c068',
-          workItems: [],
         },
       ],
       isPaper: true,
@@ -233,17 +316,17 @@ describe('serveCaseToIrsInteractor', () => {
     applicationContext.getCurrentUser.mockReturnValue(
       new User({
         name: 'bob',
-        role: User.ROLES.petitionsClerk,
+        role: ROLES.petitionsClerk,
         userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
       }),
     );
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(mockCase);
+      .getCaseByDocketNumber.mockReturnValue(mockCase);
 
     const result = await serveCaseToIrsInteractor({
       applicationContext,
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      docketNumber: MOCK_CASE.docketNumber,
     });
 
     const documentWithServedParties = applicationContext
@@ -251,7 +334,7 @@ describe('serveCaseToIrsInteractor', () => {
       .updateCase.mock.calls[0][0].caseToUpdate.documents.find(
         document =>
           document.documentType ===
-          Document.INITIAL_DOCUMENT_TYPES.requestForPlaceOfTrial.documentType,
+          INITIAL_DOCUMENT_TYPES.requestForPlaceOfTrial.documentType,
       );
     expect(result).toBeDefined();
     expect(documentWithServedParties.servedParties).toBeDefined();
@@ -277,7 +360,7 @@ describe('addDocketEntryForPaymentStatus', () => {
       {
         ...MOCK_CASE,
         petitionPaymentDate: 'Today',
-        petitionPaymentStatus: Case.PAYMENT_STATUS.PAID,
+        petitionPaymentStatus: PAYMENT_STATUS.PAID,
       },
       { applicationContext },
     );
@@ -297,7 +380,7 @@ describe('addDocketEntryForPaymentStatus', () => {
         ...MOCK_CASE,
         contactPrimary: undefined,
         documents: [],
-        petitionPaymentStatus: Case.PAYMENT_STATUS.WAIVED,
+        petitionPaymentStatus: PAYMENT_STATUS.WAIVED,
         petitionPaymentWaivedDate: 'Today',
       },
       { applicationContext },
@@ -310,5 +393,64 @@ describe('addDocketEntryForPaymentStatus', () => {
 
     expect(addedDocketRecord).toBeDefined();
     expect(addedDocketRecord.filingDate).toEqual('Today');
+  });
+
+  it('should add a docket entry for all intiially filed documents except for the petition and stin file', async () => {
+    const mockCase = {
+      ...MOCK_CASE,
+      docketRecord: {},
+      documents: [
+        ...MOCK_CASE.documents,
+        {
+          createdAt: '2018-11-21T20:49:28.192Z',
+          docketNumber: '101-18',
+          documentId: 'abc81f4d-1e47-423a-8caf-6d2fdc3d3859',
+          documentTitle:
+            INITIAL_DOCUMENT_TYPES.requestForPlaceOfTrial.documentTitle,
+          documentType:
+            INITIAL_DOCUMENT_TYPES.requestForPlaceOfTrial.documentType,
+          eventCode: INITIAL_DOCUMENT_TYPES.requestForPlaceOfTrial.eventCode,
+          isFileAttached: true,
+          processingStatus: 'pending',
+          userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
+        },
+      ],
+      isPaper: true,
+      mailingDate: 'some day',
+    };
+
+    applicationContext.getCurrentUser.mockReturnValue(
+      new User({
+        name: 'bob',
+        role: ROLES.petitionsClerk,
+        userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
+      }),
+    );
+    expect(mockCase.docketRecord).toEqual({});
+
+    applicationContext
+      .getUseCaseHelpers()
+      .countPagesInDocument.mockResolvedValue(2);
+    applicationContext
+      .getPersistenceGateway()
+      .getCaseByDocketNumber.mockResolvedValue(mockCase);
+
+    await serveCaseToIrsInteractor({
+      applicationContext,
+      docketNumber: MOCK_CASE.docketNumber,
+    });
+
+    expect(
+      applicationContext.getPersistenceGateway().updateCase.mock.calls[0][0]
+        .caseToUpdate.docketRecord[0],
+    ).toMatchObject({
+      action: undefined,
+      description: INITIAL_DOCUMENT_TYPES.requestForPlaceOfTrial.documentTitle,
+      documentId: 'abc81f4d-1e47-423a-8caf-6d2fdc3d3859',
+      editState: undefined,
+      entityName: 'DocketRecord',
+      eventCode: INITIAL_DOCUMENT_TYPES.requestForPlaceOfTrial.eventCode,
+      index: 1,
+    });
   });
 });

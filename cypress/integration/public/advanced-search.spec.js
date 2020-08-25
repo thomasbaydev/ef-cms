@@ -4,6 +4,7 @@ const {
   enterDocumentDocketNumber,
   enterDocumentKeywordForOpinionSearch,
   enterPetitionerName,
+  enterStartDateForOpinionSearch,
   navigateTo: navigateToDashboard,
   noSearchResultsContainer,
   searchForCaseByDocketNumber,
@@ -13,10 +14,6 @@ const {
 } = require('../../support/pages/public/advanced-search');
 
 describe('Advanced search', () => {
-  before(() => {
-    cy.task('seed');
-  });
-
   describe('case - by name', () => {
     it('should route to case detail when a match is found and the user clicks on the docket record link in the table', () => {
       navigateToDashboard();
@@ -45,6 +42,7 @@ describe('Advanced search', () => {
       navigateToDashboard();
       clickOnSearchTab('opinion');
       enterDocumentKeywordForOpinionSearch('opinion');
+      enterStartDateForOpinionSearch('08/03/1995');
       enterDocumentDocketNumber('105-20L');
       searchForDocuments();
       expect(searchResultsTable()).to.exist;

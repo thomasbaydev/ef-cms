@@ -2,12 +2,12 @@ const axios = require('axios');
 const faker = require('faker');
 const jwt = require('jsonwebtoken');
 const {
-  ContactFactory,
-} = require('../../../shared/src/business/entities/contacts/ContactFactory');
-const {
-  TrialSession,
-} = require('../../../shared/src/business/entities/trialSessions/TrialSession');
-const { Case } = require('../../../shared/src/business/entities/cases/Case');
+  CASE_TYPES,
+  COUNTRY_TYPES,
+  PARTY_TYPES,
+  PROCEDURE_TYPES,
+  TRIAL_CITIES,
+} = require('../../../shared/src/business/entities/EntityConstants');
 const { userMap } = require('../../../shared/src/test/mockUserTokenMap');
 
 const USAGE = `
@@ -42,7 +42,7 @@ const main = () => {
 
   for (let i = 0; i < numToCreate; i++) {
     const preferredTrialCityObject =
-      TrialSession.TRIAL_CITIES.ALL[faker.random.number() % 74];
+      TRIAL_CITIES.ALL[faker.random.number() % 74];
 
     const preferredTrialCity =
       preferredTrialCityObject.city + ', ' + preferredTrialCityObject.state;
@@ -51,11 +51,11 @@ const main = () => {
     const randomlyGeneratedData = {
       petitionFileId,
       petitionMetadata: {
-        caseType: Case.CASE_TYPES[faker.random.number() % 13],
+        caseType: CASE_TYPES[faker.random.number() % 13],
         contactPrimary: {
           address1: faker.address.streetAddress(),
           city: faker.address.city(),
-          countryType: 'domestic',
+          countryType: COUNTRY_TYPES.DOMESTIC,
           name: faker.name.findName(),
           phone: faker.phone.phoneNumber(),
           postalCode: faker.address.zipCode(),
@@ -64,19 +64,19 @@ const main = () => {
         contactSecondary: {
           address1: faker.address.streetAddress(),
           city: faker.address.city(),
-          countryType: 'domestic',
+          countryType: COUNTRY_TYPES.DOMESTIC,
           name: faker.name.findName(),
           phone: faker.phone.phoneNumber(),
           postalCode: faker.address.zipCode(),
           state: faker.address.stateAbbr(),
         },
-        countryType: 'domestic',
+        countryType: COUNTRY_TYPES.DOMESTIC,
         filingType: 'Myself and my spouse',
         hasIrsNotice: faker.random.boolean(),
-        partyType: ContactFactory.PARTY_TYPES.petitionerSpouse,
+        partyType: PARTY_TYPES.petitionerSpouse,
         preferredTrialCity,
         privatePractitioners: [],
-        procedureType: Case.PROCEDURE_TYPES[faker.random.number() % 2],
+        procedureType: PROCEDURE_TYPES[faker.random.number() % 2],
       },
       stinFileId,
     };

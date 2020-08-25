@@ -6,9 +6,9 @@ The [U.S. Tax Court](https://ustaxcourt.gov/) currently uses a non-web-based leg
 
 #### develop
 
-| develop | master | staging | test |
+| develop | prod | staging | test |
 | ------- | ------ | ------- | ---- |
-| [![CircleCI](https://circleci.com/gh/flexion/ef-cms/tree/develop.svg?style=svg)](https://circleci.com/gh/flexion/ef-cms/tree/develop) | [![CircleCI](https://circleci.com/gh/ustaxcourt/ef-cms/tree/master.svg?style=svg)](https://circleci.com/gh/ustaxcourt/ef-cms/tree/master) | [![CircleCI](https://circleci.com/gh/ustaxcourt/ef-cms/tree/staging.svg?style=svg)](https://circleci.com/gh/ustaxcourt/ef-cms/tree/staging) | [![CircleCI](https://circleci.com/gh/ustaxcourt/ef-cms/tree/test.svg?style=svg)](https://circleci.com/gh/ustaxcourt/ef-cms/tree/test) |
+| [![CircleCI](https://circleci.com/gh/flexion/ef-cms/tree/develop.svg?style=svg)](https://circleci.com/gh/flexion/ef-cms/tree/develop) | [![CircleCI](https://circleci.com/gh/ustaxcourt/ef-cms/tree/prod.svg?style=svg)](https://circleci.com/gh/ustaxcourt/ef-cms/tree/prod) | [![CircleCI](https://circleci.com/gh/ustaxcourt/ef-cms/tree/staging.svg?style=svg)](https://circleci.com/gh/ustaxcourt/ef-cms/tree/staging) | [![CircleCI](https://circleci.com/gh/ustaxcourt/ef-cms/tree/test.svg?style=svg)](https://circleci.com/gh/ustaxcourt/ef-cms/tree/test) |
 
 API | Front-End | Shared Code
 --- | --------- | -----------
@@ -50,14 +50,16 @@ For documentation about the CI/CD setup, API, style guide, UX, code review, etc.
 
 <a href="docs/images/aws-diagram.png"><img src="docs/images/aws-diagram.png" style="border: 2px solid #000;" /></a>
 
-## Dependency diagrams
-
-- <a href="docs/images/client-dependencies.jpg">Client</a>
-- <a href="docs/images/server-dependencies.jpg">Server</a>
-
 ## Backlog
 
-The backlog is stored [in GitHub Issues in Flexion’s repository](https://github.com/flexion/ef-cms/issues), _not_ on this repository. Although they can be viewed like any other GitHub issues, they are managed on a scrum board that requires the [ZenHub browser plugin](https://www.zenhub.com/) to see.
+There are a few backlogs related to the project:
+
+| Items | Location
+|-------|----------
+| User stories and feature work <br>(Primary backlog) | [GitHub issues in Flexion’s repository](https://github.com/flexion/ef-cms/issues); scrum board visible using the [ZenHub browser plugin](https://www.zenhub.com/).
+| Refactoring and bugs | [Trello cards in Flexion’s OpEx/DevEx board](https://trello.com/b/9tgrIFfA/ef-cms-opex-devex).
+| Court-related decisions, processes, and environment work | [GitHub issues in this repository](https://github.com/ustaxcourt/ef-cms/issues); scrum board visible using the [ZenHub browser plugin](https://www.zenhub.com/).
+| Data migration script work | [GitHub issues in this private repository](https://github.com/ustaxcourt/ef-cms-migration/issues); scrum board using [GitHub projects](https://github.com/ustaxcourt/ef-cms-migration/projects).
 
 ## Testing everything
 
@@ -75,13 +77,13 @@ Once [you have Docker installed](https://docs.docker.com/install/), the followin
 
 - You can access the UI at http://localhost:1234
 - You can access the public UI at http://localhost:5678
-- You can access the API at http://localhost:3000
+- You can access the API at http://localhost:4000
 - You can access the DynamoDB shell at http://localhost:8000/shell
 - You can access the DynamoDB admin UI at http://localhost:8001
 - You can access S3 local at http://localhost:9000
 - You can access the style guide at http://localhost:1234/style-guide
 
-Within Docker, you should allocate 4 CPUs, 16 GB of RAM, and 4 GB of swap. With fewer resources, the software is likely to fail to run with errors that don’t make it obvious what the problem is.
+Within Docker, you should allocate 2+ CPUs, 8+ GB of RAM, and 4+ GB of swap. With fewer resources, the software is likely to fail to run with errors that don’t make it obvious what the problem is.
 
 ### ECR
 ECR is Amazon’s Docker container registry that holds images for `ef-cms` builds on CircleCI. Currently, images can be managed in the AWS ECR console under the `ef-cms-us-east-1`. If you need to update the Docker image, you can do so (with appropriate permissions) by running `./docker-to-ecr.sh`. This command will build an image per the `Dockerfile-CI` config, tag it as `latest` and push it to the repo in ECR.
@@ -133,34 +135,34 @@ You can log in using the following accounts.
 #### External Users
 
 ```
-petitioner
-privatePractitioner
-privatePractitioner1 - privatePractitioner4
-irsPractitioner
-irsPractitioner1 - irsPractitioner4
-irsSuperuser
+petitioner@example.com
+privatePractitioner@example.com
+privatePractitioner1 - privatePractitioner4@example.com
+irsPractitioner@example.com
+irsPractitioner1 - irsPractitioner4@example.com
+irsSuperuser@example.com
 ```
 
 #### Internal Users
 ```
-adc
-admissionsclerk
-clerkofcourt
-docketclerk
-docketclerk1
-petitionsclerk
-petitionsclerk1
-trialclerk
-judgeArmen
-armensChambers
-judgeAshford
-ashfordsChambers
-judgeBuch
-buchsChambers
-judgeCarluzzo
-carluzzosChambers
-judgeCohen
-cohensChambers
+adc@example.com
+admissionsclerk@example.com
+clerkofcourt@example.com
+docketclerk@example.com
+docketclerk1@example.com
+petitionsclerk@example.com
+petitionsclerk1@example.com
+trialclerk@example.com
+judgeArmen@example.com
+armensChambers@example.com
+judgeAshford@example.com
+ashfordsChambers@example.com
+judgeBuch@example.com
+buchsChambers@example.com
+judgeCarluzzo@example.com
+carluzzosChambers@example.com
+judgeCohen@example.com
+cohensChambers@example.com
 ```
 
 No password is required.

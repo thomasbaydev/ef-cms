@@ -43,7 +43,9 @@ export const docketClerkEditsDocketEntryNonstandardC = test => {
       value: 'DCL',
     });
 
-    await test.runSequence('submitDocketEntrySequence');
+    await test.runSequence('fileDocketEntrySequence', {
+      isSavingForLater: true,
+    });
 
     expect(test.getState('validationErrors')).toEqual({
       freeText: VALIDATION_ERROR_MESSAGES.freeText,
@@ -101,7 +103,9 @@ export const docketClerkEditsDocketEntryNonstandardC = test => {
       value: true,
     });
 
-    await test.runSequence('submitDocketEntrySequence');
+    await test.runSequence('fileDocketEntrySequence', {
+      isSavingForLater: true,
+    });
 
     expect(test.getState('validationErrors')).toEqual({});
 
@@ -135,7 +139,7 @@ export const docketClerkEditsDocketEntryNonstandardC = test => {
       certificateOfServiceDate: '2011-01-01',
       documentTitle: 'Declaration of Bob Barker in Support of Petition',
       documentType: 'Declaration in Support',
-      eventCode: 'DCL',
+      eventCode: 'MISCL',
       lodged: true,
       mailingDate: 'yesterday',
       pending: true,

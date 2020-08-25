@@ -11,6 +11,7 @@ import {
   router,
 } from './router';
 
+import { faAddressCard } from '@fortawesome/free-regular-svg-icons/faAddressCard';
 import { faArrowAltCircleLeft as faArrowAltCircleLeftRegular } from '@fortawesome/free-regular-svg-icons/faArrowAltCircleLeft';
 import { faCheckCircle as faCheckCircleRegular } from '@fortawesome/free-regular-svg-icons/faCheckCircle';
 import { faClock } from '@fortawesome/free-regular-svg-icons/faClock';
@@ -24,6 +25,7 @@ import { faTimesCircle as faTimesCircleRegular } from '@fortawesome/free-regular
 import { faUser } from '@fortawesome/free-regular-svg-icons/faUser';
 
 import { faArrowAltCircleLeft as faArrowAltCircleLeftSolid } from '@fortawesome/free-solid-svg-icons/faArrowAltCircleLeft';
+import { faArrowRight } from '@fortawesome/free-solid-svg-icons/faArrowRight';
 import { faCalculator } from '@fortawesome/free-solid-svg-icons/faCalculator';
 import { faCalendarAlt } from '@fortawesome/free-solid-svg-icons/faCalendarAlt';
 import { faCalendarCheck } from '@fortawesome/free-solid-svg-icons/faCalendarCheck';
@@ -59,6 +61,7 @@ import { faLaptop } from '@fortawesome/free-solid-svg-icons/faLaptop';
 import { faLink } from '@fortawesome/free-solid-svg-icons/faLink';
 import { faListUl } from '@fortawesome/free-solid-svg-icons/faListUl';
 import { faLock } from '@fortawesome/free-solid-svg-icons/faLock';
+import { faMailBulk } from '@fortawesome/free-solid-svg-icons/faMailBulk';
 import { faMinus } from '@fortawesome/free-solid-svg-icons/faMinus';
 import { faMinusCircle } from '@fortawesome/free-solid-svg-icons/faMinusCircle';
 import { faPaperPlane } from '@fortawesome/free-solid-svg-icons/faPaperPlane';
@@ -69,6 +72,7 @@ import { faPlusCircle } from '@fortawesome/free-solid-svg-icons/faPlusCircle';
 import { faPrint } from '@fortawesome/free-solid-svg-icons/faPrint';
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons/faQuestionCircle';
 import { faRedoAlt } from '@fortawesome/free-solid-svg-icons/faRedoAlt';
+import { faReply } from '@fortawesome/free-solid-svg-icons/faReply';
 import { faSearch } from '@fortawesome/free-solid-svg-icons/faSearch';
 import { faShareSquare } from '@fortawesome/free-solid-svg-icons/faShareSquare';
 import { faShieldAlt } from '@fortawesome/free-solid-svg-icons/faShieldAlt';
@@ -86,8 +90,8 @@ import { faTimesCircle } from '@fortawesome/free-solid-svg-icons/faTimesCircle';
 import { faTrash } from '@fortawesome/free-solid-svg-icons/faTrash';
 import { faUserCheck } from '@fortawesome/free-solid-svg-icons/faUserCheck';
 
+import { config, library } from '@fortawesome/fontawesome-svg-core';
 import { isFunction, mapValues } from 'lodash';
-import { library } from '@fortawesome/fontawesome-svg-core';
 import { presenter } from './presenter/presenter';
 import { socketProvider } from './providers/socket';
 import { socketRouter } from './providers/socketRouter';
@@ -145,9 +149,11 @@ const app = {
 
     presenter.state.constants = applicationContext.getConstants();
 
+    config.autoAddCss = false;
     library.add(
       faArrowAltCircleLeftRegular,
       faArrowAltCircleLeftSolid,
+      faAddressCard,
       faCalculator,
       faCalendarAlt,
       faCalendarCheck,
@@ -163,7 +169,6 @@ const app = {
       faClock,
       faClockSolid,
       faClone,
-      faEnvelopeOpen,
       faCloudDownloadAlt,
       faCloudUploadAlt,
       faCopy,
@@ -171,8 +176,9 @@ const app = {
       faDollarSign,
       faEdit,
       faEditSolid,
-      faEnvelopeSolid,
       faEnvelopeOpen,
+      faArrowRight,
+      faEnvelopeSolid,
       faExclamation,
       faExclamationCircle,
       faExclamationTriangle,
@@ -192,6 +198,7 @@ const app = {
       faLink,
       faListUl,
       faLock,
+      faMailBulk,
       faMinus,
       faMinusCircle,
       faPaperclip,
@@ -202,6 +209,7 @@ const app = {
       faPrint,
       faQuestionCircle,
       faRedoAlt,
+      faReply,
       faSearch,
       faShareSquare,
       faShieldAlt,

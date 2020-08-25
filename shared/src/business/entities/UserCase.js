@@ -1,8 +1,9 @@
-const joi = require('@hapi/joi');
+const joi = require('joi');
 const {
   joiValidationDecorator,
 } = require('../../utilities/JoiValidationDecorator');
 const { Case } = require('./cases/Case');
+const { createISODateString } = require('../utilities/DateHandler');
 
 UserCase.validationName = 'UserCase';
 
@@ -14,22 +15,25 @@ UserCase.validationName = 'UserCase';
  * @constructor
  */
 function UserCase(rawUserCase) {
-  this.caseId = rawUserCase.caseId;
+  this.entityName = 'UserCase';
   this.caseCaption = rawUserCase.caseCaption;
-  this.createdAt = rawUserCase.createdAt;
+  this.createdAt = rawUserCase.createdAt || createISODateString();
   this.docketNumber = rawUserCase.docketNumber;
   this.docketNumberWithSuffix = rawUserCase.docketNumberWithSuffix;
-  this.leadCaseId = rawUserCase.leadCaseId;
+  this.leadDocketNumber = rawUserCase.leadDocketNumber;
+  this.status = rawUserCase.status;
 }
 
 joiValidationDecorator(
   UserCase,
   joi.object().keys({
-    caseCaption: Case.validationRules.caseCaption,
-    caseId: Case.validationRules.caseId,
-    docketNumber: Case.validationRules.docketNumber,
-    docketNumberWithSuffix: Case.validationRules.docketNumberWithSuffix,
-    leadCaseId: Case.validationRules.leadCaseId,
+    caseCaption: Case.VALIDATION_RULES.caseCaption,
+    createdAt: Case.VALIDATION_RULES.createdAt,
+    docketNumber: Case.VALIDATION_RULES.docketNumber,
+    docketNumberWithSuffix: Case.VALIDATION_RULES.docketNumberWithSuffix,
+    entityName: joi.string().valid('UserCase').required(),
+    leadDocketNumber: Case.VALIDATION_RULES.leadDocketNumber,
+    status: Case.VALIDATION_RULES.status,
   }),
   Case.VALIDATION_ERROR_MESSAGES,
 );

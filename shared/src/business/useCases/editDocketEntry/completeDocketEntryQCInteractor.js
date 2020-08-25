@@ -5,6 +5,11 @@ const {
   aggregatePartiesForService,
 } = require('../../utilities/aggregatePartiesForService');
 const {
+  CONTACT_CHANGE_DOCUMENT_TYPES,
+  DOCUMENT_RELATIONSHIPS,
+  NOTICE_OF_DOCKET_CHANGE,
+} = require('../../entities/EntityConstants');
+const {
   formatDocument,
   getFilingsAndProceedings,
 } = require('../../utilities/getFormattedCaseDetail');
@@ -16,7 +21,8 @@ const {
   ROLE_PERMISSIONS,
 } = require('../../../authorization/authorizationClientService');
 const { Case } = require('../../entities/cases/Case');
-const { DOCKET_SECTION } = require('../../entities/WorkQueue');
+const { CASE_CAPTION_POSTFIX } = require('../../entities/EntityConstants');
+const { DOCKET_SECTION } = require('../../entities/EntityConstants');
 const { DocketRecord } = require('../../entities/DocketRecord');
 const { Document } = require('../../entities/Document');
 const { formatDateString } = require('../../utilities/DateHandler');
@@ -45,7 +51,11 @@ exports.completeDocketEntryQCInteractor = async ({
     throw new UnauthorizedError('Unauthorized');
   }
 
-  const { caseId, documentId } = entryMetadata;
+  const {
+    docketNumber,
+    documentId,
+    overridePaperServiceAddress,
+  } = entryMetadata;
 
   const user = await applicationContext
     .getPersistenceGateway()
@@ -53,9 +63,9 @@ exports.completeDocketEntryQCInteractor = async ({
 
   const caseToUpdate = await applicationContext
     .getPersistenceGateway()
-    .getCaseByCaseId({
+    .getCaseByDocketNumber({
       applicationContext,
-      caseId,
+      docketNumber,
     });
 
   let caseEntity = new Case(caseToUpdate, { applicationContext });
@@ -79,11 +89,13 @@ exports.completeDocketEntryQCInteractor = async ({
     eventCode: entryMetadata.eventCode,
     freeText: entryMetadata.freeText,
     freeText2: entryMetadata.freeText2,
-    isFileAttached: entryMetadata.isFileAttached,
+    hasOtherFilingParty: entryMetadata.hasOtherFilingParty,
+    isFileAttached: true,
     lodged: entryMetadata.lodged,
     mailingDate: entryMetadata.mailingDate,
     objections: entryMetadata.objections,
     ordinalValue: entryMetadata.ordinalValue,
+    otherFilingParty: entryMetadata.otherFilingParty,
     partyIrsPractitioner: entryMetadata.partyIrsPractitioner,
     partyPrimary: entryMetadata.partyPrimary,
     partySecondary: entryMetadata.partySecondary,
@@ -96,8 +108,9 @@ exports.completeDocketEntryQCInteractor = async ({
   const updatedDocument = new Document(
     {
       ...currentDocument,
+      filedBy: undefined, // allow constructor to re-generate
       ...editableFields,
-      relationship: 'primaryDocument',
+      relationship: DOCUMENT_RELATIONSHIPS.PRIMARY,
       userId: user.userId,
       ...caseEntity.getCaseContacts({
         contactPrimary: true,
@@ -106,8 +119,6 @@ exports.completeDocketEntryQCInteractor = async ({
     },
     { applicationContext },
   ).validate();
-
-  updatedDocument.generateFiledBy(caseToUpdate, true);
   updatedDocument.setQCed(user);
 
   let updatedDocumentTitle = updatedDocument.documentTitle;
@@ -144,7 +155,7 @@ exports.completeDocketEntryQCInteractor = async ({
 
   const docketChangeInfo = {
     caseCaptionExtension,
-    caseCaptionWithPostfix: `${caseToUpdate.caseCaption} ${Case.CASE_CAPTION_POSTFIX}`,
+    caseCaptionWithPostfix: `${caseToUpdate.caseCaption} ${CASE_CAPTION_POSTFIX}`,
     caseTitle,
     docketEntryIndex: docketRecordIndexUpdated,
     docketNumber: `${caseToUpdate.docketNumber}${
@@ -179,7 +190,7 @@ exports.completeDocketEntryQCInteractor = async ({
   caseEntity.updateDocketRecordEntry(omit(docketRecordEntry, 'index'));
   caseEntity.updateDocument(updatedDocument);
 
-  const workItemToUpdate = updatedDocument.getQCWorkItem();
+  const workItemToUpdate = updatedDocument.workItem;
 
   if (workItemToUpdate) {
     await applicationContext.getPersistenceGateway().deleteWorkItemFromInbox({
@@ -188,7 +199,6 @@ exports.completeDocketEntryQCInteractor = async ({
     });
 
     Object.assign(workItemToUpdate, {
-      caseId: caseId,
       caseIsInProgress: caseEntity.inProgress,
       caseStatus: caseToUpdate.status,
       docketNumber: caseToUpdate.docketNumber,
@@ -235,9 +245,8 @@ exports.completeDocketEntryQCInteractor = async ({
   let paperServiceDocumentTitle;
 
   if (
-    Document.CONTACT_CHANGE_DOCUMENT_TYPES.includes(
-      updatedDocument.documentType,
-    )
+    overridePaperServiceAddress ||
+    CONTACT_CHANGE_DOCUMENT_TYPES.includes(updatedDocument.documentType)
   ) {
     if (servedParties.paper.length > 0) {
       const { Body: pdfData } = await applicationContext
@@ -294,7 +303,7 @@ exports.completeDocketEntryQCInteractor = async ({
 
     let noticeUpdatedDocument = new Document(
       {
-        ...Document.NOTICE_OF_DOCKET_CHANGE,
+        ...NOTICE_OF_DOCKET_CHANGE,
         documentId: noticeDocumentId,
         userId: user.userId,
       },
@@ -302,13 +311,15 @@ exports.completeDocketEntryQCInteractor = async ({
     );
 
     noticeUpdatedDocument.documentTitle = replaceBracketed(
-      Document.NOTICE_OF_DOCKET_CHANGE.documentTitle,
+      NOTICE_OF_DOCKET_CHANGE.documentTitle,
       docketChangeInfo.docketEntryIndex,
     );
 
     noticeUpdatedDocument.setAsServed(servedParties.all);
 
-    caseEntity.addDocument(noticeUpdatedDocument, { applicationContext });
+    caseEntity.addDocument(noticeUpdatedDocument, {
+      applicationContext,
+    });
 
     const { Body: pdfData } = await applicationContext
       .getStorageClient()
@@ -389,7 +400,7 @@ exports.completeDocketEntryQCInteractor = async ({
   if (needsNewCoversheet) {
     await applicationContext.getUseCases().addCoversheetInteractor({
       applicationContext,
-      caseId,
+      docketNumber: caseEntity.docketNumber,
       documentId,
     });
   }

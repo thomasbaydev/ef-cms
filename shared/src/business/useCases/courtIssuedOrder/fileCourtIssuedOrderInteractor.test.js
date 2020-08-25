@@ -3,19 +3,27 @@ const {
   getFakeFile,
 } = require('../../test/createTestApplicationContext');
 const {
+  CASE_STATUS_TYPES,
+  CASE_TYPES_MAP,
+  COUNTRY_TYPES,
+  PARTY_TYPES,
+  PETITIONS_SECTION,
+  ROLES,
+} = require('../../entities/EntityConstants');
+const {
   fileCourtIssuedOrderInteractor,
 } = require('./fileCourtIssuedOrderInteractor');
 const { User } = require('../../entities/User');
 
 describe('fileCourtIssuedOrderInteractor', () => {
+  const mockUserId = applicationContext.getUniqueId();
   const caseRecord = {
     caseCaption: 'Caption',
-    caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-    caseType: 'Deficiency',
+    caseType: CASE_TYPES_MAP.deficiency,
     contactPrimary: {
       address1: '123 Main St',
       city: 'Somewhere',
-      countryType: 'domestic',
+      countryType: COUNTRY_TYPES.DOMESTIC,
       email: 'fieri@example.com',
       name: 'Guy Fieri',
       phone: '1234567890',
@@ -38,26 +46,33 @@ describe('fileCourtIssuedOrderInteractor', () => {
         docketNumber: '45678-18',
         documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
         documentType: 'Answer',
-        userId: 'e3bb51b1-bb93-494b-8a20-8bce8327fd99',
+        eventCode: 'A',
+        filedBy: 'Test Petitioner',
+        userId: mockUserId,
       },
       {
         docketNumber: '45678-18',
         documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
         documentType: 'Answer',
-        userId: 'e3bb51b1-bb93-494b-8a20-8bce8327fd99',
+        eventCode: 'A',
+        filedBy: 'Test Petitioner',
+        userId: mockUserId,
       },
       {
         docketNumber: '45678-18',
         documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
         documentType: 'Answer',
-        userId: 'e3bb51b1-bb93-494b-8a20-8bce8327fd99',
+        eventCode: 'A',
+        filedBy: 'Test Petitioner',
+        userId: mockUserId,
       },
     ],
     filingType: 'Myself',
-    partyType: 'Petitioner',
+    partyType: PARTY_TYPES.petitioner,
     preferredTrialCity: 'Fresno, California',
     procedureType: 'Regular',
-    role: User.ROLES.petitioner,
+    role: ROLES.petitioner,
+    status: CASE_STATUS_TYPES.new,
     userId: 'ddd6c900-388b-4151-8014-b3378076bfb0',
   };
 
@@ -65,7 +80,7 @@ describe('fileCourtIssuedOrderInteractor', () => {
     applicationContext.getCurrentUser.mockReturnValue(
       new User({
         name: 'Emmett Lathrop "Doc" Brown, Ph.D.',
-        role: User.ROLES.petitionsClerk,
+        role: ROLES.petitionsClerk,
         userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
       }),
     );
@@ -73,14 +88,14 @@ describe('fileCourtIssuedOrderInteractor', () => {
     applicationContext.getPersistenceGateway().getUserById.mockReturnValue(
       new User({
         name: 'Emmett Lathrop "Doc" Brown, Ph.D.',
-        role: User.ROLES.petitionsClerk,
+        role: ROLES.petitionsClerk,
         userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
       }),
     );
 
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(caseRecord);
+      .getCaseByDocketNumber.mockReturnValue(caseRecord);
   });
 
   it('should throw an error if not authorized', async () => {
@@ -90,8 +105,9 @@ describe('fileCourtIssuedOrderInteractor', () => {
       fileCourtIssuedOrderInteractor({
         applicationContext,
         documentMetadata: {
-          caseId: caseRecord.caseId,
+          docketNumber: caseRecord.docketNumber,
           documentType: 'Order to Show Cause',
+          eventCode: 'OSC',
         },
         primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
       }),
@@ -102,15 +118,18 @@ describe('fileCourtIssuedOrderInteractor', () => {
     await fileCourtIssuedOrderInteractor({
       applicationContext,
       documentMetadata: {
-        caseId: caseRecord.caseId,
-        docketNumber: '45678-18',
+        docketNumber: caseRecord.docketNumber,
         documentType: 'Order to Show Cause',
+        eventCode: 'OSC',
+        signedAt: '2019-03-01T21:40:46.415Z',
+        signedByUserId: mockUserId,
+        signedJudgeName: 'Dredd',
       },
       primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
 
     expect(
-      applicationContext.getPersistenceGateway().getCaseByCaseId,
+      applicationContext.getPersistenceGateway().getCaseByDocketNumber,
     ).toHaveBeenCalled();
     expect(
       applicationContext.getPersistenceGateway().updateCase.mock.calls[0][0]
@@ -122,17 +141,19 @@ describe('fileCourtIssuedOrderInteractor', () => {
     await fileCourtIssuedOrderInteractor({
       applicationContext,
       documentMetadata: {
-        caseId: caseRecord.caseId,
-        docketNumber: '45678-18',
+        docketNumber: caseRecord.docketNumber,
         documentTitle: 'Order to do anything',
         documentType: 'Order',
         eventCode: 'O',
+        signedAt: '2019-03-01T21:40:46.415Z',
+        signedByUserId: mockUserId,
+        signedJudgeName: 'Dredd',
       },
       primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
 
     expect(
-      applicationContext.getPersistenceGateway().getCaseByCaseId,
+      applicationContext.getPersistenceGateway().getCaseByDocketNumber,
     ).toHaveBeenCalled();
     expect(
       applicationContext.getPersistenceGateway().updateCase.mock.calls[0][0]
@@ -148,11 +169,13 @@ describe('fileCourtIssuedOrderInteractor', () => {
     await fileCourtIssuedOrderInteractor({
       applicationContext,
       documentMetadata: {
-        caseId: caseRecord.caseId,
-        docketNumber: '45678-18',
+        docketNumber: caseRecord.docketNumber,
         documentTitle: 'Notice to be nice',
         documentType: 'Notice',
         eventCode: 'NOT',
+        signedAt: '2019-03-01T21:40:46.415Z',
+        signedByUserId: mockUserId,
+        signedJudgeName: 'Dredd',
       },
       primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
@@ -174,15 +197,13 @@ describe('fileCourtIssuedOrderInteractor', () => {
     await fileCourtIssuedOrderInteractor({
       applicationContext,
       documentMetadata: {
-        caseId: caseRecord.caseId,
-        docketNumber: '45678-18',
+        docketNumber: caseRecord.docketNumber,
         documentContents: 'I am some document contents',
         documentType: 'Order to Show Cause',
-        draftState: {
-          documentContents: 'I am some document contents',
-          editorDelta: 'I am some document contents',
-          richText: 'I am some document contents',
-        },
+        eventCode: 'OSC',
+        signedAt: '2019-03-01T21:40:46.415Z',
+        signedByUserId: mockUserId,
+        signedJudgeName: 'Dredd',
       },
       primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
@@ -216,11 +237,11 @@ describe('fileCourtIssuedOrderInteractor', () => {
     await fileCourtIssuedOrderInteractor({
       applicationContext,
       documentMetadata: {
-        caseId: caseRecord.caseId,
-        docketNumber: '45678-18',
+        docketNumber: caseRecord.docketNumber,
         documentTitle: 'TC Opinion',
-        documentType: 'TCOP - T.C. Opinion',
+        documentType: 'T.C. Opinion',
         eventCode: 'TCOP',
+        judge: 'Dredd',
       },
       primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
@@ -240,6 +261,108 @@ describe('fileCourtIssuedOrderInteractor', () => {
     ).not.toEqual(-1);
   });
 
+  it('should add order document to most recent message if a parentMessageId is passed in', async () => {
+    applicationContext
+      .getPersistenceGateway()
+      .getMessageThreadByParentId.mockReturnValue([
+        {
+          caseStatus: caseRecord.status,
+          caseTitle: PARTY_TYPES.petitioner,
+          createdAt: '2019-03-01T21:40:46.415Z',
+          docketNumber: caseRecord.docketNumber,
+          docketNumberWithSuffix: caseRecord.docketNumber,
+          from: 'Test Petitionsclerk',
+          fromSection: PETITIONS_SECTION,
+          fromUserId: '4791e892-14ee-4ab1-8468-0c942ec379d2',
+          message: 'hey there',
+          messageId: 'a10d6855-f3ee-4c11-861c-c7f11cba4dff',
+          parentMessageId: '31687a1e-3640-42cd-8e7e-a8e6df39ce9a',
+          subject: 'hello',
+          to: 'Test Petitionsclerk2',
+          toSection: PETITIONS_SECTION,
+          toUserId: '449b916e-3362-4a5d-bf56-b2b94ba29c12',
+        },
+      ]);
+
+    await fileCourtIssuedOrderInteractor({
+      applicationContext,
+      documentMetadata: {
+        docketNumber: caseRecord.docketNumber,
+        documentTitle: 'Order to do anything',
+        documentType: 'Order',
+        eventCode: 'O',
+        parentMessageId: '6c1fd626-c1e1-4367-bca6-e00f9ef98cf5',
+        signedAt: '2019-03-01T21:40:46.415Z',
+        signedByUserId: mockUserId,
+        signedJudgeName: 'Dredd',
+      },
+      primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+    });
+
+    expect(
+      applicationContext.getPersistenceGateway().updateMessage,
+    ).toHaveBeenCalled();
+    expect(
+      applicationContext.getPersistenceGateway().updateMessage.mock.calls[0][0]
+        .message.attachments,
+    ).toEqual([
+      {
+        documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+        documentTitle: 'Order to do anything',
+      },
+    ]);
+  });
+
+  it('should set isDraft to true when creating a court issued document', async () => {
+    applicationContext
+      .getPersistenceGateway()
+      .getMessageThreadByParentId.mockReturnValue([
+        {
+          caseStatus: caseRecord.status,
+          caseTitle: PARTY_TYPES.petitioner,
+          createdAt: '2019-03-01T21:40:46.415Z',
+          docketNumber: caseRecord.docketNumber,
+          docketNumberWithSuffix: caseRecord.docketNumber,
+          from: 'Test Petitionsclerk',
+          fromSection: PETITIONS_SECTION,
+          fromUserId: '4791e892-14ee-4ab1-8468-0c942ec379d2',
+          message: 'hey there',
+          messageId: 'a10d6855-f3ee-4c11-861c-c7f11cba4dff',
+          parentMessageId: '31687a1e-3640-42cd-8e7e-a8e6df39ce9a',
+          subject: 'hello',
+          to: 'Test Petitionsclerk2',
+          toSection: PETITIONS_SECTION,
+          toUserId: '449b916e-3362-4a5d-bf56-b2b94ba29c12',
+        },
+      ]);
+
+    await fileCourtIssuedOrderInteractor({
+      applicationContext,
+      documentMetadata: {
+        docketNumber: caseRecord.docketNumber,
+        documentTitle: 'Order to do anything',
+        documentType: 'Order',
+        eventCode: 'O',
+        parentMessageId: '6c1fd626-c1e1-4367-bca6-e00f9ef98cf5',
+        signedAt: '2019-03-01T21:40:46.415Z',
+        signedByUserId: mockUserId,
+        signedJudgeName: 'Dredd',
+      },
+      primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+    });
+
+    const lastDocumentIndex =
+      applicationContext.getPersistenceGateway().updateCase.mock.calls[0][0]
+        .caseToUpdate.documents.length - 1;
+
+    const newlyFiledDocument = applicationContext.getPersistenceGateway()
+      .updateCase.mock.calls[0][0].caseToUpdate.documents[lastDocumentIndex];
+
+    expect(newlyFiledDocument).toMatchObject({
+      isDraft: true,
+    });
+  });
+
   it('should throw an error if fails to parse pdf', async () => {
     applicationContext
       .getUtilities()
@@ -251,10 +374,9 @@ describe('fileCourtIssuedOrderInteractor', () => {
       fileCourtIssuedOrderInteractor({
         applicationContext,
         documentMetadata: {
-          caseId: caseRecord.caseId,
-          docketNumber: '45678-18',
+          docketNumber: caseRecord.docketNumber,
           documentTitle: 'TC Opinion',
-          documentType: 'TCOP - T.C. Opinion',
+          documentType: 'T.C. Opinion',
           eventCode: 'TCOP',
         },
         primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',

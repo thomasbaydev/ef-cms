@@ -1,4 +1,7 @@
 const React = require('react');
+const {
+  SERVICE_INDICATOR_TYPES,
+} = require('./../../../entities/EntityConstants');
 const { mount, shallow } = require('enzyme');
 const { PetitionService } = require('./PetitionService.jsx');
 
@@ -16,8 +19,8 @@ describe('PetitionService', () => {
     name: 'Test Petitioner',
     phone: '1234567890',
     postalCode: '12345',
-    serviceIndicator: 'Electronic',
-    state: 'ST',
+    serviceIndicator: SERVICE_INDICATOR_TYPES.SI_ELECTRONIC,
+    state: 'AL',
   };
 
   const contactSecondary = {
@@ -26,8 +29,8 @@ describe('PetitionService', () => {
     city: 'Somecity',
     name: 'Secondary Petitioner',
     postalCode: '12345',
-    serviceIndicator: 'Paper',
-    state: 'ST',
+    serviceIndicator: SERVICE_INDICATOR_TYPES.SI_PAPER,
+    state: 'AL',
   };
 
   const docketEntryNumber = 1;
@@ -37,7 +40,7 @@ describe('PetitionService', () => {
     documentTitle: 'Petition',
     eventCode: 'P',
     filingDate: '02/05/20',
-    mailingDate: '02/02/20',
+    formattedMailingDate: '02/02/20',
     servedAtFormatted: '02/03/2020 12:00am EST',
   };
 
@@ -51,7 +54,7 @@ describe('PetitionService', () => {
       phoneNumber: '123-123-1234',
       postalCode: '12345',
       representing: 'Test Petitioner',
-      state: 'ST',
+      state: 'AL',
     },
     {
       address1: '543 Barrister Ct',
@@ -62,7 +65,7 @@ describe('PetitionService', () => {
       phoneNumber: '123-123-4321',
       postalCode: '12345',
       representing: 'Secondary Petitioner',
-      state: 'ST',
+      state: 'AL',
     },
   ];
 
@@ -105,7 +108,7 @@ describe('PetitionService', () => {
       `Docket Entry No.: ${docketEntryNumber}`,
     );
     expect(documentInfo.text()).toContain(documentDetail.filingDate);
-    expect(documentInfo.text()).toContain(documentDetail.mailingDate);
+    expect(documentInfo.text()).toContain(documentDetail.formattedMailingDate);
     expect(documentInfo.text()).toContain(documentDetail.servedAtFormatted);
   });
 

@@ -1,4 +1,4 @@
-import { Document } from '../../../../shared/src/business/entities/Document';
+import { DOCUMENT_EXTERNAL_CATEGORIES_MAP } from '../../../../shared/src/business/entities/EntityConstants';
 import { applicationContext } from '../../applicationContext';
 import { completeDocumentTypeSectionHelper as completeDocumentTypeSectionHelperComputed } from './completeDocumentTypeSectionHelper';
 import { runCompute } from 'cerebral/test';
@@ -25,14 +25,14 @@ describe('completeDocumentTypeSectionHelper', () => {
     const categoryKey = 'Application';
     const categoryIdx = 0;
 
-    const { category, documentType } = Document.CATEGORY_MAP[categoryKey][
-      categoryIdx
-    ];
+    const { category, documentType } = DOCUMENT_EXTERNAL_CATEGORIES_MAP[
+      categoryKey
+    ][categoryIdx];
 
     const result = runCompute(completeDocumentTypeSectionHelper, {
       state: {
         caseDetail: {
-          caseId: 'case-id-123',
+          docketNumber: '101-20',
         },
         form: {
           category,
@@ -49,14 +49,14 @@ describe('completeDocumentTypeSectionHelper', () => {
     const categoryKey = 'Motion';
     const categoryIdx = 22;
 
-    const { category, documentType } = Document.CATEGORY_MAP[categoryKey][
-      categoryIdx
-    ];
+    const { category, documentType } = DOCUMENT_EXTERNAL_CATEGORIES_MAP[
+      categoryKey
+    ][categoryIdx];
 
     const result = runCompute(completeDocumentTypeSectionHelper, {
       state: {
         caseDetail: {
-          caseId: 'case-id-123',
+          docketNumber: '101-20',
         },
         form: {
           category,

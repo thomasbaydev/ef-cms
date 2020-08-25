@@ -3,6 +3,7 @@ const {
   ROLE_PERMISSIONS,
 } = require('../../authorization/authorizationClientService');
 const { Case } = require('../entities/cases/Case');
+const { CASE_STATUS_TYPES } = require('../entities/EntityConstants');
 const { TrialSession } = require('../entities/trialSessions/TrialSession');
 const { UnauthorizedError } = require('../../errors/errors');
 
@@ -13,7 +14,7 @@ const { UnauthorizedError } = require('../../errors/errors');
  * @param {object} providers.applicationContext the application context
  * @param {string} providers.associatedJudge the associated judge to set on the case
  * @param {string} providers.caseCaption the caption to set on the case
- * @param {string} providers.caseId the id of the case to update
+ * @param {string} providers.docketNumber the docket number of the case to update
  * @param {object} providers.caseStatus the status to set on the case
  * @returns {object} the updated case data
  */
@@ -21,8 +22,8 @@ exports.updateCaseContextInteractor = async ({
   applicationContext,
   associatedJudge,
   caseCaption,
-  caseId,
   caseStatus,
+  docketNumber,
 }) => {
   const user = applicationContext.getCurrentUser();
 
@@ -32,7 +33,7 @@ exports.updateCaseContextInteractor = async ({
 
   const oldCase = await applicationContext
     .getPersistenceGateway()
-    .getCaseByCaseId({ applicationContext, caseId });
+    .getCaseByDocketNumber({ applicationContext, docketNumber });
 
   const newCase = new Case(oldCase, { applicationContext });
 
@@ -49,7 +50,7 @@ exports.updateCaseContextInteractor = async ({
   // if this case status is changing FROM calendared
   // we need to remove it from the trial session
   if (caseStatus !== oldCase.status) {
-    if (oldCase.status === Case.STATUS_TYPES.calendared) {
+    if (oldCase.status === CASE_STATUS_TYPES.calendared) {
       const disposition = `Status was changed to ${caseStatus}`;
 
       const trialSession = await applicationContext
@@ -63,7 +64,10 @@ exports.updateCaseContextInteractor = async ({
         applicationContext,
       });
 
-      trialSessionEntity.removeCaseFromCalendar({ caseId, disposition });
+      trialSessionEntity.removeCaseFromCalendar({
+        disposition,
+        docketNumber: oldCase.docketNumber,
+      });
 
       await applicationContext.getPersistenceGateway().updateTrialSession({
         applicationContext,
@@ -72,23 +76,23 @@ exports.updateCaseContextInteractor = async ({
 
       newCase.removeFromTrialWithAssociatedJudge(associatedJudge);
     } else if (
-      oldCase.status === Case.STATUS_TYPES.generalDocketReadyForTrial
+      oldCase.status === CASE_STATUS_TYPES.generalDocketReadyForTrial
     ) {
       await applicationContext
         .getPersistenceGateway()
         .deleteCaseTrialSortMappingRecords({
           applicationContext,
-          caseId,
+          docketNumber: newCase.docketNumber,
         });
     }
 
-    if (caseStatus === Case.STATUS_TYPES.generalDocketReadyForTrial) {
+    if (caseStatus === CASE_STATUS_TYPES.generalDocketReadyForTrial) {
       await applicationContext
         .getPersistenceGateway()
         .createCaseTrialSortMappingRecords({
           applicationContext,
-          caseId: newCase.caseId,
           caseSortTags: newCase.generateTrialSortTags(),
+          docketNumber: newCase.docketNumber,
         });
     }
   }

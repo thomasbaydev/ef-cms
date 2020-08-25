@@ -20,23 +20,22 @@
       type: "string"
       flags: 
         presence: "optional"
+      rules: 
+        - 
+          name: "max"
+          args: 
+            limit: 100
       allow: 
         - null
     associatedJudge: 
       type: "string"
       flags: 
         presence: "required"
-    caseId: 
-      type: "string"
-      flags: 
-        presence: "required"
       rules: 
         - 
-          name: "guid"
+          name: "max"
           args: 
-            options: 
-              version: 
-                - "uuidv4"
+            limit: 100
     caseIsInProgress: 
       type: "boolean"
       flags: 
@@ -44,11 +43,30 @@
     caseStatus: 
       type: "string"
       flags: 
+        only: true
         presence: "optional"
+      allow: 
+        - "Assigned - Case"
+        - "Assigned - Motion"
+        - "Calendared"
+        - "CAV"
+        - "Closed"
+        - "General Docket - Not at Issue"
+        - "General Docket - At Issue (Ready for Trial)"
+        - "Jurisdiction Retained"
+        - "New"
+        - "On Appeal"
+        - "Rule 155"
+        - "Submitted"
     caseTitle: 
       type: "string"
       flags: 
         presence: "optional"
+      rules: 
+        - 
+          name: "max"
+          args: 
+            limit: 500
     completedAt: 
       type: "date"
       flags: 
@@ -60,6 +78,11 @@
       type: "string"
       flags: 
         presence: "optional"
+      rules: 
+        - 
+          name: "max"
+          args: 
+            limit: 100
       allow: 
         - null
     completedByUserId: 
@@ -79,6 +102,11 @@
       type: "string"
       flags: 
         presence: "optional"
+      rules: 
+        - 
+          name: "max"
+          args: 
+            limit: 100
       allow: 
         - null
     createdAt: 
@@ -92,12 +120,17 @@
       type: "string"
       flags: 
         presence: "required"
-    docketNumberSuffix: 
+        description: "Unique case identifier in XXXXX-YY format."
+      rules: 
+        - 
+          name: "pattern"
+          args: 
+            regex: "/^([1-9]\\d{2,4}-\\d{2})$/"
+    docketNumberWithSuffix: 
       type: "string"
       flags: 
         presence: "optional"
-      allow: 
-        - null
+        description: "Auto-generated from docket number and the suffix."
     document: 
       type: "object"
       flags: 
@@ -125,33 +158,135 @@
       type: "boolean"
       flags: 
         presence: "optional"
-    isQC: 
-      type: "boolean"
-      flags: 
-        presence: "required"
     isRead: 
       type: "boolean"
       flags: 
         presence: "optional"
-    messages: 
-      type: "array"
-      flags: 
-        presence: "required"
-      items: 
-        - 
-          type: "object"
     section: 
       type: "string"
       flags: 
+        only: true
         presence: "required"
+      allow: 
+        - "adc"
+        - "admissions"
+        - "chambers"
+        - "clerkofcourt"
+        - "docket"
+        - "petitions"
+        - "trialClerks"
+        - "armensChambers"
+        - "ashfordsChambers"
+        - "buchsChambers"
+        - "carluzzosChambers"
+        - "cohensChambers"
+        - "colvinsChambers"
+        - "copelandsChambers"
+        - "foleysChambers"
+        - "galesChambers"
+        - "gerbersChambers"
+        - "goekesChambers"
+        - "gustafsonsChambers"
+        - "guysChambers"
+        - "halpernsChambers"
+        - "holmesChambers"
+        - "jacobsChambers"
+        - "jonesChambers"
+        - "kerrigansChambers"
+        - "laubersChambers"
+        - "leydensChambers"
+        - "marvelsChambers"
+        - "morrisonsChambers"
+        - "negasChambers"
+        - "panuthosChambers"
+        - "parisChambers"
+        - "pughsChambers"
+        - "ruwesChambers"
+        - "thorntonsChambers"
+        - "torosChambers"
+        - "urdasChambers"
+        - "vasquezsChambers"
+        - "wellsChambers"
+        - "admin"
+        - "admissionsclerk"
+        - "docketclerk"
+        - "floater"
+        - "inactivePractitioner"
+        - "irsPractitioner"
+        - "irsSuperuser"
+        - "judge"
+        - "petitioner"
+        - "petitionsclerk"
+        - "privatePractitioner"
+        - "trialclerk"
+        - "irsSystem"
     sentBy: 
       type: "string"
       flags: 
         presence: "required"
+        description: "The name of the user that sent the WorkItem"
+      rules: 
+        - 
+          name: "max"
+          args: 
+            limit: 100
     sentBySection: 
       type: "string"
       flags: 
+        only: true
         presence: "optional"
+      allow: 
+        - "adc"
+        - "admissions"
+        - "chambers"
+        - "clerkofcourt"
+        - "docket"
+        - "petitions"
+        - "trialClerks"
+        - "armensChambers"
+        - "ashfordsChambers"
+        - "buchsChambers"
+        - "carluzzosChambers"
+        - "cohensChambers"
+        - "colvinsChambers"
+        - "copelandsChambers"
+        - "foleysChambers"
+        - "galesChambers"
+        - "gerbersChambers"
+        - "goekesChambers"
+        - "gustafsonsChambers"
+        - "guysChambers"
+        - "halpernsChambers"
+        - "holmesChambers"
+        - "jacobsChambers"
+        - "jonesChambers"
+        - "kerrigansChambers"
+        - "laubersChambers"
+        - "leydensChambers"
+        - "marvelsChambers"
+        - "morrisonsChambers"
+        - "negasChambers"
+        - "panuthosChambers"
+        - "parisChambers"
+        - "pughsChambers"
+        - "ruwesChambers"
+        - "thorntonsChambers"
+        - "torosChambers"
+        - "urdasChambers"
+        - "vasquezsChambers"
+        - "wellsChambers"
+        - "admin"
+        - "admissionsclerk"
+        - "docketclerk"
+        - "floater"
+        - "inactivePractitioner"
+        - "irsPractitioner"
+        - "irsSuperuser"
+        - "judge"
+        - "petitioner"
+        - "petitionsclerk"
+        - "privatePractitioner"
+        - "trialclerk"
     sentByUserId: 
       type: "string"
       flags: 

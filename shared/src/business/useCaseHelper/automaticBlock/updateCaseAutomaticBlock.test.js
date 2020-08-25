@@ -2,6 +2,10 @@ const {
   applicationContext,
 } = require('../../test/createTestApplicationContext');
 const {
+  AUTOMATIC_BLOCKED_REASONS,
+  CASE_STATUS_TYPES,
+} = require('../../entities/EntityConstants');
+const {
   MOCK_CASE,
   MOCK_CASE_WITHOUT_PENDING,
 } = require('../../../test/mockCase');
@@ -20,7 +24,7 @@ describe('updateCaseAutomaticBlock', () => {
   it('sets the case to automaticBlocked and calls deleteCaseTrialSortMappingRecords if it has pending documents', async () => {
     applicationContext
       .getPersistenceGateway()
-      .getCaseDeadlinesByCaseId.mockReturnValue([]);
+      .getCaseDeadlinesByDocketNumber.mockReturnValue([]);
 
     const caseEntity = new Case(MOCK_CASE, { applicationContext });
     const updatedCase = await updateCaseAutomaticBlock({
@@ -31,7 +35,7 @@ describe('updateCaseAutomaticBlock', () => {
     expect(updatedCase).toMatchObject({
       automaticBlocked: true,
       automaticBlockedDate: expect.anything(),
-      automaticBlockedReason: Case.AUTOMATIC_BLOCKED_REASONS.pending,
+      automaticBlockedReason: AUTOMATIC_BLOCKED_REASONS.pending,
     });
     expect(
       applicationContext.getPersistenceGateway()
@@ -42,7 +46,9 @@ describe('updateCaseAutomaticBlock', () => {
   it('sets the case to automaticBlocked and calls deleteCaseTrialSortMappingRecords if it has deadlines', async () => {
     applicationContext
       .getPersistenceGateway()
-      .getCaseDeadlinesByCaseId.mockReturnValue([{ deadline: 'something' }]);
+      .getCaseDeadlinesByDocketNumber.mockReturnValue([
+        { deadline: 'something' },
+      ]);
 
     const caseEntity = new Case(MOCK_CASE_WITHOUT_PENDING, {
       applicationContext,
@@ -55,7 +61,7 @@ describe('updateCaseAutomaticBlock', () => {
     expect(updatedCase).toMatchObject({
       automaticBlocked: true,
       automaticBlockedDate: expect.anything(),
-      automaticBlockedReason: Case.AUTOMATIC_BLOCKED_REASONS.dueDate,
+      automaticBlockedReason: AUTOMATIC_BLOCKED_REASONS.dueDate,
     });
     expect(
       applicationContext.getPersistenceGateway()
@@ -66,7 +72,9 @@ describe('updateCaseAutomaticBlock', () => {
   it('does not set the case to automaticBlocked or call deleteCaseTrialSortMappingRecords if it already has a trial date', async () => {
     applicationContext
       .getPersistenceGateway()
-      .getCaseDeadlinesByCaseId.mockReturnValue([{ deadline: 'something' }]);
+      .getCaseDeadlinesByDocketNumber.mockReturnValue([
+        { deadline: 'something' },
+      ]);
 
     const caseEntity = new Case(
       { ...MOCK_CASE_WITHOUT_PENDING, trialDate: '2021-03-01T21:40:46.415Z' },
@@ -89,7 +97,7 @@ describe('updateCaseAutomaticBlock', () => {
   it('sets the case to not automaticBlocked but does not call createCaseTrialSortMappingRecords if the case does not have deadlines or pending items and the case is not generalDocketReadyForTrial status', async () => {
     applicationContext
       .getPersistenceGateway()
-      .getCaseDeadlinesByCaseId.mockReturnValue([]);
+      .getCaseDeadlinesByDocketNumber.mockReturnValue([]);
 
     const caseEntity = new Case(MOCK_CASE_WITHOUT_PENDING, {
       applicationContext,
@@ -113,12 +121,12 @@ describe('updateCaseAutomaticBlock', () => {
   it('sets the case to not automaticBlocked and calls createCaseTrialSortMappingRecords if the case does not have deadlines or pending items and the case is generalDocketReadyForTrial status', async () => {
     applicationContext
       .getPersistenceGateway()
-      .getCaseDeadlinesByCaseId.mockReturnValue([]);
+      .getCaseDeadlinesByDocketNumber.mockReturnValue([]);
 
     const caseEntity = new Case(
       {
         ...MOCK_CASE_WITHOUT_PENDING,
-        status: Case.STATUS_TYPES.generalDocketReadyForTrial,
+        status: CASE_STATUS_TYPES.generalDocketReadyForTrial,
       },
       {
         applicationContext,

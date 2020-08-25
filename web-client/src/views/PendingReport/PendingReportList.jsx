@@ -47,11 +47,11 @@ export const PendingReportList = connect(
         >
           <thead>
             <tr>
-              <th>Docket number</th>
-              <th>Date filed</th>
-              <th>Case title</th>
-              <th>Filings and proceedings</th>
-              <th>Case status</th>
+              <th aria-label="Docket Number">Docket No.</th>
+              <th>Date Filed</th>
+              <th>Case Title</th>
+              <th>Filings and Proceedings</th>
+              <th>Case Status</th>
               <th>Judge</th>
             </tr>
           </thead>
@@ -65,7 +65,7 @@ export const PendingReportList = connect(
                 <td>{item.caseTitle}</td>
                 <td>
                   <a
-                    href={`/case-detail/${item.docketNumber}/documents/${item.documentId}`}
+                    href={`/case-detail/${item.docketNumber}/document-view?documentId=${item.documentId}`}
                   >
                     {item.formattedName}
                   </a>

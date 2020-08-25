@@ -4,7 +4,8 @@ const {
   ROLE_PERMISSIONS,
 } = require('../../../authorization/authorizationClientService');
 const { Case } = require('../../entities/cases/Case');
-const { formatDateString } = require('../../../business/utilities/DateHandler');
+const { CASE_STATUS_TYPES } = require('../../entities/EntityConstants');
+const { formatDateString } = require('../../utilities/DateHandler');
 const { padStart } = require('lodash');
 const { UnauthorizedError } = require('../../../errors/errors');
 
@@ -52,10 +53,10 @@ const batchDownloadTrialSessionInteractor = async ({
   const { trialLocation } = trialSessionDetails;
   let zipName = sanitize(`${trialDate}-${trialLocation}.zip`)
     .replace(/\s/g, '_')
-    .replace(/,/g, ''); // TODO - create a sanitize utility for s3 ids // TODO - should we make these unique somehow?
+    .replace(/,/g, '');
 
   sessionCases = sessionCases
-    .filter(caseToFilter => caseToFilter.status !== Case.STATUS_TYPES.closed)
+    .filter(caseToFilter => caseToFilter.status !== CASE_STATUS_TYPES.closed)
     .map(caseToBatch => {
       const caseTitle = Case.getCaseTitle(caseToBatch.caseCaption);
       const caseFolder = `${caseToBatch.docketNumber}, ${caseTitle}`;
@@ -98,15 +99,15 @@ const batchDownloadTrialSessionInteractor = async ({
   const numberOfDocketRecordsToGenerate = sessionCases.length;
   const numberOfFilesToBatch = numberOfDocketRecordsToGenerate + s3Ids.length;
 
-  const onDocketRecordCreation = async caseId => {
-    if (caseId) {
+  const onDocketRecordCreation = async docketNumber => {
+    if (docketNumber) {
       numberOfDocketRecordsGenerated += 1;
     }
     await applicationContext.getNotificationGateway().sendNotificationToUser({
       applicationContext,
       message: {
         action: 'batch_download_docket_generated',
-        caseId,
+        docketNumber,
         numberOfDocketRecordsGenerated,
         numberOfDocketRecordsToGenerate,
         numberOfFilesToBatch,
@@ -122,7 +123,7 @@ const batchDownloadTrialSessionInteractor = async ({
       .getUseCases()
       .generateDocketRecordPdfInteractor({
         applicationContext,
-        caseId: sessionCase.caseId,
+        docketNumber: sessionCase.docketNumber,
         includePartyDetail: true,
       });
 
@@ -130,13 +131,13 @@ const batchDownloadTrialSessionInteractor = async ({
       .getPersistenceGateway()
       .getDocument({
         applicationContext,
-        caseId: sessionCase.caseId,
+        docketNumber: sessionCase.docketNumber,
         documentId: result.fileId,
         protocol: 'S3',
         useTempBucket: true,
       });
 
-    await onDocketRecordCreation({ caseId: sessionCase.caseId });
+    await onDocketRecordCreation({ docketNumber: sessionCase.docketNumber });
 
     extraFiles.push(document);
 
@@ -243,5 +244,6 @@ exports.batchDownloadTrialSessionInteractor = async ({
       },
       userId,
     });
+    await applicationContext.notifyHoneybadger(error);
   }
 };

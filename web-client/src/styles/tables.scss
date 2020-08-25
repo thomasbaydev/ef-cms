@@ -187,6 +187,10 @@ table.messages {
   }
 }
 
+table.messages .message-document-title a.usa-button.ustc-button--unstyled {
+  text-align: left;
+}
+
 table.work-queue {
   th {
     border: 0;
@@ -246,6 +250,13 @@ table.work-queue {
       max-width: 25rem;
     }
 
+    &.message-subject {
+      a {
+        line-height: 18px;
+        text-align: left;
+      }
+    }
+
     &.has-icon {
       width: 44px;
     }
@@ -254,6 +265,7 @@ table.work-queue {
       max-width: 35rem;
       padding: 4px;
       margin: -4px;
+      text-align: left;
     }
 
     &.to {
@@ -569,4 +581,34 @@ table.case-list tbody tr:nth-child(even) td {
       font-weight: $font-semibold;
     }
   }
+}
+
+.document-viewer {
+  tr {
+    &.row-button {
+      cursor: pointer;
+    }
+
+    &.active {
+      background-color: color($theme-color-base-lightest);
+      box-shadow: 10px 0 0 0 color($theme-color-primary) inset;
+      color: color($theme-color-base-darkest);
+      text-decoration: none;
+    }
+  }
+
+  td {
+    &.small {
+      max-width: $table-column-width-small;
+      padding: 18px 15px 15px 15px;
+    }
+  }
+}
+
+.grid-header {
+  min-height: 50px;
+  align-items: center;
+  border-bottom: 1px solid color($theme-color-base-lighter);
+  background-color: color($theme-color-base-lightest);
+  font-weight: $font-semibold;
 }

@@ -22,24 +22,32 @@ import { completeDocumentTypeSectionHelper } from './computeds/completeDocumentT
 import { confirmInitiateServiceModalHelper } from './computeds/confirmInitiateServiceModalHelper';
 import { contactEditHelper } from './computeds/contactEditHelper';
 import { contactsHelper } from './computeds/contactsHelper';
+import { correspondenceViewerHelper } from './computeds/correspondenceViewerHelper';
 import { createOrderHelper } from './computeds/createOrderHelper';
 import { createPractitionerUserHelper } from './computeds/createPractitionerUserHelper';
 import { dashboardExternalHelper } from './computeds/dashboardExternalHelper';
 import { docketRecordHelper } from './computeds/docketRecordHelper';
-import { documentDetailHelper } from './computeds/documentDetailHelper';
 import { documentSigningHelper } from './computeds/documentSigningHelper';
+import { documentViewerHelper } from './computeds/documentViewerHelper';
+import { draftDocumentViewerHelper } from './computeds/draftDocumentViewerHelper';
 import { editDocketEntryHelper } from './computeds/editDocketEntryHelper';
 import { editDocketEntryMetaHelper } from './computeds/editDocketEntryMetaHelper';
 import { editPetitionerInformationHelper } from './computeds/editPetitionerInformationHelper';
 import { editStatisticFormHelper } from './computeds/editStatisticFormHelper';
-import { extractedPendingMessagesFromCaseDetail } from './computeds/extractPendingMessagesFromCaseDetail';
+import { externalUserCasesHelper } from './computeds/Dashboard/externalUserCasesHelper';
 import { fileDocumentHelper } from './computeds/fileDocumentHelper';
 import { fileUploadStatusHelper } from './computeds/fileUploadStatusHelper';
+import { filingPartiesFormHelper } from './computeds/filingPartiesFormHelper';
 import {
   formattedCaseDetail,
-  formattedCases,
+  formattedClosedCases,
+  formattedOpenCases,
 } from './computeds/formattedCaseDetail';
+import { formattedCaseMessages } from './computeds/formattedCaseMessages';
 import { formattedDashboardTrialSessions } from './computeds/formattedDashboardTrialSessions';
+import { formattedDocument } from './computeds/formattedDocument';
+import { formattedMessageDetail } from './computeds/formattedMessageDetail';
+import { formattedMessages } from './computeds/formattedMessages';
 import { formattedPendingItems } from './computeds/formattedPendingItems';
 import { formattedTrialSessionDetails } from './computeds/formattedTrialSessionDetails';
 import { formattedTrialSessions } from './computeds/formattedTrialSessions';
@@ -49,11 +57,18 @@ import { headerHelper } from './computeds/headerHelper';
 import { internalTypesHelper } from './computeds/internalTypesHelper';
 import { loadingHelper } from './computeds/loadingHelper';
 import { menuHelper } from './computeds/menuHelper';
+import { messageDocumentHelper } from './computeds/messageDocumentHelper';
+import { messageModalHelper } from './computeds/messageModalHelper';
+import { messagesHelper } from './computeds/messagesHelper';
 import { orderTypesHelper } from './computeds/orderTypesHelper';
+import { paperDocketEntryHelper } from './computeds/paperDocketEntryHelper';
 import { pdfPreviewModalHelper } from './computeds/PDFPreviewModal/pdfPreviewModalHelper';
 import { pdfSignerHelper } from './computeds/pdfSignerHelper';
+import { petitionQcHelper } from './computeds/petitionQcHelper';
 import { practitionerDetailHelper } from './computeds/practitionerDetailHelper';
 import { practitionerSearchFormHelper } from './computeds/practitionerSearchFormHelper';
+import { printPaperServiceHelper } from './computeds/printPaperServiceHelper';
+import { recentMessagesHelper } from './computeds/recentMessagesHelper';
 import { requestAccessHelper } from './computeds/requestAccessHelper';
 import { reviewSavedPetitionHelper } from './computeds/reviewSavedPetitionHelper';
 import { scanBatchPreviewerHelper } from './computeds/scanBatchPreviewerHelper';
@@ -101,22 +116,30 @@ const helpers = {
   confirmInitiateServiceModalHelper,
   contactEditHelper,
   contactsHelper,
+  correspondenceViewerHelper,
   createOrderHelper,
   createPractitionerUserHelper,
   dashboardExternalHelper,
   docketRecordHelper,
-  documentDetailHelper,
   documentSigningHelper,
+  documentViewerHelper,
+  draftDocumentViewerHelper,
   editDocketEntryHelper,
   editDocketEntryMetaHelper,
   editPetitionerInformationHelper,
   editStatisticFormHelper,
-  extractedPendingMessagesFromCaseDetail,
+  externalUserCasesHelper,
   fileDocumentHelper,
   fileUploadStatusHelper,
+  filingPartiesFormHelper,
   formattedCaseDetail,
-  formattedCases,
+  formattedCaseMessages,
+  formattedClosedCases,
   formattedDashboardTrialSessions,
+  formattedDocument,
+  formattedMessageDetail,
+  formattedMessages,
+  formattedOpenCases,
   formattedPendingItems,
   formattedTrialSessionDetails,
   formattedTrialSessions,
@@ -126,11 +149,18 @@ const helpers = {
   internalTypesHelper,
   loadingHelper,
   menuHelper,
+  messageDocumentHelper,
+  messageModalHelper,
+  messagesHelper,
   orderTypesHelper,
+  paperDocketEntryHelper,
   pdfPreviewModalHelper,
   pdfSignerHelper,
+  petitionQcHelper,
   practitionerDetailHelper,
   practitionerSearchFormHelper,
+  printPaperServiceHelper,
+  recentMessagesHelper,
   requestAccessHelper,
   reviewSavedPetitionHelper,
   scanBatchPreviewerHelper,
@@ -158,26 +188,28 @@ export const baseState = {
   advancedSearchForm: {}, // form for advanced search screen, TODO: replace with state.form
   archiveDraftDocument: {
     // used by the delete draft document modal
-    caseId: null,
+    docketNumber: null,
     documentId: null,
     documentTitle: null,
   },
   assigneeId: null, // used for assigning workItems in assignSelectedWorkItemsAction
   batchDownloads: {}, // batch download of PDFs
   caseDetail: {},
-  cases: [],
+  closedCases: [],
   cognitoLoginUrl: null,
-  completeForm: {}, // TODO: replace with state.form
+  completeForm: {},
+  // TODO: replace with state.form
   currentPage: 'Interstitial',
   currentViewMetadata: {
     caseDetail: {
       caseDetailInternalTabs: {
         caseInformation: false,
         correspondence: false,
-        deadlines: false,
         docketRecord: false,
-        inProgress: false,
+        drafts: false,
+        messages: false,
         notes: false,
+        trackedItems: false,
       },
     },
     documentDetail: {
@@ -194,16 +226,19 @@ export const baseState = {
       tab: null,
     },
   },
-  docketRecordIndex: 0, // needs its own object because it's present when other forms are on screen
+  docketRecordIndex: 0,
+  // needs its own object because it's present when other forms are on screen
   documentId: null,
-  fieldOrder: [], // TODO: related to errors
+  fieldOrder: [],
+  // TODO: related to errors
   fileUploadProgress: {
     // used for the progress bar shown in modal when uploading files
     isUploading: false,
     percentComplete: 0,
     timeRemaining: Number.POSITIVE_INFINITY,
   },
-  form: {}, // shared object for creating new entities, clear before using
+  form: {},
+  // shared object for creating new entities, clear before using
   header: {
     searchTerm: '',
     showBetaBar: true,
@@ -216,6 +251,7 @@ export const baseState = {
   },
   navigation: {},
   notifications: {},
+  openCases: [],
   pdfForSigning: {
     documentId: null,
     nameForSigning: '',
@@ -256,7 +292,7 @@ export const baseState = {
   workItemActions: {},
   workItemMetadata: {},
   workQueue: [],
-  workQueueToDisplay: { box: 'inbox', queue: 'my', workQueueIsInternal: true },
+  workQueueToDisplay: { box: 'inbox', queue: 'my' },
 };
 
 export const state = {

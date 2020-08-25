@@ -4,9 +4,9 @@ const {
 const {
   deleteDeficiencyStatisticInteractor,
 } = require('./deleteDeficiencyStatisticInteractor');
-const { Case } = require('../../entities/cases/Case');
+const { CASE_TYPES_MAP } = require('../../entities/EntityConstants');
 const { MOCK_CASE } = require('../../../test/mockCase');
-const { User } = require('../../entities/User');
+const { ROLES } = require('../../entities/EntityConstants');
 
 describe('deleteDeficiencyStatisticInteractor', () => {
   const statisticId = 'f7a1cdb5-f534-4d12-a046-86ca3b46ddc4';
@@ -23,13 +23,13 @@ describe('deleteDeficiencyStatisticInteractor', () => {
 
   beforeEach(() => {
     applicationContext.getCurrentUser.mockReturnValue({
-      role: User.ROLES.docketClerk,
+      role: ROLES.docketClerk,
       userId: 'docketClerk',
     });
 
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(
+      .getCaseByDocketNumber.mockReturnValue(
         Promise.resolve({ ...MOCK_CASE, statistics: [statistic] }),
       );
   });
@@ -40,7 +40,7 @@ describe('deleteDeficiencyStatisticInteractor', () => {
     await expect(
       deleteDeficiencyStatisticInteractor({
         applicationContext,
-        caseId: MOCK_CASE.caseId,
+        docketNumber: MOCK_CASE.docketNumber,
       }),
     ).rejects.toThrow('Unauthorized for editing statistics');
   });
@@ -48,7 +48,7 @@ describe('deleteDeficiencyStatisticInteractor', () => {
   it('should call updateCase with the removed case statistics and return the updated case', async () => {
     const result = await deleteDeficiencyStatisticInteractor({
       applicationContext,
-      caseId: MOCK_CASE.caseId,
+      docketNumber: MOCK_CASE.docketNumber,
       statisticId,
     });
     expect(result).toMatchObject({
@@ -64,7 +64,7 @@ describe('deleteDeficiencyStatisticInteractor', () => {
   it('should call updateCase with the original case statistics and return the original case if statisticId is not present on the case', async () => {
     const result = await deleteDeficiencyStatisticInteractor({
       applicationContext,
-      caseId: MOCK_CASE.caseId,
+      docketNumber: MOCK_CASE.docketNumber,
       statisticId: '8b864301-a0d9-43aa-8029-e1a0ed8ad4c9',
     });
     expect(result).toMatchObject({
@@ -78,19 +78,21 @@ describe('deleteDeficiencyStatisticInteractor', () => {
   });
 
   it('should throw an error and not update the case if attempting to delete the only statistic from a deficiency case with hasVerifiedIrsNotice true (at least one statistic is required)', async () => {
-    applicationContext.getPersistenceGateway().getCaseByCaseId.mockReturnValue(
-      Promise.resolve({
-        ...MOCK_CASE,
-        caseType: Case.CASE_TYPES_MAP.deficiency,
-        hasVerifiedIrsNotice: true,
-        statistics: [statistic],
-      }),
-    );
+    applicationContext
+      .getPersistenceGateway()
+      .getCaseByDocketNumber.mockReturnValue(
+        Promise.resolve({
+          ...MOCK_CASE,
+          caseType: CASE_TYPES_MAP.deficiency,
+          hasVerifiedIrsNotice: true,
+          statistics: [statistic],
+        }),
+      );
 
     await expect(
       deleteDeficiencyStatisticInteractor({
         applicationContext,
-        caseId: MOCK_CASE.caseId,
+        docketNumber: MOCK_CASE.docketNumber,
         statisticId: statistic.statisticId,
       }),
     ).rejects.toThrow('The Case entity was invalid');

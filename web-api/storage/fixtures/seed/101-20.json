@@ -22,21 +22,113 @@
       "name": "Bill Burr",
       "state": "PA",
       "countryType": "domestic",
-      "email": "petitioner"
+      "email": "petitioner@example.com"
     },
+    "otherPetitioners": [
+      {
+        "city": "Philadelphia",
+        "secondaryName": "Rumplestiltskin Ray",
+        "phone": "1234567890",
+        "serviceIndicator": "None",
+        "address1": "453 Electric Ave",
+        "postalCode": "99999",
+        "name": "Rachael Ray",
+        "additionalName": "Rachael Ray",
+        "state": "PA",
+        "countryType": "domestic",
+        "email": "mayor@flavortown.gov",
+        "title": "Petitioner"
+      },
+      {
+        "city": "Philadelphia",
+        "phone": "1234567890",
+        "serviceIndicator": "None",
+        "address1": "453 Electric Ave",
+        "postalCode": "99999",
+        "name": "Guy Fieri",
+        "additionalName": "Guy Fieri",
+        "state": "PA",
+        "countryType": "domestic",
+        "email": "mayor@flavortown.gov",
+        "title": "Petitioner"
+      },
+      {
+        "city": "Philadelphia",
+        "phone": "1234567890",
+        "serviceIndicator": "None",
+        "address1": "453 Electric Ave",
+        "postalCode": "99999",
+        "name": "Bobby Flay",
+        "additionalName": "Bobby Flay",
+        "state": "PA",
+        "countryType": "domestic",
+        "email": "mayor@flavortown.gov",
+        "title": "Petitioner"
+      },
+      {
+        "city": "Philadelphia",
+        "phone": "1234567890",
+        "serviceIndicator": "None",
+        "address1": "453 Electric Ave",
+        "postalCode": "99999",
+        "name": "Kid Rock",
+        "additionalName": "Kid Rock",
+        "state": "PA",
+        "countryType": "domestic",
+        "email": "mayor@flavortown.gov",
+        "title": "Petitioner"
+      },
+      {
+        "city": "Philadelphia",
+        "phone": "1234567890",
+        "serviceIndicator": "None",
+        "address1": "453 Electric Ave",
+        "postalCode": "99999",
+        "name": "Bill Burr",
+        "additionalName": "Bill Burr",
+        "state": "PA",
+        "countryType": "domestic",
+        "email": "mayor@flavortown.gov",
+        "title": "Petitioner"
+      },
+      {
+        "city": "Philadelphia",
+        "phone": "1234567890",
+        "serviceIndicator": "None",
+        "address1": "453 Electric Ave",
+        "postalCode": "99999",
+        "name": "Bill Burr",
+        "additionalName": "Bill Burr",
+        "state": "PA",
+        "countryType": "domestic",
+        "email": "mayor@flavortown.gov",
+        "title": "Petitioner"
+      },
+      {
+        "city": "Philadelphia",
+        "phone": "1234567890",
+        "serviceIndicator": "None",
+        "address1": "453 Electric Ave",
+        "postalCode": "99999",
+        "name": "Bill Burr",
+        "additionalName": "Bill Burr",
+        "state": "PA",
+        "countryType": "domestic",
+        "email": "mayor@flavortown.gov",
+        "title": "Petitioner"
+      }
+    ],
     "createdAt": "2020-01-02T16:05:45.978Z",
     "noticeOfAttachments": false,
     "trialTime": "10:00",
     "caseCaption": "Bill Burr, Petitioner",
-    "caseId": "0bc59d5b-c2b9-41f7-92a7-03b8cadffcc0",
-    "sk": "case|0bc59d5b-c2b9-41f7-92a7-03b8cadffcc0",
+    "sk": "case|101-20",
     "filingType": "Myself",
     "orderForOds": false,
     "orderForRatification": false,
     "initialDocketNumberSuffix": "S",
     "trialSessionId": "959c4338-0fac-42eb-b0eb-d53b8d0195cc",
     "docketNumberSuffix": "S",
-    "orderToChangeDesignatedPlaceOfTrial": false,
     "trialDate": "2020-11-27T05:00:00.000Z",
     "userId": "7805d1ab-18d0-43ec-bafb-654e83405416",
     "orderForAmendedPetition": false,
@@ -44,21 +136,21 @@
     "preferredTrialCity": "Houston, Texas",
     "hasPendingItems": false,
     "orderForAmendedPetitionAndFilingFee": false,
-    "pk": "case|0bc59d5b-c2b9-41f7-92a7-03b8cadffcc0",
+    "pk": "case|101-20",
     "docketNumber": "101-20",
     "docketNumberWithSuffix": "101-20S",
     "status": "Calendared"
   },
   {
-    "sk": "case|0bc59d5b-c2b9-41f7-92a7-03b8cadffcc0",
+    "sk": "case|101-20",
     "pk": "case-by-docket-number|101-20"
   },
   {
-    "sk": "case|0bc59d5b-c2b9-41f7-92a7-03b8cadffcc0",
+    "sk": "case|101-20",
     "pk": "case-by-docket-number|7805d1ab-18d0-43ec-bafb-654e83405416"
   },
   {
-    "pk": "case|0bc59d5b-c2b9-41f7-92a7-03b8cadffcc0",
+    "pk": "case|101-20",
     "sk": "docket-record|2bc59d5b-c2b9-41f7-92a7-03b8cadffcc0",
     "docketRecordId": "2bc59d5b-c2b9-41f7-92a7-03b8cadffcc0",
     "description": "Petition",
@@ -70,7 +162,7 @@
     "filedBy": "Petr. Bill Burr"
   },
   {
-    "pk": "case|0bc59d5b-c2b9-41f7-92a7-03b8cadffcc0",
+    "pk": "case|101-20",
     "sk": "docket-record|3bc59d5b-c2b9-41f7-92a7-03b8cadffcc0",
     "docketRecordId": "3bc59d5b-c2b9-41f7-92a7-03b8cadffcc0",
     "eventCode": "RQT",
@@ -84,7 +176,6 @@
     "filingDate": "2020-01-02T16:05:45.980Z",
     "practitioner": [],
     "partyPrimary": true,
-    "workItems": [],
     "pending": false,
     "receivedAt": "2020-01-02T16:05:45.980Z",
     "userId": "7805d1ab-18d0-43ec-bafb-654e83405416",
@@ -92,12 +183,12 @@
     "createdAt": "2020-01-02T16:05:45.980Z",
     "processingStatus": "complete",
     "filedBy": "Petr. Bill Burr",
-    "caseId": "0bc59d5b-c2b9-41f7-92a7-03b8cadffcc0",
     "sk": "document|0048b9e5-15e8-4315-8b9c-8a2e181205e4",
     "partySecondary": false,
+    "isFileAttached": true,
     "documentId": "0048b9e5-15e8-4315-8b9c-8a2e181205e4",
     "numberOfPages": 1,
-    "pk": "case|0bc59d5b-c2b9-41f7-92a7-03b8cadffcc0"
+    "pk": "case|101-20"
   },
   {
     "documentType": "Petition",
@@ -105,51 +196,38 @@
     "filingDate": "2020-01-02T16:05:45.979Z",
     "practitioner": [],
     "partyPrimary": true,
-    "workItems": [
-      {
-        "associatedJudge": "Chief Judge",
-        "docketNumberSuffix": "S",
-        "caseStatus": "New",
-        "caseIsInProgress": false,
-        "document": {
-          "eventCode": "P",
-          "createdAt": "2020-01-02T16:05:45.979Z",
-          "processingStatus": "pending",
-          "documentType": "Petition",
-          "practitioner": [],
-          "filedBy": "Petr. Bill Burr",
-          "partyPrimary": true,
-          "pending": false,
-          "partySecondary": false,
-          "documentId": "cb323daf-c541-4645-bb44-232255d03d40",
-          "numberOfPages": 1,
-          "receivedAt": "2020-01-02T16:05:45.979Z",
-          "userId": "7805d1ab-18d0-43ec-bafb-654e83405416"
-        },
-        "caseTitle": "Bill Burr",
-        "section": "petitions",
-        "workItemId": "c4b34a7e-2b0a-4b6b-a406-b53b19d08cc4",
-        "isInitializeCase": true,
-        "assigneeId": null,
-        "isQC": true,
-        "sentBy": "Test Petitioner",
-        "sentByUserId": "7805d1ab-18d0-43ec-bafb-654e83405416",
+    "workItem": {
+      "associatedJudge": "Chief Judge",
+      "docketNumberSuffix": "S",
+      "caseStatus": "New",
+      "caseIsInProgress": false,
+      "document": {
+        "eventCode": "P",
         "createdAt": "2020-01-02T16:05:45.979Z",
-        "assigneeName": null,
-        "caseId": "0bc59d5b-c2b9-41f7-92a7-03b8cadffcc0",
-        "messages": [
-          {
-            "createdAt": "2020-01-02T16:05:45.980Z",
-            "messageId": "3947f4e4-9c7b-4d3d-a19b-bf8d89065be9",
-            "from": "Test Petitioner",
-            "message": "Petition filed by Bill Burr is ready for review.",
-            "fromUserId": "7805d1ab-18d0-43ec-bafb-654e83405416"
-          }
-        ],
-        "docketNumber": "101-20",
-        "updatedAt": "2020-01-02T16:05:45.979Z"
-      }
-    ],
+        "processingStatus": "pending",
+        "documentType": "Petition",
+        "practitioner": [],
+        "filedBy": "Petr. Bill Burr",
+        "partyPrimary": true,
+        "pending": false,
+        "partySecondary": false,
+        "documentId": "cb323daf-c541-4645-bb44-232255d03d40",
+        "numberOfPages": 1,
+        "receivedAt": "2020-01-02T16:05:45.979Z",
+        "userId": "7805d1ab-18d0-43ec-bafb-654e83405416"
+      },
+      "caseTitle": "Bill Burr",
+      "section": "petitions",
+      "workItemId": "c4b34a7e-2b0a-4b6b-a406-b53b19d08cc4",
+      "isInitializeCase": true,
+      "assigneeId": null,
+      "sentBy": "Test Petitioner",
+      "sentByUserId": "7805d1ab-18d0-43ec-bafb-654e83405416",
+      "createdAt": "2020-01-02T16:05:45.979Z",
+      "assigneeName": null,
+      "docketNumber": "101-20",
+      "updatedAt": "2020-01-02T16:05:45.979Z"
+    },
     "pending": false,
     "receivedAt": "2020-01-02T16:05:45.979Z",
     "userId": "7805d1ab-18d0-43ec-bafb-654e83405416",
@@ -157,11 +235,11 @@
     "createdAt": "2020-01-02T16:05:45.979Z",
     "processingStatus": "complete",
     "filedBy": "Petr. Bill Burr",
-    "caseId": "0bc59d5b-c2b9-41f7-92a7-03b8cadffcc0",
     "sk": "document|cb323daf-c541-4645-bb44-232255d03d40",
     "partySecondary": false,
+    "isFileAttached": true,
     "numberOfPages": 1,
     "documentId": "cb323daf-c541-4645-bb44-232255d03d40",
-    "pk": "case|0bc59d5b-c2b9-41f7-92a7-03b8cadffcc0"
+    "pk": "case|101-20"
   }
 ]

@@ -25,6 +25,17 @@
           name: "max"
           args: 
             limit: 500
+    docketRecordId: 
+      type: "string"
+      flags: 
+        presence: "required"
+      rules: 
+        - 
+          name: "guid"
+          args: 
+            options: 
+              version: 
+                - "uuidv4"
     documentId: 
       type: "string"
       flags: 
@@ -48,7 +59,7 @@
         - 
           name: "max"
           args: 
-            limit: 1000
+            limit: 4000
       allow: 
         - null
       metas: 
@@ -249,12 +260,10 @@
         - "M136"
         - "M218"
         - "MEMO"
-        - "MGRTED"
         - "MINC"
         - "MIND"
         - "MISC"
         - "MISCL"
-        - "MISL"
         - "MISP"
         - "MOP"
         - "NAJA"
@@ -266,7 +275,6 @@
         - "NCP"
         - "NCTP"
         - "NDC"
-        - "NDT"
         - "NFAR"
         - "NIFL"
         - "NINF"
@@ -442,11 +450,42 @@
     index: 
       type: "number"
       flags: 
-        presence: "required"
+        presence: "optional"
         description: "Index of this item in the Docket Record list."
       rules: 
         - 
           name: "integer"
+    isLegacy: 
+      type: "boolean"
+      flags: 
+        presence: "optional"
+        description: "Indicates whether or not the DocketRecord belongs to a legacy case that has been migrated to the new system."
+    isStricken: 
+      type: "boolean"
+      flags: 
+        description: "Indicates the item has been removed from the docket record."
+      whens: 
+        - 
+          ref: 
+            path: 
+              - "isLegacy"
+          is: 
+            type: "any"
+            flags: 
+              only: true
+              presence: "required"
+            allow: 
+              - 
+                override: true
+              - true
+          then: 
+            type: "any"
+            flags: 
+              presence: "required"
+          otherwise: 
+            type: "any"
+            flags: 
+              presence: "optional"
     numberOfPages: 
       type: "number"
       flags: 
@@ -460,9 +499,9 @@
         presence: "optional"
         description: "Served parties code to override system-computed code."
       allow: 
-        - "R"
         - "B"
-        - ""
+        - "P"
+        - "R"
         - null
 
  ```

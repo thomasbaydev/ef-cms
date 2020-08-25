@@ -6,6 +6,8 @@ const { MOCK_CASE } = require('../../../test/mockCase');
 const { MOCK_USERS } = require('../../../test/mockUsers');
 
 describe('fetchPendingItems', () => {
+  const { CHIEF_JUDGE } = applicationContext.getConstants();
+
   beforeAll(() => {
     applicationContext.getCurrentUser.mockReturnValue(
       MOCK_USERS['a7d90c05-f6cd-442c-a168-202db587f16f'],
@@ -14,7 +16,7 @@ describe('fetchPendingItems', () => {
 
   beforeEach(() => {
     const mockDataOne = {
-      caseId: '1',
+      caseCaption: 'Test Petitioner, Petitioner',
       documents: [
         {
           documentId: 'def',
@@ -27,7 +29,7 @@ describe('fetchPendingItems', () => {
       ],
     };
     const mockDataTwo = {
-      caseId: '2',
+      caseCaption: 'Another Test Petitioner, Petitioner',
       documents: [
         {
           documentId: 'abc',
@@ -39,12 +41,13 @@ describe('fetchPendingItems', () => {
         },
       ],
     };
+
     applicationContext
       .getPersistenceGateway()
       .fetchPendingItems.mockReturnValue([mockDataOne, mockDataTwo]);
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue([mockDataOne, mockDataTwo]);
+      .getCaseByDocketNumber.mockReturnValue([mockDataOne, mockDataTwo]);
   });
 
   it('calls search function with correct params when provided a judge and returns records', async () => {
@@ -58,8 +61,8 @@ describe('fetchPendingItems', () => {
     ).toHaveBeenCalled();
 
     expect(results).toMatchObject([
-      { caseId: '1', documentId: 'def', pending: true },
-      { caseId: '2', documentId: 'abc', pending: true },
+      { documentId: 'def', pending: true },
+      { documentId: 'abc', pending: true },
     ]);
   });
 
@@ -68,7 +71,6 @@ describe('fetchPendingItems', () => {
       .getPersistenceGateway()
       .fetchPendingItems.mockReturnValue([
         {
-          caseId: '1',
           documents: undefined,
         },
       ]);
@@ -93,8 +95,8 @@ describe('fetchPendingItems', () => {
     ).toHaveBeenCalled();
 
     expect(results).toMatchObject([
-      { caseId: '1', documentId: 'def', pending: true },
-      { caseId: '2', documentId: 'abc', pending: true },
+      { documentId: 'def', pending: true },
+      { documentId: 'abc', pending: true },
     ]);
   });
 
@@ -111,23 +113,23 @@ describe('fetchPendingItems', () => {
     expect(results).toMatchObject([]);
   });
 
-  it('uses caseId filter and calls getCaseByCaseId and returns the pending items for that case', async () => {
+  it('uses docketNumber filter and calls getCaseByDocketNumber and returns the pending items for that case', async () => {
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(MOCK_CASE);
+      .getCaseByDocketNumber.mockReturnValue(MOCK_CASE);
 
     const results = await fetchPendingItems({
       applicationContext,
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      docketNumber: MOCK_CASE.docketNumber,
     });
 
     expect(
-      applicationContext.getPersistenceGateway().getCaseByCaseId,
+      applicationContext.getPersistenceGateway().getCaseByDocketNumber,
     ).toHaveBeenCalled();
 
     expect(results).toMatchObject([
       {
-        associatedJudge: 'Chief Judge',
+        associatedJudge: CHIEF_JUDGE,
         caseCaption: 'Test Petitioner, Petitioner',
         createdAt: '2018-11-21T20:49:28.192Z',
         docketNumberSuffix: null,
@@ -138,7 +140,6 @@ describe('fetchPendingItems', () => {
         pending: true,
         processingStatus: 'pending',
         userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
-        workItems: [],
       },
     ]);
   });

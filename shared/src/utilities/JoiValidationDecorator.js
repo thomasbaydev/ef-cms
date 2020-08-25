@@ -1,5 +1,6 @@
-const joi = require('@hapi/joi');
-const { isEmpty } = require('lodash');
+const joi = require('joi');
+const { InvalidEntityError } = require('../errors/errors');
+const { isEmpty, pick } = require('lodash');
 
 /**
  *
@@ -67,10 +68,19 @@ function getFormattedValidationErrors(entity) {
   const keys = Object.keys(entity);
   const obj = {};
   let errors = null;
-  if (entity && entity.getFormattedValidationErrors) {
+  if (entity.getFormattedValidationErrors) {
     errors = getFormattedValidationErrorsHelper(entity);
   }
   if (errors) {
+    for (const key of Object.keys(errors)) {
+      if (
+        // remove unhelpful error messages from contact validations
+        typeof errors[key] == 'string' &&
+        errors[key].endsWith('does not match any of the allowed types')
+      ) {
+        delete errors[key];
+      }
+    }
     Object.assign(obj, errors);
   }
   for (let key of keys) {
@@ -131,14 +141,57 @@ exports.joiValidationDecorator = function (
     return isEmpty(validationErrors);
   };
 
+  entityConstructor.prototype.validateForMigration = function validateForMigration() {
+    let { error } = schema.validate(this, {
+      abortEarly: false,
+      allowUnknown: true,
+    });
+
+    if (error) {
+      throw new InvalidEntityError(
+        entityConstructor.validationName,
+        JSON.stringify(
+          error.details.map(detail => {
+            return detail.message.replace(/"/g, "'");
+          }),
+        ),
+      );
+    }
+
+    return this;
+  };
+
   entityConstructor.prototype.validate = function validate() {
     if (!this.isValid()) {
-      throw new Error(
-        `The ${
-          entityConstructor.validationName || ''
-        } entity was invalid ${JSON.stringify(
-          this.getFormattedValidationErrors(),
-        )}`,
+      const helpfulKeys = Object.keys(this).filter(key => key.endsWith('Id'));
+      helpfulKeys.push(
+        'docketNumber',
+        ...Object.keys(this.getFormattedValidationErrors()),
+      );
+
+      const stringifyTransform = obj => {
+        if (!obj) return obj;
+        const transformed = {};
+        Object.keys(obj).forEach(key => {
+          if (typeof obj[key] === 'string') {
+            transformed[key] = obj[key].replace(/"/g, "'");
+          } else {
+            transformed[key] = obj[key];
+          }
+        });
+        return transformed;
+      };
+
+      throw new InvalidEntityError(
+        entityConstructor.validationName,
+        JSON.stringify(
+          stringifyTransform(pick(this, helpfulKeys)),
+          (key, value) =>
+            this.hasOwnProperty(key) && typeof value === 'undefined'
+              ? '<undefined>'
+              : value,
+        ),
+        JSON.stringify(stringifyTransform(this.getValidationErrors())),
       );
     }
     return this;

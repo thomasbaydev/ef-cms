@@ -1,25 +1,21 @@
-const joi = require('@hapi/joi');
+const joi = require('joi');
+const {
+  ADMISSIONS_STATUS_OPTIONS,
+  EMPLOYER_OPTIONS,
+  PRACTITIONER_TYPE_OPTIONS,
+  ROLES,
+} = require('./EntityConstants');
+const {
+  JoiValidationConstants,
+} = require('../../utilities/JoiValidationConstants');
 const {
   joiValidationDecorator,
 } = require('../../utilities/JoiValidationDecorator');
 const {
-  User,
   userDecorator,
   userValidation,
   VALIDATION_ERROR_MESSAGES: USER_VALIDATION_ERROR_MESSAGES,
 } = require('./User');
-const { getTimestampSchema } = require('../../utilities/dateSchema');
-const joiStrictTimestamp = getTimestampSchema();
-const EMPLOYER_OPTIONS = ['IRS', 'DOJ', 'Private'];
-const PRACTITIONER_TYPE_OPTIONS = ['Attorney', 'Non-Attorney'];
-const ADMISSIONS_STATUS_OPTIONS = [
-  'Active',
-  'Suspended',
-  'Disbarred',
-  'Resigned',
-  'Deceased',
-  'Inactive',
-];
 
 /**
  * constructor
@@ -32,9 +28,9 @@ function Practitioner(rawUser) {
 }
 
 const roleMap = {
-  DOJ: User.ROLES.irsPractitioner,
-  IRS: User.ROLES.irsPractitioner,
-  Private: User.ROLES.privatePractitioner,
+  DOJ: ROLES.irsPractitioner,
+  IRS: ROLES.irsPractitioner,
+  Private: ROLES.privatePractitioner,
 };
 
 Practitioner.prototype.init = function (rawUser) {
@@ -56,7 +52,7 @@ Practitioner.prototype.init = function (rawUser) {
   if (this.admissionsStatus === 'Active') {
     this.role = roleMap[this.employer];
   } else {
-    this.role = User.ROLES.inactivePractitioner;
+    this.role = ROLES.inactivePractitioner;
   }
   this.suffix = rawUser.suffix;
   this.section = this.role;
@@ -93,8 +89,7 @@ const practitionerValidation = {
     .optional()
     .allow(null)
     .description('An alternate phone number for the practitioner.'),
-  admissionsDate: joiStrictTimestamp
-    .max('now')
+  admissionsDate: JoiValidationConstants.ISO_DATE.max('now')
     .required()
     .description(
       'The date the practitioner was admitted to the Tax Court bar.',
@@ -104,10 +99,7 @@ const practitionerValidation = {
     .valid(...ADMISSIONS_STATUS_OPTIONS)
     .required()
     .description('The Tax Court bar admission status for the practitioner.'),
-  alternateEmail: joi
-    .string()
-    .max(100)
-    .optional()
+  alternateEmail: JoiValidationConstants.EMAIL.optional()
     .allow(null)
     .description('An alternate email address for the practitioner.'),
   barNumber: joi
@@ -166,10 +158,10 @@ const practitionerValidation = {
     .description('The type of practitioner - either Attorney or Non-Attorney.'),
   role: joi.alternatives().conditional('admissionsStatus', {
     is: joi.valid('Active'),
-    otherwise: joi.string().valid(User.ROLES.inactivePractitioner).required(),
+    otherwise: joi.string().valid(ROLES.inactivePractitioner).required(),
     then: joi
       .string()
-      .valid(...[User.ROLES.irsPractitioner, User.ROLES.privatePractitioner])
+      .valid(...[ROLES.irsPractitioner, ROLES.privatePractitioner])
       .required(),
   }),
   suffix: joi
@@ -189,12 +181,8 @@ joiValidationDecorator(
 );
 
 Practitioner.validationName = 'Practitioner';
-
-Practitioner.PRACTITIONER_TYPE_OPTIONS = PRACTITIONER_TYPE_OPTIONS;
-Practitioner.EMPLOYER_OPTIONS = EMPLOYER_OPTIONS;
 Practitioner.validationRules = practitionerValidation;
 Practitioner.VALIDATION_ERROR_MESSAGES = VALIDATION_ERROR_MESSAGES;
-Practitioner.ADMISSIONS_STATUS_OPTIONS = ADMISSIONS_STATUS_OPTIONS;
 
 /**
  * returns the full concatenated name for the given practitioner data

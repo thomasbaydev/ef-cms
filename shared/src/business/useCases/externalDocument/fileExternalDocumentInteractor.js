@@ -2,15 +2,18 @@ const {
   aggregatePartiesForService,
 } = require('../../utilities/aggregatePartiesForService');
 const {
+  CASE_STATUS_TYPES,
+  DOCUMENT_RELATIONSHIPS,
+} = require('../../entities/EntityConstants');
+const {
   isAuthorized,
   ROLE_PERMISSIONS,
 } = require('../../../authorization/authorizationClientService');
-const { capitalize, pick } = require('lodash');
 const { Case } = require('../../entities/cases/Case');
-const { DOCKET_SECTION } = require('../../entities/WorkQueue');
+const { DOCKET_SECTION } = require('../../entities/EntityConstants');
 const { DocketRecord } = require('../../entities/DocketRecord');
 const { Document } = require('../../entities/Document');
-const { Message } = require('../../entities/Message');
+const { pick } = require('lodash');
 const { UnauthorizedError } = require('../../../errors/errors');
 const { WorkItem } = require('../../entities/WorkItem');
 
@@ -29,7 +32,7 @@ exports.fileExternalDocumentInteractor = async ({
   documentMetadata,
 }) => {
   const authorizedUser = applicationContext.getCurrentUser();
-  const { caseId } = documentMetadata;
+  const { docketNumber } = documentMetadata;
 
   if (!isAuthorized(authorizedUser, ROLE_PERMISSIONS.FILE_EXTERNAL_DOCUMENT)) {
     throw new UnauthorizedError('Unauthorized');
@@ -41,9 +44,9 @@ exports.fileExternalDocumentInteractor = async ({
 
   const caseToUpdate = await applicationContext
     .getPersistenceGateway()
-    .getCaseByCaseId({
+    .getCaseByDocketNumber({
       applicationContext,
-      caseId,
+      docketNumber,
     });
 
   let caseEntity = new Case(caseToUpdate, { applicationContext });
@@ -61,23 +64,24 @@ exports.fileExternalDocumentInteractor = async ({
     'partySecondary',
     'partyIrsPractitioner',
     'practitioner',
-    'caseId',
     'docketNumber',
   ]);
 
   if (secondaryDocument) {
     secondaryDocument.lodged = true;
-    secondaryDocument.eventCode = 'MISL';
   }
   if (secondarySupportingDocuments) {
     secondarySupportingDocuments.forEach(item => {
       item.lodged = true;
-      item.eventCode = 'MISL';
     });
   }
 
   const documentsToAdd = [
-    [documentIds.shift(), primaryDocumentMetadata, 'primaryDocument'],
+    [
+      documentIds.shift(),
+      { ...primaryDocumentMetadata, secondaryDocument },
+      DOCUMENT_RELATIONSHIPS.PRIMARY,
+    ],
   ];
 
   if (supportingDocuments) {
@@ -85,7 +89,7 @@ exports.fileExternalDocumentInteractor = async ({
       documentsToAdd.push([
         documentIds.shift(),
         supportingDocuments[i],
-        'primarySupportingDocument',
+        DOCUMENT_RELATIONSHIPS.PRIMARY_SUPPORTING,
       ]);
     }
   }
@@ -93,7 +97,7 @@ exports.fileExternalDocumentInteractor = async ({
   documentsToAdd.push([
     documentIds.shift(),
     secondaryDocument,
-    'secondaryDocument',
+    DOCUMENT_RELATIONSHIPS.SECONDARY,
   ]);
 
   if (secondarySupportingDocuments) {
@@ -101,7 +105,7 @@ exports.fileExternalDocumentInteractor = async ({
       documentsToAdd.push([
         documentIds.shift(),
         secondarySupportingDocuments[i],
-        'supportingDocument',
+        DOCUMENT_RELATIONSHIPS.SUPPORTING,
       ]);
     }
   }
@@ -116,6 +120,11 @@ exports.fileExternalDocumentInteractor = async ({
           ...metadata,
           documentId,
           documentType: metadata.documentType,
+          partyPrimary:
+            baseMetadata.partyPrimary || documentMetadata.representingPrimary,
+          partySecondary:
+            baseMetadata.partySecondary ||
+            documentMetadata.representingSecondary,
           relationship,
           userId: user.userId,
           ...caseEntity.getCaseContacts({
@@ -127,14 +136,13 @@ exports.fileExternalDocumentInteractor = async ({
       );
 
       const highPriorityWorkItem =
-        caseEntity.status === Case.STATUS_TYPES.calendared;
+        caseEntity.status === CASE_STATUS_TYPES.calendared;
 
       const workItem = new WorkItem(
         {
           assigneeId: null,
           assigneeName: null,
           associatedJudge: caseToUpdate.associatedJudge,
-          caseId: caseId,
           caseIsInProgress: caseEntity.inProgress,
           caseStatus: caseToUpdate.status,
           caseTitle: Case.getCaseTitle(Case.getCaseCaption(caseEntity)),
@@ -145,7 +153,6 @@ exports.fileExternalDocumentInteractor = async ({
             createdAt: documentEntity.createdAt,
           },
           highPriority: highPriorityWorkItem,
-          isQC: true,
           section: DOCKET_SECTION,
           sentBy: user.name,
           sentByUserId: user.userId,
@@ -154,19 +161,7 @@ exports.fileExternalDocumentInteractor = async ({
         { applicationContext },
       );
 
-      const message = new Message(
-        {
-          from: user.name,
-          fromUserId: user.userId,
-          message: `${documentEntity.documentType} filed by ${capitalize(
-            user.role,
-          )} is ready for review.`,
-        },
-        { applicationContext },
-      );
-
-      workItem.addMessage(message);
-      documentEntity.addWorkItem(workItem);
+      documentEntity.setWorkItem(workItem);
 
       workItems.push(workItem);
       caseEntity.addDocumentWithoutDocketRecord(documentEntity);
@@ -180,9 +175,12 @@ exports.fileExternalDocumentInteractor = async ({
         },
         { applicationContext },
       );
+
+      const isAutoServed = documentEntity.isAutoServed();
+
       caseEntity.addDocketRecord(docketRecordEntity);
 
-      if (documentEntity.isAutoServed()) {
+      if (isAutoServed) {
         documentEntity.setAsServed(servedParties.all);
 
         await applicationContext.getUseCaseHelpers().sendServedPartiesEmails({

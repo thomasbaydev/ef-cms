@@ -7,7 +7,7 @@ import { state } from 'cerebral';
  * @param {object} providers.applicationContext the application context used for getting the getUser use case
  * @param {Function} providers.get the cerebral get function
  * @param {object} providers.path the next path in the sequence to call
- * @returns {object} alertSuccess, caseId, tab
+ * @returns {object} alertSuccess
  */
 export const updateUserContactInformationAction = async ({
   applicationContext,
@@ -27,9 +27,11 @@ export const updateUserContactInformationAction = async ({
   } catch (err) {
     if (
       err.originalError &&
-      err.originalError.response.data.indexOf(
+      err.originalError.response &&
+      err.originalError.response.data &&
+      err.originalError.response.data.includes(
         'there were no changes found needing to be updated',
-      ) !== -1
+      )
     ) {
       return path.noChange();
     } else {

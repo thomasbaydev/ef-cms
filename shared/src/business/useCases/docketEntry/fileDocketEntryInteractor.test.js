@@ -1,15 +1,19 @@
 const {
   applicationContext,
 } = require('../../test/createTestApplicationContext');
-const { Case } = require('../../entities/cases/Case');
-const { ContactFactory } = require('../../entities/contacts/ContactFactory');
+const {
+  AUTOMATIC_BLOCKED_REASONS,
+  CASE_TYPES_MAP,
+  COUNTRY_TYPES,
+  PARTY_TYPES,
+  ROLES,
+} = require('../../entities/EntityConstants');
 const { fileDocketEntryInteractor } = require('./fileDocketEntryInteractor');
-const { User } = require('../../entities/User');
 
 describe('fileDocketEntryInteractor', () => {
   const user = {
     name: 'Emmett Lathrop "Doc" Brown, Ph.D.',
-    role: User.ROLES.docketClerk,
+    role: ROLES.docketClerk,
     section: 'docket',
     userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
   };
@@ -18,12 +22,11 @@ describe('fileDocketEntryInteractor', () => {
   beforeAll(() => {
     caseRecord = {
       caseCaption: 'Caption',
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-      caseType: 'Deficiency',
+      caseType: CASE_TYPES_MAP.deficiency,
       contactPrimary: {
         address1: '123 Main St',
         city: 'Somewhere',
-        countryType: 'domestic',
+        countryType: COUNTRY_TYPES.DOMESTIC,
         email: 'fieri@example.com',
         name: 'Guy Fieri',
         phone: '1234567890',
@@ -39,6 +42,7 @@ describe('fileDocketEntryInteractor', () => {
           documentTitle: 'Answer',
           documentType: 'Answer',
           eventCode: 'A',
+          filedBy: 'Test Petitioner',
           userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
         },
         {
@@ -47,6 +51,7 @@ describe('fileDocketEntryInteractor', () => {
           documentTitle: 'Answer',
           documentType: 'Answer',
           eventCode: 'A',
+          filedBy: 'Test Petitioner',
           userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
         },
         {
@@ -55,14 +60,15 @@ describe('fileDocketEntryInteractor', () => {
           documentTitle: 'Answer',
           documentType: 'Answer',
           eventCode: 'A',
+          filedBy: 'Test Petitioner',
           userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
         },
       ],
       filingType: 'Myself',
-      partyType: ContactFactory.PARTY_TYPES.petitioner,
+      partyType: PARTY_TYPES.petitioner,
       preferredTrialCity: 'Fresno, California',
       procedureType: 'Regular',
-      role: User.ROLES.petitioner,
+      role: ROLES.petitioner,
       userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
     };
 
@@ -76,7 +82,7 @@ describe('fileDocketEntryInteractor', () => {
 
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(caseRecord);
+      .getCaseByDocketNumber.mockReturnValue(caseRecord);
   });
 
   it('should throw an error if not authorized', async () => {
@@ -86,10 +92,10 @@ describe('fileDocketEntryInteractor', () => {
       fileDocketEntryInteractor({
         applicationContext,
         documentMetadata: {
-          caseId: caseRecord.caseId,
+          docketNumber: caseRecord.docketNumber,
           documentTitle: 'Memorandum in Support',
           documentType: 'Memorandum in Support',
-          eventCode: 'MISL',
+          eventCode: 'MISP',
         },
         primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
       }),
@@ -100,10 +106,11 @@ describe('fileDocketEntryInteractor', () => {
     await fileDocketEntryInteractor({
       applicationContext,
       documentMetadata: {
-        caseId: caseRecord.caseId,
+        docketNumber: caseRecord.docketNumber,
         documentTitle: 'Memorandum in Support',
         documentType: 'Memorandum in Support',
-        eventCode: 'MISL',
+        eventCode: 'MISP',
+        filedBy: 'Test Petitioner',
         isFileAttached: true,
         isPaper: true,
       },
@@ -114,79 +121,87 @@ describe('fileDocketEntryInteractor', () => {
       applicationContext.getPersistenceGateway().saveWorkItemForNonPaper,
     ).not.toBeCalled();
     expect(applicationContext.getPersistenceGateway().updateCase).toBeCalled();
-  });
-
-  it('sets the eventCode to MISL when the document is lodged', async () => {
-    await fileDocketEntryInteractor({
-      applicationContext,
-      documentMetadata: {
-        caseId: caseRecord.caseId,
-        documentTitle: 'Memorandum in Support',
-        documentType: 'Memorandum in Support',
-        lodged: true,
-      },
-      primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-    });
-
     expect(
-      applicationContext.getPersistenceGateway().updateCase.mock.calls[0][0]
-        .caseToUpdate.documents[3].eventCode,
-    ).toEqual('MISL');
+      applicationContext.getUseCaseHelpers().sendServedPartiesEmails,
+    ).toBeCalled();
   });
 
-  it('sets the eventCode to MISL on any secondaryDocument', async () => {
+  it('add documents and workItem to inbox if saving for later if a document is attached', async () => {
     await fileDocketEntryInteractor({
       applicationContext,
       documentMetadata: {
-        caseId: caseRecord.caseId,
+        docketNumber: caseRecord.docketNumber,
         documentTitle: 'Memorandum in Support',
         documentType: 'Memorandum in Support',
-        eventCode: 'MISL',
+        eventCode: 'MISP',
+        filedBy: 'Test Petitioner',
         isFileAttached: true,
-        lodged: true,
-        secondaryDocument: {
-          documentTitle: 'Memorandum in Support',
-          documentType: 'Memorandum in Support',
-          eventCode: 'MISL',
-          isFileAttached: true,
-        },
-        secondarySupportingDocumentMetadata: {
-          documentTitle: 'Memorandum in Support',
-          documentType: 'Memorandum in Support',
-          eventCode: 'MISL',
-          isFileAttached: true,
-        },
+        isPaper: true,
       },
+      isSavingForLater: true,
       primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-      secondaryDocumentFileId: 'd54ba5a9-b37b-479d-9201-067ec6e335bb',
-      secondarySupportingDocumentFileId: 'e54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
 
     expect(
-      applicationContext.getPersistenceGateway().updateCase.mock.calls[0][0]
-        .caseToUpdate.documents[4],
-    ).toMatchObject({
-      eventCode: 'MISL',
-      lodged: true,
-    });
+      applicationContext.getPersistenceGateway().saveWorkItemForNonPaper,
+    ).not.toBeCalled();
     expect(
-      applicationContext.getPersistenceGateway().updateCase.mock.calls[0][0]
-        .caseToUpdate.documents[5],
-    ).toMatchObject({
-      eventCode: 'MISL',
-      lodged: true,
+      applicationContext.getPersistenceGateway()
+        .saveWorkItemForDocketClerkFilingExternalDocument,
+    ).not.toBeCalled();
+    expect(
+      applicationContext.getPersistenceGateway()
+        .saveWorkItemForDocketEntryInProgress,
+    ).toBeCalled();
+    expect(applicationContext.getPersistenceGateway().updateCase).toBeCalled();
+    expect(
+      applicationContext.getUseCaseHelpers().countPagesInDocument,
+    ).toBeCalled();
+  });
+
+  it('add documents and workItem to inbox if saving for later if a document is attached', async () => {
+    await fileDocketEntryInteractor({
+      applicationContext,
+      documentMetadata: {
+        docketNumber: caseRecord.docketNumber,
+        documentTitle: 'Memorandum in Support',
+        documentType: 'Memorandum in Support',
+        eventCode: 'MISP',
+        filedBy: 'Test Petitioner',
+        isFileAttached: true,
+        isPaper: true,
+      },
+      isSavingForLater: false,
+      primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
+
+    expect(
+      applicationContext.getPersistenceGateway().saveWorkItemForNonPaper,
+    ).not.toBeCalled();
+    expect(
+      applicationContext.getPersistenceGateway()
+        .saveWorkItemForDocketClerkFilingExternalDocument,
+    ).toBeCalled();
+    expect(
+      applicationContext.getPersistenceGateway()
+        .saveWorkItemForDocketEntryInProgress,
+    ).not.toBeCalled();
+    expect(applicationContext.getPersistenceGateway().updateCase).toBeCalled();
+    expect(
+      applicationContext.getUseCaseHelpers().countPagesInDocument,
+    ).not.toBeCalled();
   });
 
   it('sets the case as blocked if the document filed is a tracked document type', async () => {
     await fileDocketEntryInteractor({
       applicationContext,
       documentMetadata: {
-        caseId: caseRecord.caseId,
         category: 'Application',
+        docketNumber: caseRecord.docketNumber,
         documentTitle: 'Application for Examination Pursuant to Rule 73',
         documentType: 'Application for Examination Pursuant to Rule 73',
         eventCode: 'AFE',
+        filedBy: 'Test Petitioner',
         isPaper: true,
       },
       primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
@@ -199,7 +214,7 @@ describe('fileDocketEntryInteractor', () => {
     ).toMatchObject({
       automaticBlocked: true,
       automaticBlockedDate: expect.anything(),
-      automaticBlockedReason: Case.AUTOMATIC_BLOCKED_REASONS.pending,
+      automaticBlockedReason: AUTOMATIC_BLOCKED_REASONS.pending,
     });
     expect(
       applicationContext.getPersistenceGateway()
@@ -210,16 +225,19 @@ describe('fileDocketEntryInteractor', () => {
   it('sets the case as blocked with due dates if the document filed is a tracked document type and the case has due dates', async () => {
     applicationContext
       .getPersistenceGateway()
-      .getCaseDeadlinesByCaseId.mockReturnValue([{ deadline: 'something' }]);
+      .getCaseDeadlinesByDocketNumber.mockReturnValue([
+        { deadline: 'something' },
+      ]);
 
     await fileDocketEntryInteractor({
       applicationContext,
       documentMetadata: {
-        caseId: caseRecord.caseId,
         category: 'Application',
+        docketNumber: caseRecord.docketNumber,
         documentTitle: 'Application for Examination Pursuant to Rule 73',
         documentType: 'Application for Examination Pursuant to Rule 73',
         eventCode: 'AFE',
+        filedBy: 'Test Petitioner',
         isPaper: true,
       },
       primaryDocumentFileId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
@@ -232,7 +250,7 @@ describe('fileDocketEntryInteractor', () => {
     ).toMatchObject({
       automaticBlocked: true,
       automaticBlockedDate: expect.anything(),
-      automaticBlockedReason: Case.AUTOMATIC_BLOCKED_REASONS.pendingAndDueDate,
+      automaticBlockedReason: AUTOMATIC_BLOCKED_REASONS.pendingAndDueDate,
     });
     expect(
       applicationContext.getPersistenceGateway()

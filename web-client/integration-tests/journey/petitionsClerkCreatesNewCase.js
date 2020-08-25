@@ -1,12 +1,20 @@
-import { Case } from '../../../shared/src/business/entities/cases/Case';
 import { CaseInternal } from '../../../shared/src/business/entities/cases/CaseInternal';
+import { applicationContextForClient as applicationContext } from '../../../shared/src/business/test/createTestApplicationContext';
 
 const { VALIDATION_ERROR_MESSAGES } = CaseInternal;
+
+const {
+  CASE_TYPES_MAP,
+  COUNTRY_TYPES,
+  PARTY_TYPES,
+  PAYMENT_STATUS,
+} = applicationContext.getConstants();
 
 export const petitionsClerkCreatesNewCase = (
   test,
   fakeFile,
   trialLocation = 'Birmingham, Alabama',
+  shouldServe = true,
 ) => {
   return it('Petitions clerk creates a new case', async () => {
     await test.runSequence('gotoStartCaseWizardSequence');
@@ -55,7 +63,7 @@ export const petitionsClerkCreatesNewCase = (
     await test.runSequence('updateFormValueSequence', {
       key: 'caseCaption',
       value:
-        'Daenerys Stormborn of the House Targaryen, First of Her Name, the Unburnt, Queen of the Andals and the First Men, Khaleesi of the Great Grass Sea, Breaker of Chains, and Mother of Dragons, Deceased, Daenerys Stormborn of the House Targaryen, First of Her Name, the Unburnt, Queen of the Andals and the First Men, Khaleesi of the Great Grass Sea, Breaker of Chains, and Mother of Dragons, Surviving Spouse, Petitioner',
+        'Daenerys Stormborn, Deceased, Daenerys Stormborn, Surviving Spouse, Petitioner',
     });
 
     await test.runSequence('updateFormValueSequence', {
@@ -132,17 +140,17 @@ export const petitionsClerkCreatesNewCase = (
 
     await test.runSequence('updateFormValueSequence', {
       key: 'caseType',
-      value: 'Deficiency',
+      value: CASE_TYPES_MAP.deficiency,
     });
 
     await test.runSequence('updateFormValueSequence', {
       key: 'partyType',
-      value: 'Petitioner',
+      value: PARTY_TYPES.petitioner,
     });
 
     await test.runSequence('updateFormValueSequence', {
       key: 'contactPrimary.countryType',
-      value: 'international',
+      value: COUNTRY_TYPES.INTERNATIONAL,
     });
 
     await test.runSequence('updateFormValueSequence', {
@@ -152,8 +160,7 @@ export const petitionsClerkCreatesNewCase = (
 
     await test.runSequence('updateFormValueSequence', {
       key: 'contactPrimary.name',
-      value:
-        'Daenerys Stormborn of the House Targaryen, First of Her Name, the Unburnt, Queen of the Andals and the First Men, Khaleesi of the Great Grass Sea, Breaker of Chains, and Mother of Dragons',
+      value: 'Daenerys Stormborn',
     });
 
     await test.runSequence('updateFormValueSequence', {
@@ -183,7 +190,7 @@ export const petitionsClerkCreatesNewCase = (
 
     await test.runSequence('updatePetitionPaymentFormValueSequence', {
       key: 'petitionPaymentStatus',
-      value: Case.PAYMENT_STATUS.UNPAID,
+      value: PAYMENT_STATUS.UNPAID,
     });
 
     await test.runSequence('validatePetitionFromPaperSequence');
@@ -194,12 +201,13 @@ export const petitionsClerkCreatesNewCase = (
 
     expect(test.getState('currentPage')).toEqual('ReviewSavedPetition');
 
-    await test.runSequence('serveCaseToIrsSequence');
+    if (shouldServe) {
+      await test.runSequence('serveCaseToIrsSequence');
+    }
 
     await test.runSequence('gotoCaseDetailSequence');
 
     test.docketNumber = test.getState('caseDetail.docketNumber');
-    test.caseId = test.getState('caseDetail.caseId');
     expect(test.getState('caseDetail.preferredTrialCity')).toEqual(
       trialLocation,
     );

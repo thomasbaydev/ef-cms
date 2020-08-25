@@ -403,10 +403,10 @@
         }
       }
     },
-    "/case-parties/{caseId}/counsel/{userId}": {
+    "/case-parties/{docketNumber}/counsel/{userId}": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -480,10 +480,10 @@
         }
       }
     },
-    "/case-parties/{caseId}/contact-primary": {
+    "/case-parties/{docketNumber}/contact-primary": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -532,10 +532,10 @@
         }
       }
     },
-    "/case-parties/{caseId}/contact-secondary": {
+    "/case-parties/{docketNumber}/contact-secondary": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -628,10 +628,10 @@
         }
       }
     },
-    "/api/cases/{caseId}/generate-docket-record": {
+    "/api/cases/{docketNumber}/generate-docket-record": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -988,10 +988,10 @@
         }
       }
     },
-    "/cases/{caseId}": {
+    "/cases/{docketNumber}": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -999,8 +999,8 @@
       ],
       "get": {
         "tags": ["cases"],
-        "summary": "get a case by caseId",
-        "description": "Get a case by caseId.\n",
+        "summary": "get a case by docket number",
+        "description": "Get a case by docket number.\n",
         "produces": ["application/json"],
         "responses": {
           "200": {
@@ -1065,7 +1065,7 @@
         }
       }
     },
-    "/cases/open-cases": {
+    "/cases/open": {
       "get": {
         "tags": ["cases"],
         "summary": "Retrieve open cases",
@@ -1109,10 +1109,54 @@
         }
       }
     },
-    "/public-api/cases/{caseId}": {
+    "/cases/closed": {
+      "get": {
+        "tags": ["cases"],
+        "summary": "Retrieve closed cases",
+        "description": "Retrieve closed cases.\n",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/case"
+            }
+          }
+        },
+        "security": [
+          {
+            "CognitoUserPool": []
+          }
+        ]
+      },
+      "options": {
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Credentials": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public-api/cases/{docketNumber}": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -1120,8 +1164,8 @@
       ],
       "get": {
         "tags": ["cases"],
-        "summary": "get a case by caseId",
-        "description": "Get a case by caseId.\n",
+        "summary": "get a case by docket number",
+        "description": "Get a case by docket number.\n",
         "produces": ["application/json"],
         "responses": {
           "200": {
@@ -1213,10 +1257,10 @@
         }
       }
     },
-    "/case-meta/{caseId}/block": {
+    "/case-meta/{docketNumber}/block": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -1284,10 +1328,10 @@
         }
       }
     },
-    "/cases/{caseId}/remove-pending/{documentId}": {
+    "/cases/{docketNumber}/remove-pending/{documentId}": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -1342,10 +1386,10 @@
         }
       }
     },
-    "/cases/{caseId}/statistics/{statisticId}": {
+    "/cases/{docketNumber}/statistics/{statisticId}": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -1419,10 +1463,10 @@
         }
       }
     },
-    "/case-meta/{caseId}/high-priority": {
+    "/case-meta/{docketNumber}/high-priority": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -1490,10 +1534,10 @@
         }
       }
     },
-    "/case-meta/{caseId}/other-statistics": {
+    "/case-meta/{docketNumber}/other-statistics": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -1542,10 +1586,10 @@
         }
       }
     },
-    "/case-meta/{caseId}/statistics": {
+    "/case-meta/{docketNumber}/statistics": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -1594,10 +1638,10 @@
         }
       }
     },
-    "/case-meta/{caseId}/case-context": {
+    "/case-meta/{docketNumber}/case-context": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -1647,10 +1691,10 @@
         }
       }
     },
-    "/case-meta/{caseId}/consolidate-case": {
+    "/case-meta/{docketNumber}/consolidate-case": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -1658,8 +1702,8 @@
       ],
       "put": {
         "tags": ["cases"],
-        "summary": "Consolidates two or more cases associated with the given case ids.",
-        "description": "Consolidates two or more cases associated with the given case ids.\n",
+        "summary": "Consolidates two or more cases associated with the given docket number.",
+        "description": "Consolidates two or more cases associated with the given docket number.\n",
         "produces": ["application/json"],
         "consumes": ["application/json"],
         "responses": {
@@ -1679,7 +1723,7 @@
       "delete": {
         "parameters": [
           {
-            "name": "caseIdsToRemove",
+            "name": "docketNumbersToRemove",
             "in": "query",
             "required": true,
             "type": "string"
@@ -1728,10 +1772,10 @@
         }
       }
     },
-    "/cases/{caseId}/consolidated-cases": {
+    "/cases/{docketNumber}/consolidated-cases": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -1739,8 +1783,8 @@
       ],
       "get": {
         "tags": ["cases"],
-        "summary": "Returns all consolidated cases associated with the given case id.",
-        "description": "Returns all consolidated cases associated with the given case id.\n",
+        "summary": "Returns all consolidated cases associated with the given docket number.",
+        "description": "Returns all consolidated cases associated with the given docket number.\n",
         "produces": ["application/json"],
         "consumes": ["application/json"],
         "responses": {
@@ -1825,10 +1869,10 @@
         }
       }
     },
-    "/case-documents/{caseId}/external-document": {
+    "/case-documents/{docketNumber}/external-document": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -1877,10 +1921,10 @@
         }
       }
     },
-    "/case-documents/{caseId}/docket-entry": {
+    "/case-documents/{docketNumber}/docket-entry": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -1948,10 +1992,10 @@
         }
       }
     },
-    "/case-documents/{caseId}/docket-entry-meta": {
+    "/case-documents/{docketNumber}/docket-entry-meta": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -2000,10 +2044,10 @@
         }
       }
     },
-    "/case-documents/{caseId}/docket-entry-in-progress": {
+    "/case-documents/{docketNumber}/docket-entry-in-progress": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -2052,10 +2096,10 @@
         }
       }
     },
-    "/case-documents/{caseId}/docket-entry-complete": {
+    "/case-documents/{docketNumber}/docket-entry-complete": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -2104,10 +2148,10 @@
         }
       }
     },
-    "/cases/{caseId}/irsPetitionPackage": {
+    "/cases/{docketNumber}/irsPetitionPackage": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -2141,7 +2185,7 @@
       "delete": {
         "parameters": [
           {
-            "name": "caseId",
+            "name": "docketNumber",
             "in": "path",
             "required": true,
             "type": "string"
@@ -2239,10 +2283,71 @@
         }
       }
     },
-    "/case-documents/{caseId}/{documentId}/document-download-url": {
+    "/case-documents/{docketNumber}/{documentId}": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "documentId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "delete": {
+        "tags": ["documents"],
+        "summary": "deletes a document from a case",
+        "description": "Deletes a document from a case and from S3.\n",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response"
+          }
+        }
+      },
+      "put": {
+        "tags": ["documents"],
+        "summary": "archives a document on a case, but does not delete it",
+        "description": "Archives a document on a case, but does not delete it.\n",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response"
+          }
+        }
+      },
+      "options": {
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Credentials": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/case-documents/{docketNumber}/{documentId}/document-download-url": {
+      "parameters": [
+        {
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -2292,10 +2397,10 @@
         }
       }
     },
-    "/public-api/{caseId}/{documentId}/public-document-download-url": {
+    "/public-api/{docketNumber}/{documentId}/public-document-download-url": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -2345,7 +2450,7 @@
         }
       }
     },
-    "/case-documents/{caseId}/{documentId}/download-policy-url": {
+    "/case-documents/{docketNumber}/{documentId}/download-policy-url": {
       "parameters": [
         {
           "name": "documentId",
@@ -2354,7 +2459,7 @@
           "type": "string"
         },
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -2553,58 +2658,6 @@
         }
       }
     },
-    "/sections/{section}/messages/inbox": {
-      "parameters": [
-        {
-          "name": "section",
-          "in": "path",
-          "required": true,
-          "type": "string"
-        }
-      ],
-      "get": {
-        "tags": ["workitems"],
-        "summary": "get all workitems in the sections inbox",
-        "description": "Get all workitems in the sections inbox.\n",
-        "produces": ["application/json"],
-        "responses": {
-          "200": {
-            "description": "200 response",
-            "schema": {
-              "$ref": "#/definitions/workItem"
-            }
-          }
-        },
-        "security": [
-          {
-            "CognitoUserPool": []
-          }
-        ]
-      },
-      "options": {
-        "consumes": ["application/json"],
-        "produces": ["application/json"],
-        "responses": {
-          "200": {
-            "description": "200 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Methods": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Credentials": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Headers": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
-    },
     "/sections/{section}/document-qc/inbox": {
       "parameters": [
         {
@@ -2709,10 +2762,10 @@
         }
       }
     },
-    "/case-documents/{caseId}/{documentId}/work-items": {
+    "/case-documents/{docketNumber}/{documentId}/work-items": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -2767,10 +2820,10 @@
         }
       }
     },
-    "/case-documents/{caseId}/{documentId}/serve-court-issued": {
+    "/case-documents/{docketNumber}/{documentId}/serve-court-issued": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -2825,25 +2878,31 @@
         }
       }
     },
-    "/sections/{section}/messages/sent": {
+    "/case-documents/{docketNumber}/{documentId}/serve": {
       "parameters": [
         {
-          "name": "section",
+          "name": "docketNumber",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "documentId",
           "in": "path",
           "required": true,
           "type": "string"
         }
       ],
-      "get": {
-        "tags": ["workitems"],
-        "summary": "get all workitems in the sections outbox",
-        "description": "Get all workitems in the sections outbox.\n",
+      "post": {
+        "tags": ["cases"],
+        "summary": "serves an externally-filed document",
+        "description": "serves an externally-filed document\n",
         "produces": ["application/json"],
         "responses": {
           "200": {
             "description": "200 response",
             "schema": {
-              "$ref": "#/definitions/workItem"
+              "$ref": "#/definitions/case"
             }
           }
         },
@@ -3236,7 +3295,7 @@
         }
       }
     },
-    "/users/{userId}/case/{caseId}/pending": {
+    "/users/{userId}/case/{docketNumber}/pending": {
       "parameters": [
         {
           "name": "userId",
@@ -3245,7 +3304,7 @@
           "type": "string"
         },
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -3463,110 +3522,6 @@
         }
       }
     },
-    "/users/{userId}/messages/inbox": {
-      "parameters": [
-        {
-          "name": "userId",
-          "in": "path",
-          "required": true,
-          "type": "string"
-        }
-      ],
-      "get": {
-        "tags": ["workitems"],
-        "summary": "get a users work item inbox",
-        "description": "get a users work item inbox\n",
-        "produces": ["application/json"],
-        "responses": {
-          "200": {
-            "description": "200 response",
-            "schema": {
-              "$ref": "#/definitions/workItem"
-            }
-          }
-        },
-        "security": [
-          {
-            "CognitoUserPool": []
-          }
-        ]
-      },
-      "options": {
-        "consumes": ["application/json"],
-        "produces": ["application/json"],
-        "responses": {
-          "200": {
-            "description": "200 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Methods": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Credentials": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Headers": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/users/{userId}/messages/sent": {
-      "parameters": [
-        {
-          "name": "userId",
-          "in": "path",
-          "required": true,
-          "type": "string"
-        }
-      ],
-      "get": {
-        "tags": ["workitems"],
-        "summary": "get a users work item outbox",
-        "description": "get a users work item outbox\n",
-        "produces": ["application/json"],
-        "responses": {
-          "200": {
-            "description": "200 response",
-            "schema": {
-              "$ref": "#/definitions/workItem"
-            }
-          }
-        },
-        "security": [
-          {
-            "CognitoUserPool": []
-          }
-        ]
-      },
-      "options": {
-        "consumes": ["application/json"],
-        "produces": ["application/json"],
-        "responses": {
-          "200": {
-            "description": "200 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Methods": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Credentials": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Headers": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
-    },
     "/work-items": {
       "put": {
         "tags": ["workitems"],
@@ -3734,10 +3689,10 @@
         }
       }
     },
-    "/case-documents/{caseId}/{documentId}/coversheet": {
+    "/case-documents/{docketNumber}/{documentId}/coversheet": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -3789,10 +3744,10 @@
         }
       }
     },
-    "/case-documents/{caseId}/{documentId}/sign": {
+    "/case-documents/{docketNumber}/{documentId}/sign": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -4287,7 +4242,7 @@
         }
       }
     },
-    "/trial-sessions/{trialSessionId}/remove-case/{caseId}": {
+    "/trial-sessions/{trialSessionId}/remove-case/{docketNumber}": {
       "parameters": [
         {
           "name": "trialSessionId",
@@ -4296,7 +4251,7 @@
           "type": "string"
         },
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -4345,7 +4300,7 @@
         }
       }
     },
-    "/trial-sessions/{trialSessionId}/cases/{caseId}": {
+    "/trial-sessions/{trialSessionId}/cases/{docketNumber}": {
       "parameters": [
         {
           "name": "trialSessionId",
@@ -4354,7 +4309,7 @@
           "type": "string"
         },
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -4443,10 +4398,10 @@
         }
       }
     },
-    "/case-documents/{caseId}/court-issued-docket-entry": {
+    "/case-documents/{docketNumber}/court-issued-docket-entry": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -4506,10 +4461,10 @@
         }
       }
     },
-    "/case-documents/{caseId}/court-issued-order": {
+    "/case-documents/{docketNumber}/court-issued-order": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -4555,10 +4510,10 @@
         }
       }
     },
-    "/case-documents/{caseId}/court-issued-orders/{documentId}": {
+    "/case-documents/{docketNumber}/court-issued-orders/{documentId}": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -4579,9 +4534,6 @@
               "documentMetadata": {
                 "type": "object",
                 "properties": {
-                  "caseId": {
-                    "type": "string"
-                  },
                   "docketNumber": {
                     "type": "string"
                   },
@@ -4730,10 +4682,10 @@
         }
       }
     },
-    "/case-deadlines/{caseId}": {
+    "/case-deadlines/{docketNumber}": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -4801,10 +4753,10 @@
         }
       }
     },
-    "/case-deadlines/{caseId}/{caseDeadlineId}": {
+    "/case-deadlines/{docketNumber}/{caseDeadlineId}": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -4875,10 +4827,10 @@
         }
       }
     },
-    "/case-parties/{caseId}/petition-details": {
+    "/case-parties/{docketNumber}/petition-details": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -4927,10 +4879,10 @@
         }
       }
     },
-    "/case-parties/{caseId}/petitioner-info": {
+    "/case-parties/{docketNumber}/petitioner-info": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -4979,10 +4931,10 @@
         }
       }
     },
-    "/case-meta/{caseId}/qc-complete": {
+    "/case-meta/{docketNumber}/qc-complete": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -5047,10 +4999,10 @@
         }
       }
     },
-    "/case-meta/{caseId}/seal": {
+    "/case-meta/{docketNumber}/seal": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -5099,10 +5051,10 @@
         }
       }
     },
-    "/case-parties/{caseId}/associate-private-practitioner": {
+    "/case-parties/{docketNumber}/associate-private-practitioner": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -5151,10 +5103,10 @@
         }
       }
     },
-    "/case-parties/{caseId}/associate-respondent": {
+    "/case-parties/{docketNumber}/associate-respondent": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -5274,10 +5226,10 @@
         }
       }
     },
-    "/case-notes/{caseId}/user-notes": {
+    "/case-notes/{docketNumber}/user-notes": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -5383,10 +5335,10 @@
         }
       }
     },
-    "/case-notes/{caseId}": {
+    "/case-notes/{docketNumber}": {
       "parameters": [
         {
-          "name": "caseId",
+          "name": "docketNumber",
           "in": "path",
           "required": true,
           "type": "string"
@@ -5421,6 +5373,735 @@
             "description": "200 response",
             "schema": {
               "$ref": "#/definitions/caseNote"
+            }
+          }
+        },
+        "security": [
+          {
+            "CognitoUserPool": []
+          }
+        ]
+      },
+      "options": {
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Credentials": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages": {
+      "post": {
+        "tags": ["messages"],
+        "summary": "create a message",
+        "description": "Create a message.\n",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/message"
+            }
+          }
+        },
+        "security": [
+          {
+            "CognitoUserPool": []
+          }
+        ]
+      },
+      "options": {
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Credentials": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages/{messageId}": {
+      "parameters": [
+        {
+          "name": "messageId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "get": {
+        "tags": ["messages"],
+        "summary": "gets the message for the specific id",
+        "description": "Gets the message for the specific id.\n",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/message"
+            }
+          }
+        },
+        "security": [
+          {
+            "CognitoUserPool": []
+          }
+        ]
+      },
+      "options": {
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Credentials": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages/inbox/{userId}": {
+      "parameters": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "get": {
+        "tags": ["messages"],
+        "summary": "gets the inbox messages for the specific user id",
+        "description": "Gets the inbox messages for the specific user id.\n",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/message"
+            }
+          }
+        },
+        "security": [
+          {
+            "CognitoUserPool": []
+          }
+        ]
+      },
+      "options": {
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Credentials": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages/inbox/section/{section}": {
+      "parameters": [
+        {
+          "name": "section",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "get": {
+        "tags": ["messages"],
+        "summary": "gets the inbox messages for the specific section",
+        "description": "Gets the inbox messages for the specific user section.\n",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/message"
+            }
+          }
+        },
+        "security": [
+          {
+            "CognitoUserPool": []
+          }
+        ]
+      },
+      "options": {
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Credentials": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages/outbox/{userId}": {
+      "parameters": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "get": {
+        "tags": ["messages"],
+        "summary": "gets the outbox messages for the specific user id",
+        "description": "Gets the outbox messages for the specific user id.\n",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/message"
+            }
+          }
+        },
+        "security": [
+          {
+            "CognitoUserPool": []
+          }
+        ]
+      },
+      "options": {
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Credentials": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages/outbox/section/{section}": {
+      "parameters": [
+        {
+          "name": "section",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "get": {
+        "tags": ["messages"],
+        "summary": "gets the outbox messages for the specific section",
+        "description": "Gets the outbox messages for the specific user section.\n",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/message"
+            }
+          }
+        },
+        "security": [
+          {
+            "CognitoUserPool": []
+          }
+        ]
+      },
+      "options": {
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Credentials": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages/completed/section/{sectionId}": {
+      "parameters": [
+        {
+          "name": "sectionId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "get": {
+        "tags": ["messages"],
+        "summary": "gets the completed messages for the specific section",
+        "description": "Gets the completed messages for the specific user section.\n",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/message"
+            }
+          }
+        },
+        "security": [
+          {
+            "CognitoUserPool": []
+          }
+        ]
+      },
+      "options": {
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Credentials": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages/completed/{userId}": {
+      "parameters": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "get": {
+        "tags": ["messages"],
+        "summary": "gets the completed messages for the specific user",
+        "description": "Gets the completed messages for the specific user.\n",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/message"
+            }
+          }
+        },
+        "security": [
+          {
+            "CognitoUserPool": []
+          }
+        ]
+      },
+      "options": {
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Credentials": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages/case/{docketNumber}": {
+      "parameters": [
+        {
+          "name": "docketNumber",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "get": {
+        "tags": ["messages"],
+        "summary": "gets the messages for the specific case",
+        "description": "Gets the messages for the specific case.\n",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/message"
+            }
+          }
+        },
+        "security": [
+          {
+            "CognitoUserPool": []
+          }
+        ]
+      },
+      "options": {
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Credentials": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages/{parentMessageId}/complete": {
+      "post": {
+        "tags": ["messages"],
+        "summary": "complete a message",
+        "description": "Complete a message.\n",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/message"
+            }
+          }
+        },
+        "security": [
+          {
+            "CognitoUserPool": []
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "name": "parentMessageId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "in": "body",
+          "name": "message info",
+          "description": "the message info",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "options": {
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Credentials": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages/{parentMessageId}/reply": {
+      "post": {
+        "tags": ["messages"],
+        "summary": "reply to a message",
+        "description": "Reply to a message.\n",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/message"
+            }
+          }
+        },
+        "security": [
+          {
+            "CognitoUserPool": []
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "name": "parentMessageId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "in": "body",
+          "name": "message info",
+          "description": "the message info",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "attachments": {
+                "type": "array"
+              },
+              "docketNumber": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "subject": {
+                "type": "string"
+              },
+              "toSection": {
+                "type": "string"
+              },
+              "toUserId": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "options": {
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Credentials": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages/{parentMessageId}/forward": {
+      "post": {
+        "tags": ["messages"],
+        "summary": "forward a message",
+        "description": "Forward a message.\n",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/message"
+            }
+          }
+        },
+        "security": [
+          {
+            "CognitoUserPool": []
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "name": "parentMessageId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "in": "body",
+          "name": "message info",
+          "description": "the message info",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "attachments": {
+                "type": "array"
+              },
+              "docketNumber": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "subject": {
+                "type": "string"
+              },
+              "toSection": {
+                "type": "string"
+              },
+              "toUserId": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "options": {
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Credentials": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public-api/todays-opinions": {
+      "get": {
+        "tags": ["case-documents"],
+        "summary": "returns the opinions created for the current date",
+        "description": "Returns the opinions created for the current date.\n",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/document"
             }
           }
         },
@@ -5527,10 +6208,6 @@
         "assigneeName": {
           "type": "string",
           "description": "the name of the user currently assigned the work item"
-        },
-        "caseId": {
-          "type": "string",
-          "description": "the case id"
         },
         "document": {
           "type": "object",
@@ -5654,22 +6331,15 @@
               "documentType": {
                 "type": "string"
               },
-              "workItems": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {}
-                }
+              "workItem": {
+                "type": "object",
+                "properties": {}
               },
               "documentId": {
                 "type": "string"
               }
             }
           }
-        },
-        "caseId": {
-          "type": "string",
-          "description": "id of case"
         },
         "respondent": {
           "type": "string",
@@ -5768,9 +6438,9 @@
           "type": "string",
           "description": "case deadline created time"
         },
-        "caseId": {
+        "docketNumber": {
           "type": "string",
-          "description": "id of the case"
+          "description": "docket number of the case"
         },
         "caseDeadlineId": {
           "type": "string",
@@ -5790,9 +6460,9 @@
     "userNote": {
       "type": "object",
       "properties": {
-        "caseId": {
+        "docketNumber": {
           "type": "string",
-          "description": "id of the case"
+          "description": "docket number of the case"
         },
         "userId": {
           "type": "string",
@@ -5808,9 +6478,9 @@
     "caseNote": {
       "type": "object",
       "properties": {
-        "caseId": {
+        "docketNumber": {
           "type": "string",
-          "description": "id of the case"
+          "description": "docket number of the case"
         },
         "notes": {
           "type": "string",
@@ -5818,6 +6488,108 @@
         }
       },
       "description": "a case procedural note"
+    },
+    "message": {
+      "type": "object",
+      "properties": {
+        "attachments": {
+          "type": "array",
+          "description": "array of document metadata objects attached to the message"
+        },
+        "caseStatus": {
+          "type": "string",
+          "description": "status of the associated case"
+        },
+        "caseTitle": {
+          "type": "string",
+          "description": "case title for the associated cases"
+        },
+        "completedAt": {
+          "type": "string",
+          "description": "when the message was marked as completed"
+        },
+        "completedBy": {
+          "type": "string",
+          "description": "the name of the user who completed the message thread"
+        },
+        "completedBySection": {
+          "type": "string",
+          "description": "the section of the user who completed the message thread"
+        },
+        "completedByUserId": {
+          "type": "string",
+          "description": "the ID of the user who completed the message thread"
+        },
+        "completedMessage": {
+          "type": "string",
+          "description": "the message entered when completing the message thread"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "message created time"
+        },
+        "docketNumber": {
+          "type": "string",
+          "description": "docket number of the associated case"
+        },
+        "docketNumberWithSuffix": {
+          "type": "string",
+          "description": "docket number of the associated case with its suffix"
+        },
+        "entityName": {
+          "type": "string",
+          "description": "the name of the entity - Message"
+        },
+        "from": {
+          "type": "string",
+          "description": "the name of the user who sent the message"
+        },
+        "fromSection": {
+          "type": "string",
+          "description": "the section of the user who sent the message"
+        },
+        "fromUserId": {
+          "type": "string",
+          "description": "the ID of the user who sent the message"
+        },
+        "isCompleted": {
+          "type": "boolean",
+          "description": "whether the message thread has been completed"
+        },
+        "isRepliedTo": {
+          "type": "boolean",
+          "description": "whether the message has been replied to or forwarded"
+        },
+        "message": {
+          "type": "string",
+          "description": "the message text"
+        },
+        "messageId": {
+          "type": "string",
+          "description": "the unique ID generated by the system to represent the message"
+        },
+        "parentMessageId": {
+          "type": "string",
+          "description": "the unique ID generated by the system to represent the parent / initial message"
+        },
+        "subject": {
+          "type": "string",
+          "description": "the subject line of the message"
+        },
+        "to": {
+          "type": "string",
+          "description": "the name of the user who is the recipient of the message"
+        },
+        "toSection": {
+          "type": "string",
+          "description": "the section of the user who is the recipient of the message"
+        },
+        "toUserId": {
+          "type": "string",
+          "description": "the ID of the user who is the recipient of the message"
+        }
+      },
+      "description": "a case deadline"
     }
   }
 }

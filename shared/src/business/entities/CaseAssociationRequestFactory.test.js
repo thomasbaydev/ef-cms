@@ -5,6 +5,7 @@ const {
 const {
   CaseAssociationRequestFactory,
 } = require('./CaseAssociationRequestFactory');
+const { OBJECTIONS_OPTIONS_MAP } = require('../entities/EntityConstants');
 
 const { VALIDATION_ERROR_MESSAGES } = CaseAssociationRequestFactory;
 
@@ -54,7 +55,7 @@ describe('CaseAssociationRequestFactory', () => {
 
     it('should require event code', () => {
       expect(errors().eventCode).toEqual(VALIDATION_ERROR_MESSAGES.eventCode);
-      rawEntity.eventCode = '345';
+      rawEntity.eventCode = 'P';
       expect(errors().eventCode).toEqual(undefined);
     });
 
@@ -100,7 +101,7 @@ describe('CaseAssociationRequestFactory', () => {
         expect(errors().objections).toEqual(
           VALIDATION_ERROR_MESSAGES.objections,
         );
-        rawEntity.objections = 'No';
+        rawEntity.objections = OBJECTIONS_OPTIONS_MAP.NO;
         expect(errors().objections).toEqual(undefined);
       });
     });
@@ -131,7 +132,7 @@ describe('CaseAssociationRequestFactory', () => {
         expect(errors().objections).toEqual(
           VALIDATION_ERROR_MESSAGES.objections,
         );
-        rawEntity.objections = 'No';
+        rawEntity.objections = OBJECTIONS_OPTIONS_MAP.NO;
         expect(errors().objections).toEqual(undefined);
       });
 

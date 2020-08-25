@@ -1,21 +1,20 @@
-const { UnauthorizedError } = require('../../../errors/errors');
-
 const {
   isAuthorized,
   ROLE_PERMISSIONS,
 } = require('../../../authorization/authorizationClientService');
+const { UnauthorizedError } = require('../../../errors/errors');
 
 /**
  * submitPendingCaseAssociationRequestInteractor
  *
  * @param {object} providers the providers object
  * @param {object} providers.applicationContext the application context
- * @param {string} providers.caseId the case id
+ * @param {string} providers.docketNumber the docket number of the case
  * @returns {Promise<*>} the promise of the pending case association request
  */
 exports.submitPendingCaseAssociationRequestInteractor = async ({
   applicationContext,
-  caseId,
+  docketNumber,
 }) => {
   const authorizedUser = applicationContext.getCurrentUser();
 
@@ -33,7 +32,7 @@ exports.submitPendingCaseAssociationRequestInteractor = async ({
     .getPersistenceGateway()
     .verifyCaseForUser({
       applicationContext,
-      caseId,
+      docketNumber,
       userId: user.userId,
     });
 
@@ -41,7 +40,7 @@ exports.submitPendingCaseAssociationRequestInteractor = async ({
     .getPersistenceGateway()
     .verifyPendingCaseForUser({
       applicationContext,
-      caseId,
+      docketNumber,
       userId: user.userId,
     });
 
@@ -50,7 +49,7 @@ exports.submitPendingCaseAssociationRequestInteractor = async ({
       .getPersistenceGateway()
       .associateUserWithCasePending({
         applicationContext,
-        caseId: caseId,
+        docketNumber,
         userId: user.userId,
       });
   }

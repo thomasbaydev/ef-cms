@@ -4,29 +4,29 @@ const {
 const {
   deleteTrialSessionInteractor,
 } = require('./deleteTrialSessionInteractor');
+const { MOCK_CASE } = require('../../../test/mockCase');
+const { ROLES } = require('../../entities/EntityConstants');
 const { User } = require('../../entities/User');
 
-const { MOCK_CASE } = require('../../../test/mockCase');
-
-const MOCK_TRIAL = {
-  caseOrder: [{ caseId: 'a54ba5a9-b37b-479d-9201-067ec6e335bb' }],
-  isCalendared: false,
-  judge: {
-    userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-  },
-  maxCases: 100,
-  sessionType: 'Regular',
-  startDate: '2001-12-01T00:00:00.000Z',
-  term: 'Fall',
-  termYear: '2025',
-  trialLocation: 'Birmingham, Alabama',
-  trialSessionId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-};
-
-let user;
-let mockTrialSession;
-
 describe('deleteTrialSessionInteractor', () => {
+  const MOCK_TRIAL = {
+    caseOrder: [{ docketNumber: MOCK_CASE.docketNumber }],
+    isCalendared: false,
+    judge: {
+      userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+    },
+    maxCases: 100,
+    sessionType: 'Regular',
+    startDate: '2001-12-01T00:00:00.000Z',
+    term: 'Fall',
+    termYear: '2025',
+    trialLocation: 'Birmingham, Alabama',
+    trialSessionId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+  };
+
+  let user;
+  let mockTrialSession;
+
   beforeEach(() => {
     mockTrialSession = MOCK_TRIAL;
 
@@ -40,7 +40,7 @@ describe('deleteTrialSessionInteractor', () => {
 
   it('throws error if user is unauthorized', async () => {
     user = {
-      role: User.ROLES.petitioner,
+      role: ROLES.petitioner,
       userId: 'petitioner',
     };
 
@@ -55,7 +55,7 @@ describe('deleteTrialSessionInteractor', () => {
   it('throws an exception when it fails to find a trial session', async () => {
     user = new User({
       name: 'Docket Clerk',
-      role: User.ROLES.docketClerk,
+      role: ROLES.docketClerk,
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
 
@@ -72,7 +72,7 @@ describe('deleteTrialSessionInteractor', () => {
   it('throws error when trial session start date is in the past', async () => {
     user = new User({
       name: 'Docket Clerk',
-      role: User.ROLES.docketClerk,
+      role: ROLES.docketClerk,
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
 
@@ -91,7 +91,7 @@ describe('deleteTrialSessionInteractor', () => {
   it('throws error if trial session is calendared', async () => {
     user = new User({
       name: 'Docket Clerk',
-      role: User.ROLES.docketClerk,
+      role: ROLES.docketClerk,
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
 
@@ -112,7 +112,7 @@ describe('deleteTrialSessionInteractor', () => {
   it('deletes the trial session and invokes expected persistence methods', async () => {
     user = new User({
       name: 'Docket Clerk',
-      role: User.ROLES.docketClerk,
+      role: ROLES.docketClerk,
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
 
@@ -123,7 +123,7 @@ describe('deleteTrialSessionInteractor', () => {
 
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(MOCK_CASE);
+      .getCaseByDocketNumber.mockReturnValue(MOCK_CASE);
 
     await deleteTrialSessionInteractor({
       applicationContext,

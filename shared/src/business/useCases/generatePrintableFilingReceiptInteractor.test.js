@@ -12,7 +12,7 @@ describe('generatePrintableFilingReceiptInteractor', () => {
     );
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(MOCK_CASE);
+      .getCaseByDocketNumber.mockReturnValue(MOCK_CASE);
     applicationContext
       .getPersistenceGateway()
       .getDownloadPolicyUrl.mockReturnValue({
@@ -23,7 +23,7 @@ describe('generatePrintableFilingReceiptInteractor', () => {
   it('Calls the Receipt of Filing document generator', async () => {
     await generatePrintableFilingReceiptInteractor({
       applicationContext,
-      caseId: MOCK_CASE.caseId,
+      docketNumber: MOCK_CASE.docketNumber,
       documentsFiled: {
         primaryDocumentFile: {},
       },
@@ -38,5 +38,30 @@ describe('generatePrintableFilingReceiptInteractor', () => {
     expect(
       applicationContext.getPersistenceGateway().getDownloadPolicyUrl,
     ).toHaveBeenCalled();
+  });
+
+  it('acquires document information', async () => {
+    await generatePrintableFilingReceiptInteractor({
+      applicationContext,
+      docketNumber: MOCK_CASE.docketNumber,
+      documentsFiled: {
+        hasSecondarySupportingDocuments: true,
+        hasSupportingDocuments: true,
+        primaryDocumentFile: {},
+        secondaryDocument: { documentId: 4 },
+        secondaryDocumentFile: { fakeDocument: true },
+        secondarySupportingDocuments: [
+          { documentId: '3' },
+          { documentId: '7' },
+        ],
+        supportingDocuments: [{ documentId: '1' }, { documentId: '2' }],
+      },
+    });
+
+    const receiptMockCall = applicationContext.getDocumentGenerators()
+      .receiptOfFiling.mock.calls[0][0].data; // 'data' property of first arg (an object) of first call
+    expect(receiptMockCall.supportingDocuments.length).toBe(2);
+    expect(receiptMockCall.secondarySupportingDocuments.length).toBe(2);
+    expect(receiptMockCall.secondaryDocument).toBeDefined();
   });
 });

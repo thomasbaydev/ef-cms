@@ -1,13 +1,15 @@
 const {
   validatePetitionerInformationFormInteractor,
 } = require('./validatePetitionerInformationFormInteractor');
-const { ContactFactory } = require('../entities/contacts/ContactFactory');
+const { applicationContext } = require('../test/createTestApplicationContext');
+const { COUNTRY_TYPES, PARTY_TYPES } = require('../entities/EntityConstants');
 
 describe('validatePetition', () => {
   it('returns the expected errors object when contactPrimary is missing fields', () => {
     const errors = validatePetitionerInformationFormInteractor({
+      applicationContext,
       contactPrimary: {},
-      partyType: ContactFactory.PARTY_TYPES.petitioner,
+      partyType: PARTY_TYPES.petitioner,
     });
 
     expect(Object.keys(errors)).toEqual(['contactPrimary', 'contactSecondary']);
@@ -17,10 +19,11 @@ describe('validatePetition', () => {
 
   it('returns null if no errors exist for only a contactPrimary', () => {
     const errors = validatePetitionerInformationFormInteractor({
+      applicationContext,
       contactPrimary: {
         address1: '123 Main St',
         city: 'Somewhere',
-        countryType: 'domestic',
+        countryType: COUNTRY_TYPES.DOMESTIC,
         email: 'petitioner@example.com',
         name: 'Test Petitioner',
         phone: '1234567',
@@ -28,7 +31,7 @@ describe('validatePetition', () => {
         state: 'TN',
         title: 'Executor',
       },
-      partyType: ContactFactory.PARTY_TYPES.petitioner,
+      partyType: PARTY_TYPES.petitioner,
     });
 
     expect(errors.contactPrimary).toBeNull();
@@ -36,10 +39,11 @@ describe('validatePetition', () => {
 
   it('returns null if no errors exist for a contactPrimary and contactSecondary', () => {
     const errors = validatePetitionerInformationFormInteractor({
+      applicationContext,
       contactPrimary: {
         address1: '123 Main St',
         city: 'Somewhere',
-        countryType: 'domestic',
+        countryType: COUNTRY_TYPES.DOMESTIC,
         email: 'petitioner@example.com',
         name: 'Test Petitioner',
         phone: '1234567',
@@ -50,7 +54,7 @@ describe('validatePetition', () => {
       contactSecondary: {
         address1: '123 Main St',
         city: 'Somewhere',
-        countryType: 'domestic',
+        countryType: COUNTRY_TYPES.DOMESTIC,
         email: 'petitioner@example.com',
         name: 'Test Petitioner',
         phone: '1234567',
@@ -58,7 +62,7 @@ describe('validatePetition', () => {
         state: 'TN',
         title: 'Executor',
       },
-      partyType: ContactFactory.PARTY_TYPES.petitionerSpouse,
+      partyType: PARTY_TYPES.petitionerSpouse,
     });
 
     expect(errors.contactPrimary).toBeNull();

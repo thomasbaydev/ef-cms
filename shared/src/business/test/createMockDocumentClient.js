@@ -1,38 +1,38 @@
-const { User } = require('../entities/User');
+const { PETITIONS_SECTION, ROLES } = require('../entities/EntityConstants');
 
 const mockDynamoUsers = {
   ['user|1805d1ab-18d0-43ec-bafb-654e83405416 user|1805d1ab-18d0-43ec-bafb-654e83405416']: {
-    email: 'docketclerk',
+    email: 'docketclerk@example.com',
     name: 'Test Docketclerk',
     pk: 'user|1805d1ab-18d0-43ec-bafb-654e83405416',
-    role: User.ROLES.docketClerk,
+    role: ROLES.docketClerk,
     section: 'docket',
     sk: 'user|1805d1ab-18d0-43ec-bafb-654e83405416',
     userId: '1805d1ab-18d0-43ec-bafb-654e83405416',
   },
   ['user|3805d1ab-18d0-43ec-bafb-654e83405416 user|3805d1ab-18d0-43ec-bafb-654e83405416']: {
-    email: 'petitionsclerk',
+    email: 'petitionsclerk@example.com',
     name: 'Test Petitionsclerk',
     pk: 'user|3805d1ab-18d0-43ec-bafb-654e83405416',
-    role: User.ROLES.petitionsClerk,
-    section: 'petitions',
+    role: ROLES.petitionsClerk,
+    section: PETITIONS_SECTION,
     sk: 'user|3805d1ab-18d0-43ec-bafb-654e83405416',
     userId: '3805d1ab-18d0-43ec-bafb-654e83405416',
   },
   ['user|7805d1ab-18d0-43ec-bafb-654e83405416 user|7805d1ab-18d0-43ec-bafb-654e83405416']: {
-    email: 'petitioner',
+    email: 'petitioner@example.com',
     name: 'Test Petitioner',
     pk: 'user|7805d1ab-18d0-43ec-bafb-654e83405416',
-    role: User.ROLES.petitioner,
+    role: ROLES.petitioner,
     sk: 'user|7805d1ab-18d0-43ec-bafb-654e83405416',
     userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
   },
   ['user|a805d1ab-18d0-43ec-bafb-654e83405416 user|a805d1ab-18d0-43ec-bafb-654e83405416']: {
-    email: 'pettitionsclerk',
+    email: 'pettitionsclerk@example.com',
     name: 'Alex Petitionsclerk',
     pk: 'user|a805d1ab-18d0-43ec-bafb-654e83405416',
-    role: User.ROLES.petitionsClerk,
-    section: 'petitions',
+    role: ROLES.petitionsClerk,
+    section: PETITIONS_SECTION,
     sk: 'user|a805d1ab-18d0-43ec-bafb-654e83405416',
     userId: 'a805d1ab-18d0-43ec-bafb-654e83405416',
   },
@@ -135,7 +135,7 @@ const createMockDocumentClient = () => {
             if (v === 'true' || v === 'false') {
               obj[k] = v === 'true';
             } else {
-              if (k.includes('workItems[')) {
+              if (k.includes('workItem')) {
                 obj = mockDynamoUsers[`${Key.pk} ${Key.sk}`];
                 // eslint-disable-next-line security/detect-eval-with-expression
                 eval(`obj.${k} = ${JSON.stringify(v)};`);

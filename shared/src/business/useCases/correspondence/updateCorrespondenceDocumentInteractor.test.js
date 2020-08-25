@@ -2,19 +2,23 @@ const {
   applicationContext,
 } = require('../../test/createTestApplicationContext');
 const {
+  CASE_TYPES_MAP,
+  COUNTRY_TYPES,
+  PARTY_TYPES,
+  ROLES,
+} = require('../../entities/EntityConstants');
+const {
   updateCorrespondenceDocumentInteractor,
 } = require('./updateCorrespondenceDocumentInteractor');
-const { ContactFactory } = require('../../entities/contacts/ContactFactory');
 const { Correspondence } = require('../../entities/Correspondence');
 const { createISODateString } = require('../../utilities/DateHandler');
-const { User } = require('../../entities/User');
 
 describe('updateCorrespondenceDocumentInteractor', () => {
   let mockUser;
   const mockDocumentId = 'cf105788-5d34-4451-aa8d-dfd9a851b675';
   const mockUserFixture = {
     name: 'Docket Clerk',
-    role: User.ROLES.docketClerk,
+    role: ROLES.docketClerk,
     userId: '2474e5c0-f741-4120-befa-b77378ac8bf0',
   };
   const mockCorrespondence = new Correspondence({
@@ -25,12 +29,11 @@ describe('updateCorrespondenceDocumentInteractor', () => {
   });
   const mockCase = {
     caseCaption: 'Caption',
-    caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-    caseType: 'Deficiency',
+    caseType: CASE_TYPES_MAP.deficiency,
     contactPrimary: {
       address1: '123 Main St',
       city: 'Somewhere',
-      countryType: ContactFactory.COUNTRY_TYPES.DOMESTIC,
+      countryType: COUNTRY_TYPES.DOMESTIC,
       email: 'contact@example.com',
       name: 'Contact Primary',
       phone: '123123134',
@@ -41,41 +44,30 @@ describe('updateCorrespondenceDocumentInteractor', () => {
     docketNumber: '123-45',
     docketRecord: [
       {
-        description: 'Docket Record 0',
-        docketRecordId: 'c54ba5a9-b37b-479d-9201-067ec6e335bc',
-        documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bc',
-        eventCode: 'O',
-        filingDate: createISODateString(),
-        index: 0,
-      },
-      {
         description: 'Docket Record 1',
         docketRecordId: mockDocumentId,
         documentId: mockDocumentId,
         eventCode: 'OAJ',
         filingDate: createISODateString(),
-        index: 1,
+        index: 0,
       },
     ],
     documents: [
       {
-        documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bc',
-        documentType: 'O - Order',
-        eventCode: 'O',
-        serviceStamp: 'Served',
-        userId: '2474e5c0-f741-4120-befa-b77378ac8bf0',
-      },
-      {
         documentId: mockDocumentId,
-        documentType: 'OAJ - Order that case is assigned',
+        documentType: 'Order that case is assigned',
         eventCode: 'OAJ',
+        signedAt: '2019-03-01T21:40:46.415Z',
+        signedByUserId: '611dc444-fd8f-43a0-8844-c4d57745c718',
+        signedJudgeName: 'Judy',
         userId: '2474e5c0-f741-4120-befa-b77378ac8bf0',
       },
     ],
     filingType: 'Myself',
-    partyType: ContactFactory.PARTY_TYPES.petitioner,
+    partyType: PARTY_TYPES.petitioner,
     preferredTrialCity: 'Fresno, California',
     procedureType: 'Regular',
+    userId: 'e8577e31-d6d5-4c4a-adc6-520075f3dde5',
   };
 
   beforeEach(() => {
@@ -84,16 +76,16 @@ describe('updateCorrespondenceDocumentInteractor', () => {
     applicationContext.getCurrentUser.mockImplementation(() => mockUser);
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(mockCase);
+      .getCaseByDocketNumber.mockReturnValue(mockCase);
   });
 
   it('should throw an Unauthorized error if the user role does not have the CASE_CORRESPONDENCE permission', async () => {
-    mockUser = { ...mockUser, role: User.ROLES.petitioner };
+    mockUser = { ...mockUser, role: ROLES.petitioner };
 
     await expect(
       updateCorrespondenceDocumentInteractor({
         applicationContext,
-        documentMetadata: { caseId: '2368f6c6-e91f-4df3-98fd-43e55c00f6f1' },
+        documentMetadata: { docketNumber: mockCase.docketNumber },
       }),
     ).rejects.toThrow('Unauthorized');
   });
@@ -102,7 +94,7 @@ describe('updateCorrespondenceDocumentInteractor', () => {
     await updateCorrespondenceDocumentInteractor({
       applicationContext,
       documentMetadata: {
-        caseId: '2e528c9c-70f5-4b3e-81c6-1a2f715261b4',
+        docketNumber: mockCase.docketNumber,
         documentId: mockCorrespondence.documentId,
         documentTitle: 'A title that has been updated',
       },
@@ -112,11 +104,11 @@ describe('updateCorrespondenceDocumentInteractor', () => {
       applicationContext.getPersistenceGateway().fileCaseCorrespondence.mock
         .calls[0][0],
     ).toMatchObject({
-      caseId: '2e528c9c-70f5-4b3e-81c6-1a2f715261b4',
       correspondence: {
         ...mockCorrespondence,
         documentTitle: 'A title that has been updated',
       },
+      docketNumber: mockCase.docketNumber,
     });
   });
 
@@ -124,7 +116,7 @@ describe('updateCorrespondenceDocumentInteractor', () => {
     const result = await updateCorrespondenceDocumentInteractor({
       applicationContext,
       documentMetadata: {
-        caseId: '2368f6c6-e91f-4df3-98fd-43e55c00f6f1',
+        docketNumber: mockCase.docketNumber,
         documentId: mockCorrespondence.documentId,
         documentTitle: 'A title that has been updated',
       },

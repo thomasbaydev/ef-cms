@@ -1,12 +1,12 @@
-import { ContactFactory } from '../../shared/src/business/entities/contacts/ContactFactory';
-
-import { loginAs, setupTest, uploadPetition } from './helpers';
-import { markAllCasesAsQCed } from './journey/markAllCasesAsQCed';
-
+import {
+  COUNTRY_TYPES,
+  PARTY_TYPES,
+} from '../../shared/src/business/entities/EntityConstants';
 import { docketClerkCreatesAnIncompleteTrialSessionBeforeCalendaring } from './journey/docketClerkCreatesAnIncompleteTrialSessionBeforeCalendaring';
 import { docketClerkSetsCaseReadyForTrial } from './journey/docketClerkSetsCaseReadyForTrial';
 import { docketClerkViewsTrialSessionList } from './journey/docketClerkViewsTrialSessionList';
-
+import { loginAs, setupTest, uploadPetition } from './helpers';
+import { markAllCasesAsQCed } from './journey/markAllCasesAsQCed';
 import { petitionsClerkCompletesAndSetsTrialSession } from './journey/petitionsClerkCompletesAndSetsTrialSession';
 import { petitionsClerkSubmitsCaseToIrs } from './journey/petitionsClerkSubmitsCaseToIrs';
 import { petitionsClerkViewsDocketRecordAfterSettingTrial } from './journey/petitionsClerkViewsDocketRecordAfterSettingTrial';
@@ -28,14 +28,14 @@ describe('Generate Notices of Trial Session with Paper Service', () => {
     contactSecondary: {
       address1: '123 Paper St.',
       city: 'Paper City',
-      countryType: ContactFactory.COUNTRY_TYPES.DOMESTIC,
+      countryType: COUNTRY_TYPES.DOMESTIC,
       name: 'Richard Papers',
       phone: '1231231234',
       postalCode: '12345',
       state: 'IA',
     },
     hasPaper: true,
-    partyType: ContactFactory.PARTY_TYPES.petitionerSpouse,
+    partyType: PARTY_TYPES.petitionerSpouse,
     preferredTrialCity: trialLocation,
     procedureType: 'Small', // should generate a Standing Pretrial Notice
     trialLocation,
@@ -43,27 +43,25 @@ describe('Generate Notices of Trial Session with Paper Service', () => {
 
   test.casesReadyForTrial = [];
 
-  const createdCaseIds = [];
   const createdDocketNumbers = [];
 
   const makeCaseReadyForTrial = (test, id, caseOverrides) => {
-    loginAs(test, 'petitioner');
+    loginAs(test, 'petitioner@example.com');
     it(`Create case ${id}`, async () => {
       const caseDetail = await uploadPetition(test, caseOverrides);
       expect(caseDetail.docketNumber).toBeDefined();
-      createdCaseIds.push(caseDetail.caseId);
       createdDocketNumbers.push(caseDetail.docketNumber);
       test.docketNumber = caseDetail.docketNumber;
     });
 
-    loginAs(test, 'petitionsclerk');
+    loginAs(test, 'petitionsclerk@example.com');
     petitionsClerkSubmitsCaseToIrs(test);
 
-    loginAs(test, 'docketclerk');
+    loginAs(test, 'docketclerk@example.com');
     docketClerkSetsCaseReadyForTrial(test);
   };
 
-  loginAs(test, 'docketclerk');
+  loginAs(test, 'docketclerk@example.com');
   docketClerkCreatesAnIncompleteTrialSessionBeforeCalendaring(test, overrides);
   docketClerkViewsTrialSessionList(test, overrides);
 
@@ -72,9 +70,9 @@ describe('Generate Notices of Trial Session with Paper Service', () => {
     makeCaseReadyForTrial(test, id, overrides);
   }
 
-  loginAs(test, 'petitionsclerk');
+  loginAs(test, 'petitionsclerk@example.com');
   markAllCasesAsQCed(test, () => {
-    return [createdCaseIds[0], createdCaseIds[1]];
+    return [createdDocketNumbers[0], createdDocketNumbers[1]];
   });
   petitionsClerkCompletesAndSetsTrialSession(test, overrides);
   petitionsClerkViewsDocketRecordAfterSettingTrial(test, {

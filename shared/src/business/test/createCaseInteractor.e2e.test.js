@@ -1,11 +1,18 @@
 const {
+  CASE_STATUS_TYPES,
+  CASE_TYPES_MAP,
+  COUNTRY_TYPES,
+  DOCKET_NUMBER_SUFFIXES,
+  INITIAL_DOCUMENT_TYPES,
+  PETITIONS_SECTION,
+} = require('../entities/EntityConstants');
+const {
   getDocumentQCInboxForSectionInteractor,
 } = require('../useCases/workitems/getDocumentQCInboxForSectionInteractor');
 const { applicationContext } = require('../test/createTestApplicationContext');
-const { Case } = require('../entities/cases/Case');
-const { ContactFactory } = require('../entities/contacts/ContactFactory');
 const { createCaseInteractor } = require('../useCases/createCaseInteractor');
 const { getCaseInteractor } = require('../useCases/getCaseInteractor');
+const { PARTY_TYPES, ROLES } = require('../entities/EntityConstants');
 const { User } = require('../entities/User');
 
 describe('createCase integration test', () => {
@@ -16,27 +23,27 @@ describe('createCase integration test', () => {
   });
 
   it('should create the expected case into the database', async () => {
-    const { caseId } = await createCaseInteractor({
+    const { docketNumber } = await createCaseInteractor({
       applicationContext,
       petitionFileId: '92eac064-9ca5-4c56-80a0-c5852c752277',
       petitionMetadata: {
-        caseType: 'Innocent Spouse',
+        caseType: CASE_TYPES_MAP.innocentSpouse,
         contactPrimary: {
           address1: '19 First Freeway',
           address2: 'Ad cumque quidem lau',
           address3: 'Anim est dolor animi',
           city: 'Rerum eaque cupidata',
-          countryType: 'domestic',
+          countryType: COUNTRY_TYPES.DOMESTIC,
           email: 'petitioner@example.com',
           name: 'Rick Petitioner',
           phone: '+1 (599) 681-5435',
           postalCode: '89614',
-          state: 'AP',
+          state: 'AL',
         },
         contactSecondary: {},
         filingType: 'Myself',
         hasIrsNotice: false,
-        partyType: ContactFactory.PARTY_TYPES.petitioner,
+        partyType: PARTY_TYPES.petitioner,
         preferredTrialCity: 'Aberdeen, South Dakota',
         procedureType: 'Small',
       },
@@ -45,7 +52,7 @@ describe('createCase integration test', () => {
 
     const createdCase = await getCaseInteractor({
       applicationContext,
-      caseId,
+      docketNumber,
     });
 
     expect(createdCase).toMatchObject({
@@ -67,42 +74,31 @@ describe('createCase integration test', () => {
           documentType: 'Petition',
           eventCode: 'P',
           filedBy: 'Petr. Rick Petitioner',
-          workItems: [
-            {
-              assigneeId: null,
-              assigneeName: null,
-              caseStatus: Case.STATUS_TYPES.new,
-              docketNumber: '101-19',
-              docketNumberWithSuffix: '101-19S',
-              document: {
-                documentType: 'Petition',
-                filedBy: 'Petr. Rick Petitioner',
-              },
-              isInitializeCase: true,
-              messages: [
-                {
-                  from: 'Alex Petitionsclerk',
-                  fromUserId: 'a805d1ab-18d0-43ec-bafb-654e83405416',
-                  message:
-                    'Petition filed by Rick Petitioner is ready for review.',
-                },
-              ],
-              section: 'petitions',
-              sentBy: 'Alex Petitionsclerk',
-              sentByUserId: 'a805d1ab-18d0-43ec-bafb-654e83405416',
+          workItem: {
+            assigneeId: null,
+            assigneeName: null,
+            caseStatus: CASE_STATUS_TYPES.new,
+            docketNumber: '101-19',
+            docketNumberWithSuffix: '101-19S',
+            document: {
+              documentType: 'Petition',
+              filedBy: 'Petr. Rick Petitioner',
             },
-          ],
+            isInitializeCase: true,
+            section: PETITIONS_SECTION,
+            sentBy: 'Alex Petitionsclerk',
+            sentByUserId: 'a805d1ab-18d0-43ec-bafb-654e83405416',
+          },
         },
         {
-          documentType: 'Statement of Taxpayer Identification',
-          eventCode: 'STIN',
+          documentType: INITIAL_DOCUMENT_TYPES.stin.documentType,
+          eventCode: INITIAL_DOCUMENT_TYPES.stin.eventCode,
           filedBy: 'Petr. Rick Petitioner',
           userId: 'a805d1ab-18d0-43ec-bafb-654e83405416',
-          workItems: [],
         },
       ],
       initialCaption: 'Rick Petitioner, Petitioner',
-      initialDocketNumberSuffix: 'S',
+      initialDocketNumberSuffix: DOCKET_NUMBER_SUFFIXES.SMALL,
       noticeOfAttachments: false,
       orderForAmendedPetition: false,
       orderForAmendedPetitionAndFilingFee: false,
@@ -110,27 +106,27 @@ describe('createCase integration test', () => {
       orderForOds: false,
       orderForRatification: false,
       orderToShowCause: false,
-      status: Case.STATUS_TYPES.new,
+      status: CASE_STATUS_TYPES.new,
       userId: 'a805d1ab-18d0-43ec-bafb-654e83405416',
     });
 
     applicationContext.getCurrentUser.mockReturnValue(
       new User({
         name: 'richard',
-        role: User.ROLES.petitionsClerk,
+        role: ROLES.petitionsClerk,
         userId: '3805d1ab-18d0-43ec-bafb-654e83405416',
       }),
     );
 
     const docketsSectionInbox = await getDocumentQCInboxForSectionInteractor({
       applicationContext,
-      section: 'petitions',
+      section: PETITIONS_SECTION,
     });
 
     expect(docketsSectionInbox).toMatchObject([
       {
         assigneeName: null,
-        caseStatus: Case.STATUS_TYPES.new,
+        caseStatus: CASE_STATUS_TYPES.new,
         docketNumber: '101-19',
         docketNumberWithSuffix: '101-19S',
         document: {
@@ -140,14 +136,7 @@ describe('createCase integration test', () => {
           userId: 'a805d1ab-18d0-43ec-bafb-654e83405416',
         },
         isInitializeCase: true,
-        messages: [
-          {
-            from: 'Alex Petitionsclerk',
-            fromUserId: 'a805d1ab-18d0-43ec-bafb-654e83405416',
-            message: 'Petition filed by Rick Petitioner is ready for review.',
-          },
-        ],
-        section: 'petitions',
+        section: PETITIONS_SECTION,
         sentBy: 'Alex Petitionsclerk',
         sentByUserId: 'a805d1ab-18d0-43ec-bafb-654e83405416',
       },

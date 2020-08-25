@@ -6,8 +6,10 @@ const {
 const {
   createUserRecords: createPractitionerUserRecords,
 } = require('../../../shared/src/persistence/dynamo/users/createPractitionerUser.js');
+const {
+  ROLES,
+} = require('../../../shared/src/business/entities/EntityConstants');
 const { omit } = require('lodash');
-const { User } = require('../../../shared/src/business/entities/User');
 
 let usersByEmail = {};
 
@@ -17,7 +19,7 @@ module.exports.createUsers = async () => {
   usersByEmail = {};
 
   const user = {
-    role: 'admin',
+    role: ROLES.admin,
   };
 
   const applicationContext = createApplicationContext(user);
@@ -32,9 +34,9 @@ module.exports.createUsers = async () => {
 
       if (
         [
-          User.ROLES.irsPractitioner,
-          User.ROLES.privatePractitioner,
-          User.ROLES.inactivePractitioner,
+          ROLES.irsPractitioner,
+          ROLES.privatePractitioner,
+          ROLES.inactivePractitioner,
         ].includes(userRecord.role)
       ) {
         return createPractitionerUserRecords({

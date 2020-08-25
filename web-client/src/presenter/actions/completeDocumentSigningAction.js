@@ -1,27 +1,21 @@
 import { state } from 'cerebral';
 
 /**
- * Uses state-side signature data (coordinates, page number, PDFJS Object) to apply
- * the signature to a new PDF and upload to S3, then calls a use case to attach the
- * new document to the associated case.
+ * generates an action for completing document signing
  *
  * @param {object} providers the providers object
- * @param {object} providers.applicationContext the applicationContext object
- * @param {Function} providers.get the cerebral get helper function
- * @returns {object} object with new document id
+ * @param {string} providers.get the cerebral get function
+ * @param {string} providers.applicationContext the applicationContext
+ * @returns {Function} the action to complete the document signing
  */
 export const completeDocumentSigningAction = async ({
   applicationContext,
   get,
 }) => {
-  const messageId = get(state.currentViewMetadata.messageId);
   const originalDocumentId = get(state.pdfForSigning.documentId);
-  const caseId = get(state.caseDetail.caseId);
-  const caseDetail = get(state.caseDetail);
-  let documentIdToReturn = originalDocumentId;
-  const document = caseDetail.documents.find(
-    caseDocument => caseDocument.documentId === originalDocumentId,
-  );
+  const { docketNumber } = get(state.caseDetail);
+  const parentMessageId = get(state.parentMessageId);
+  let documentId;
 
   if (get(state.pdfForSigning.signatureData.x)) {
     const {
@@ -54,49 +48,37 @@ export const completeDocumentSigningAction = async ({
       type: 'application/pdf',
     });
 
-    let documentIdToOverwrite = null;
-    if (document.documentType !== 'Proposed Stipulated Decision') {
-      documentIdToOverwrite = originalDocumentId;
-    }
-
-    const signedDocumentId = await applicationContext
+    const signedDocumentFromUploadId = await applicationContext
       .getPersistenceGateway()
       .uploadDocumentFromClient({
         applicationContext,
         document: documentFile,
-        documentId: documentIdToOverwrite,
         onUploadProgress: () => {},
       });
 
-    documentIdToReturn = signedDocumentId;
-
-    await applicationContext.getUseCases().signDocumentInteractor({
+    ({
+      signedDocumentId: documentId,
+    } = await applicationContext.getUseCases().saveSignedDocumentInteractor({
       applicationContext,
-      caseId,
+      docketNumber,
       nameForSigning,
       originalDocumentId,
-      signedDocumentId,
-    });
+      parentMessageId,
+      signedDocumentId: signedDocumentFromUploadId,
+    }));
   }
 
-  if (messageId) {
-    const workItemIdToClose = document.workItems.find(workItem =>
-      workItem.messages.find(message => message.messageId === messageId),
-    ).workItemId;
+  let redirectUrl;
 
-    await applicationContext.getUseCases().completeWorkItemInteractor({
-      applicationContext,
-      userId: applicationContext.getCurrentUser().userId,
-      workItemId: workItemIdToClose,
-    });
+  if (parentMessageId) {
+    redirectUrl = `/messages/${docketNumber}/message-detail/${parentMessageId}?documentId=${documentId}`;
+  } else {
+    redirectUrl = `/case-detail/${docketNumber}/draft-documents?documentId=${documentId}`;
   }
 
   return {
-    alertSuccess: {
-      message: 'Signature added.',
-    },
-    caseId,
-    documentId: documentIdToReturn,
+    docketNumber,
+    redirectUrl,
     tab: 'docketRecord',
   };
 };

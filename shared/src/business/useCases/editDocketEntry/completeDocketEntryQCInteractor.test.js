@@ -4,9 +4,15 @@ const {
   applicationContext,
 } = require('../../test/createTestApplicationContext');
 const {
+  CASE_TYPES_MAP,
+  COUNTRY_TYPES,
+  PARTY_TYPES,
+  ROLES,
+} = require('../../entities/EntityConstants');
+const {
   completeDocketEntryQCInteractor,
 } = require('./completeDocketEntryQCInteractor');
-const { User } = require('../../entities/User');
+
 const testAssetsPath = path.join(__dirname, '../../../../test-assets/');
 
 describe('completeDocketEntryQCInteractor', () => {
@@ -22,14 +28,14 @@ describe('completeDocketEntryQCInteractor', () => {
     const PDF_MOCK_BUFFER = 'Hello World';
 
     const workItem = {
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
       docketNumber: '45678-18',
       document: {
         documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
         documentType: 'Answer',
+        eventCode: 'A',
+        filedBy: 'Test Petitioner',
         userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
       },
-      isQC: true,
       section: 'docket',
       sentBy: 'Test User',
       sentByUserId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
@@ -39,12 +45,11 @@ describe('completeDocketEntryQCInteractor', () => {
 
     caseRecord = {
       caseCaption: 'Caption',
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-      caseType: 'Deficiency',
+      caseType: CASE_TYPES_MAP.deficiency,
       contactPrimary: {
         address1: '123 Main St',
         city: 'Somewhere',
-        countryType: 'domestic',
+        countryType: COUNTRY_TYPES.DOMESTIC,
         email: 'fieri@example.com',
         name: 'Guy Fieri',
         phone: '1234567890',
@@ -69,27 +74,32 @@ describe('completeDocketEntryQCInteractor', () => {
           documentTitle: 'Answer',
           documentType: 'Answer',
           eventCode: 'A',
+          filedBy: 'Test Petitioner',
           userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-          workItems: [workItem],
+          workItem,
         },
         {
           documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335b2',
           documentType: 'Answer',
+          eventCode: 'A',
+          filedBy: 'Test Petitioner',
           userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-          workItems: [workItem],
+          workItem,
         },
         {
           documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
           documentType: 'Answer',
+          eventCode: 'A',
+          filedBy: 'Test Petitioner',
           userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-          workItems: [workItem],
+          workItem,
         },
       ],
       filingType: 'Myself',
-      partyType: 'Petitioner',
+      partyType: PARTY_TYPES.petitioner,
       preferredTrialCity: 'Fresno, California',
       procedureType: 'Regular',
-      role: User.ROLES.petitioner,
+      role: ROLES.petitioner,
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     };
 
@@ -98,19 +108,19 @@ describe('completeDocketEntryQCInteractor', () => {
     }));
     applicationContext.getCurrentUser.mockReturnValue({
       name: 'Emmett Lathrop "Doc" Brown, Ph.D.',
-      role: User.ROLES.docketClerk,
+      role: ROLES.docketClerk,
       section: 'docket',
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
     applicationContext.getPersistenceGateway().getUserById.mockReturnValue({
       name: 'Emmett Lathrop "Doc" Brown, Ph.D.',
-      role: User.ROLES.docketClerk,
+      role: ROLES.docketClerk,
       section: 'docket',
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(caseRecord);
+      .getCaseByDocketNumber.mockReturnValue(caseRecord);
     applicationContext.getUniqueId.mockReturnValue(
       'b6f835aa-bf95-4996-b858-c8e94566db47',
     );
@@ -151,18 +161,19 @@ describe('completeDocketEntryQCInteractor', () => {
       completeDocketEntryQCInteractor({
         applicationContext,
         entryMetadata: {
-          caseId: caseRecord.caseId,
           description: 'Memorandum in Support',
+          docketNumber: caseRecord.docketNumber,
           documentId: 'fffba5a9-b37b-479d-9201-067ec6e335bb',
           documentTitle: 'Document Title',
           documentType: 'Memorandum in Support',
           eventCode: 'MISP',
+          partyPrimary: true,
         },
       }),
     ).resolves.not.toThrow();
 
     expect(
-      applicationContext.getPersistenceGateway().getCaseByCaseId,
+      applicationContext.getPersistenceGateway().getCaseByDocketNumber,
     ).toBeCalled();
     expect(
       applicationContext.getPersistenceGateway()
@@ -178,7 +189,7 @@ describe('completeDocketEntryQCInteractor', () => {
     caseRecord.contactPrimary = {
       address1: '123 Main St',
       city: 'Somewhere',
-      countryType: 'domestic',
+      countryType: COUNTRY_TYPES.DOMESTIC,
       email: 'test@example.com',
       name: 'Test Petitioner',
       phone: '1234567890',
@@ -189,17 +200,18 @@ describe('completeDocketEntryQCInteractor', () => {
     const result = await completeDocketEntryQCInteractor({
       applicationContext,
       entryMetadata: {
-        caseId: caseRecord.caseId,
         description: 'Memorandum in Support',
+        docketNumber: caseRecord.docketNumber,
         documentId: 'fffba5a9-b37b-479d-9201-067ec6e335bb',
         documentTitle: 'Something Else',
         documentType: 'Memorandum in Support',
         eventCode: 'MISP',
+        partyPrimary: true,
       },
     });
 
     expect(
-      applicationContext.getPersistenceGateway().getCaseByCaseId,
+      applicationContext.getPersistenceGateway().getCaseByDocketNumber,
     ).toBeCalled();
     expect(
       applicationContext.getPersistenceGateway()
@@ -219,12 +231,13 @@ describe('completeDocketEntryQCInteractor', () => {
       entryMetadata: {
         additionalInfo: '123',
         additionalInfo2: 'abc',
-        caseId: caseRecord.caseId,
         description: 'Memorandum in Support',
+        docketNumber: caseRecord.docketNumber,
         documentId: 'fffba5a9-b37b-479d-9201-067ec6e335bb',
         documentTitle: 'Something Else',
         documentType: 'Memorandum in Support',
         eventCode: 'MISP',
+        partyPrimary: true,
       },
     });
 
@@ -245,12 +258,13 @@ describe('completeDocketEntryQCInteractor', () => {
     await completeDocketEntryQCInteractor({
       applicationContext,
       entryMetadata: {
-        caseId: caseRecord.caseId,
         description: 'Memorandum in Support',
+        docketNumber: caseRecord.docketNumber,
         documentId: 'fffba5a9-b37b-479d-9201-067ec6e335bb',
         documentTitle: 'Something Else',
         documentType: 'Memorandum in Support',
         eventCode: 'MISP',
+        partyPrimary: true,
       },
     });
 
@@ -270,11 +284,12 @@ describe('completeDocketEntryQCInteractor', () => {
       entryMetadata: {
         additionalInfo: 'additional info',
         additionalInfo2: 'additional info 2',
-        caseId: caseRecord.caseId,
+        docketNumber: caseRecord.docketNumber,
         documentId: 'fffba5a9-b37b-479d-9201-067ec6e335bb',
         documentTitle: 'Answer',
         documentType: 'Answer',
         eventCode: 'A',
+        partyPrimary: true,
       },
     });
 
@@ -287,7 +302,7 @@ describe('completeDocketEntryQCInteractor', () => {
     caseRecord.contactPrimary = {
       address1: '123 Main St',
       city: 'Somewhere',
-      countryType: 'domestic',
+      countryType: COUNTRY_TYPES.DOMESTIC,
       name: 'Test Petitioner',
       postalCode: '12345',
       state: 'AK',
@@ -298,17 +313,18 @@ describe('completeDocketEntryQCInteractor', () => {
     const result = await completeDocketEntryQCInteractor({
       applicationContext,
       entryMetadata: {
-        caseId: caseRecord.caseId,
         description: 'Memorandum in Support',
+        docketNumber: caseRecord.docketNumber,
         documentId: 'fffba5a9-b37b-479d-9201-067ec6e335bb',
         documentTitle: 'Something Else',
         documentType: 'Memorandum in Support',
         eventCode: 'MISP',
+        partyPrimary: true,
       },
     });
 
     expect(
-      applicationContext.getPersistenceGateway().getCaseByCaseId,
+      applicationContext.getPersistenceGateway().getCaseByDocketNumber,
     ).toBeCalled();
     expect(
       applicationContext.getPersistenceGateway()
@@ -326,7 +342,7 @@ describe('completeDocketEntryQCInteractor', () => {
     caseRecord.contactPrimary = {
       address1: '123 Main St',
       city: 'Somewhere',
-      countryType: 'domestic',
+      countryType: COUNTRY_TYPES.DOMESTIC,
       name: 'Test Petitioner',
       postalCode: '12345',
       state: 'AK',
@@ -337,17 +353,18 @@ describe('completeDocketEntryQCInteractor', () => {
     const result = await completeDocketEntryQCInteractor({
       applicationContext,
       entryMetadata: {
-        caseId: caseRecord.caseId,
         description: 'Memorandum in Support',
+        docketNumber: caseRecord.docketNumber,
         documentId: 'fffba5a9-b37b-479d-9201-067ec6e335bb',
         documentTitle: 'Notice of Change of Address',
         documentType: 'Notice of Change of Address',
         eventCode: 'MISP',
+        partyPrimary: true,
       },
     });
 
     expect(
-      applicationContext.getPersistenceGateway().getCaseByCaseId,
+      applicationContext.getPersistenceGateway().getCaseByDocketNumber,
     ).toBeCalled();
     expect(
       applicationContext.getPersistenceGateway()
@@ -365,9 +382,10 @@ describe('completeDocketEntryQCInteractor', () => {
     caseRecord.contactPrimary = {
       address1: '123 Main St',
       city: 'Somewhere',
-      countryType: 'domestic',
+      countryType: COUNTRY_TYPES.DOMESTIC,
       email: 'test@example.com',
       name: 'Test Petitioner',
+      phone: '123 456 1234',
       postalCode: '12345',
       state: 'AK',
     };
@@ -375,17 +393,18 @@ describe('completeDocketEntryQCInteractor', () => {
     const result = await completeDocketEntryQCInteractor({
       applicationContext,
       entryMetadata: {
-        caseId: caseRecord.caseId,
         description: 'Memorandum in Support',
+        docketNumber: caseRecord.docketNumber,
         documentId: 'fffba5a9-b37b-479d-9201-067ec6e335bb',
         documentTitle: 'Notice of Change of Address',
         documentType: 'Notice of Change of Address',
         eventCode: 'NCA',
+        partyPrimary: true,
       },
     });
 
     expect(
-      applicationContext.getPersistenceGateway().getCaseByCaseId,
+      applicationContext.getPersistenceGateway().getCaseByDocketNumber,
     ).toBeCalled();
     expect(
       applicationContext.getPersistenceGateway()
@@ -397,5 +416,36 @@ describe('completeDocketEntryQCInteractor', () => {
     expect(applicationContext.getPersistenceGateway().updateCase).toBeCalled();
     expect(result.paperServicePdfUrl).toEqual(undefined);
     expect(result.paperServiceParties.length).toEqual(0);
+  });
+
+  it('should update only allowed editable fields on a docket entry document', async () => {
+    await completeDocketEntryQCInteractor({
+      applicationContext,
+      entryMetadata: {
+        description: 'Memorandum in Support',
+        docketNumber: caseRecord.docketNumber,
+        documentId: 'fffba5a9-b37b-479d-9201-067ec6e335bb',
+        documentTitle: 'My Edited Document',
+        documentType: 'Notice of Change of Address',
+        eventCode: 'NCA',
+        freeText: 'Some text about this document',
+        hasOtherFilingParty: true,
+        isPaper: true,
+        otherFilingParty: 'Bert Brooks',
+        partyPrimary: true,
+      },
+    });
+
+    expect(
+      applicationContext.getPersistenceGateway().updateCase.mock.calls[0][0]
+        .caseToUpdate.documents[0],
+    ).toMatchObject({
+      documentTitle: 'My Edited Document',
+      documentType: 'Notice of Change of Address',
+      eventCode: 'NCA',
+      freeText: 'Some text about this document',
+      hasOtherFilingParty: true,
+      otherFilingParty: 'Bert Brooks',
+    });
   });
 });

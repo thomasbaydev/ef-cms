@@ -1,8 +1,13 @@
 const {
+  CASE_TYPES_MAP,
+  COUNTRY_TYPES,
+  PARTY_TYPES,
+  PAYMENT_STATUS,
+} = require('../entities/EntityConstants');
+const {
   validatePetitionFromPaperInteractor,
 } = require('./validatePetitionFromPaperInteractor');
 const { applicationContext } = require('../test/createTestApplicationContext');
-const { Case } = require('../entities/cases/Case');
 
 describe('validate petition from paper', () => {
   it('returns the expected errors object on an empty petition', () => {
@@ -29,14 +34,25 @@ describe('validate petition from paper', () => {
       applicationContext,
       petition: {
         caseCaption: 'testing',
-        caseType: 'testing',
+        caseType: CASE_TYPES_MAP.cdp,
+        contactPrimary: {
+          address1: '876 12th Ave',
+          city: 'Nashville',
+          country: 'USA',
+          countryType: COUNTRY_TYPES.DOMESTIC,
+          email: 'someone@example.com',
+          name: 'Jimmy Dean',
+          phone: '1234567890',
+          postalCode: '05198',
+          state: 'AK',
+        },
         mailingDate: 'testing',
         orderDesignatingPlaceOfTrial: true,
-        partyType: 'testing',
+        partyType: PARTY_TYPES.petitioner,
         petitionFile: {},
         petitionFileSize: 100,
-        petitionPaymentStatus: Case.PAYMENT_STATUS.UNPAID,
-        procedureType: 'testing',
+        petitionPaymentStatus: PAYMENT_STATUS.UNPAID,
+        procedureType: 'Regular',
         receivedAt: new Date().toISOString(),
       },
     });

@@ -5,14 +5,22 @@ import { runAction } from 'cerebral/test';
 
 describe('completeDocumentSigningAction', () => {
   const {
-    completeWorkItemInteractor,
     generateSignedDocumentInteractor,
     getInboxMessagesForUserInteractor,
-    signDocumentInteractor,
   } = applicationContext.getUseCases();
   const {
     uploadDocumentFromClient,
   } = applicationContext.getPersistenceGateway();
+
+  const docketNumber = '123';
+
+  const mockDocumentId = applicationContext.getUniqueId();
+
+  applicationContext
+    .getUseCases()
+    .saveSignedDocumentInteractor.mockReturnValue({
+      signedDocumentId: mockDocumentId,
+    });
 
   beforeAll(() => {
     presenter.providers.applicationContext = applicationContext;
@@ -53,19 +61,17 @@ describe('completeDocumentSigningAction', () => {
       },
       state: {
         caseDetail: {
-          caseId: 'abc81f4d-1e47-423a-8caf-6d2fdc3d3859',
+          docketNumber,
           documents: [
             {
               documentId: 'abc81f4d-1e47-423a-8caf-6d2fdc3d3859',
-              workItems: [
-                {
-                  messages: [
-                    {
-                      messageId: '123',
-                    },
-                  ],
-                },
-              ],
+              workItem: {
+                messages: [
+                  {
+                    messageId: '123',
+                  },
+                ],
+              },
             },
           ],
         },
@@ -87,14 +93,13 @@ describe('completeDocumentSigningAction', () => {
 
     expect(uploadDocumentFromClient.mock.calls.length).toBe(1);
     expect(generateSignedDocumentInteractor.mock.calls.length).toBe(1);
-    expect(signDocumentInteractor.mock.calls.length).toBe(1);
-    expect(completeWorkItemInteractor.mock.calls.length).toBe(1);
+    expect(
+      applicationContext.getUseCases().saveSignedDocumentInteractor.mock.calls
+        .length,
+    ).toBe(1);
     expect(result.output).toMatchObject({
-      alertSuccess: {
-        message: 'Signature added.',
-      },
-      caseId: 'abc81f4d-1e47-423a-8caf-6d2fdc3d3859',
-      documentId: 'abc81f4d-1e47-423a-8caf-6d2fdc3d3859',
+      docketNumber,
+      redirectUrl: `/case-detail/${docketNumber}/draft-documents?documentId=${mockDocumentId}`,
       tab: 'docketRecord',
     });
   });
@@ -106,19 +111,17 @@ describe('completeDocumentSigningAction', () => {
       },
       state: {
         caseDetail: {
-          caseId: 'abc81f4d-1e47-423a-8caf-6d2fdc3d3859',
+          docketNumber,
           documents: [
             {
               documentId: 'abc81f4d-1e47-423a-8caf-6d2fdc3d3859',
-              workItems: [
-                {
-                  messages: [
-                    {
-                      messageId: '123',
-                    },
-                  ],
-                },
-              ],
+              workItem: {
+                messages: [
+                  {
+                    messageId: '123',
+                  },
+                ],
+              },
             },
           ],
         },
@@ -135,15 +138,100 @@ describe('completeDocumentSigningAction', () => {
 
     expect(uploadDocumentFromClient.mock.calls.length).toBe(0);
     expect(generateSignedDocumentInteractor.mock.calls.length).toBe(0);
-    expect(signDocumentInteractor.mock.calls.length).toBe(0);
-    expect(completeWorkItemInteractor.mock.calls.length).toBe(1);
+    expect(
+      applicationContext.getUseCases().saveSignedDocumentInteractor.mock.calls
+        .length,
+    ).toBe(0);
     expect(result.output).toMatchObject({
-      alertSuccess: {
-        message: 'Signature added.',
-      },
-      caseId: 'abc81f4d-1e47-423a-8caf-6d2fdc3d3859',
-      documentId: 'abc81f4d-1e47-423a-8caf-6d2fdc3d3859',
+      docketNumber,
       tab: 'docketRecord',
+    });
+  });
+
+  it('should construct a redirectUrl to the message detail document view if there is a parentMessageId present in state', async () => {
+    const parentMessageId = applicationContext.getUniqueId();
+
+    const result = await runAction(completeDocumentSigningAction, {
+      modules: {
+        presenter,
+      },
+      state: {
+        caseDetail: {
+          docketNumber,
+          documents: [
+            {
+              documentId: 'abc81f4d-1e47-423a-8caf-6d2fdc3d3859',
+              workItem: {
+                messages: [
+                  {
+                    messageId: '123',
+                  },
+                ],
+              },
+            },
+          ],
+        },
+        currentViewMetadata: {
+          messageId: '123',
+        },
+        parentMessageId,
+        pdfForSigning: {
+          documentId: 'abc81f4d-1e47-423a-8caf-6d2fdc3d3859',
+          pageNumber: 3,
+          pdfjsLib: {},
+          signatureData: {
+            scale: 1,
+            x: 300,
+            y: 400,
+          },
+        },
+      },
+    });
+
+    expect(result.output).toMatchObject({
+      redirectUrl: `/messages/${docketNumber}/message-detail/${parentMessageId}?documentId=${mockDocumentId}`,
+    });
+  });
+
+  it('should construct a redirectUrl to the draft documents view if there is no parentMessageId present in state', async () => {
+    const result = await runAction(completeDocumentSigningAction, {
+      modules: {
+        presenter,
+      },
+      state: {
+        caseDetail: {
+          docketNumber,
+          documents: [
+            {
+              documentId: 'abc81f4d-1e47-423a-8caf-6d2fdc3d3859',
+              workItem: {
+                messages: [
+                  {
+                    messageId: '123',
+                  },
+                ],
+              },
+            },
+          ],
+        },
+        currentViewMetadata: {
+          messageId: '123',
+        },
+        pdfForSigning: {
+          documentId: 'abc81f4d-1e47-423a-8caf-6d2fdc3d3859',
+          pageNumber: 3,
+          pdfjsLib: {},
+          signatureData: {
+            scale: 1,
+            x: 300,
+            y: 400,
+          },
+        },
+      },
+    });
+
+    expect(result.output).toMatchObject({
+      redirectUrl: `/case-detail/${docketNumber}/draft-documents?documentId=${mockDocumentId}`,
     });
   });
 });

@@ -1,38 +1,48 @@
 import { DocumentSearch } from '../../shared/src/business/entities/documents/DocumentSearch';
+import {
+  FORMATS,
+  calculateISODate,
+  createISODateString,
+  deconstructDate,
+  formatDateString,
+} from '../../shared/src/business/utilities/DateHandler';
+import { applicationContextForClient as applicationContext } from '../../shared/src/business/test/createTestApplicationContext';
 import { docketClerkAddsDocketEntryFromOrder } from './journey/docketClerkAddsDocketEntryFromOrder';
 import { docketClerkAddsDocketEntryFromOrderOfDismissal } from './journey/docketClerkAddsDocketEntryFromOrderOfDismissal';
 import { docketClerkCreatesAnOrder } from './journey/docketClerkCreatesAnOrder';
 import { docketClerkSealsCase } from './journey/docketClerkSealsCase';
-import { docketClerkServesOrder } from './journey/docketClerkServesOrder';
+import { docketClerkServesDocument } from './journey/docketClerkServesDocument';
+import { docketClerkSignsOrder } from './journey/docketClerkSignsOrder';
 import {
   loginAs,
   refreshElasticsearchIndex,
   setupTest,
   uploadPetition,
-  wait,
 } from './helpers';
 
-const test = setupTest({
-  useCases: {
-    loadPDFForSigningInteractor: () => Promise.resolve(null),
-  },
-});
+const test = setupTest();
+
+const {
+  COUNTRY_TYPES,
+  DOCKET_NUMBER_SUFFIXES,
+  SERVICE_INDICATOR_TYPES,
+} = applicationContext.getConstants();
 
 const seedData = {
   caseCaption: 'Hanan Al Hroub, Petitioner',
-  caseId: '1a92894e-83a5-48ba-9994-3ada44235deb',
   contactPrimary: {
     address1: '123 Teachers Way',
     city: 'Haifa',
     country: 'Palestine',
-    countryType: 'international',
+    countryType: COUNTRY_TYPES.INTERNATIONAL,
     name: 'Hanan Al Hroub',
     postalCode: '123456',
-    serviceIndicator: 'Paper',
+    serviceIndicator: SERVICE_INDICATOR_TYPES.SI_PAPER,
   },
   contactSecondary: {},
   docketNumber: '104-20',
-  docketNumberSuffix: 'R',
+  docketNumberSuffix:
+    DOCKET_NUMBER_SUFFIXES.DECLARATORY_JUDGEMENTS_FOR_RETIREMENT_PLAN_REVOCATION,
   documentContents:
     'Déjà vu, this is a seed order filed on Apr 13 at 11:01pm ET',
   documentId: '1f1aa3f7-e2e3-43e6-885d-4ce341588c76',
@@ -50,28 +60,30 @@ describe('docket clerk order advanced search', () => {
   });
 
   describe('performing data entry', () => {
-    loginAs(test, 'petitioner');
+    loginAs(test, 'petitioner@example.com');
     it('create case', async () => {
       caseDetail = await uploadPetition(test);
       expect(caseDetail).toBeDefined();
       test.docketNumber = caseDetail.docketNumber;
     });
 
-    loginAs(test, 'docketclerk');
+    loginAs(test, 'docketclerk@example.com');
     docketClerkCreatesAnOrder(test, {
       documentTitle: 'Order',
       eventCode: 'O',
       expectedDocumentType: 'Order',
       signedAtFormatted: '01/02/2020',
     });
+    docketClerkSignsOrder(test, 0);
     docketClerkAddsDocketEntryFromOrder(test, 0);
-    docketClerkServesOrder(test, 0);
+    docketClerkServesDocument(test, 0);
 
     docketClerkCreatesAnOrder(test, {
       documentTitle: 'Order of Dismissal',
       eventCode: 'OD',
       expectedDocumentType: 'Order of Dismissal',
     });
+    docketClerkSignsOrder(test, 1);
     docketClerkAddsDocketEntryFromOrderOfDismissal(test, 1);
 
     docketClerkCreatesAnOrder(test, {
@@ -79,16 +91,18 @@ describe('docket clerk order advanced search', () => {
       eventCode: 'OD',
       expectedDocumentType: 'Order of Dismissal',
     });
+    docketClerkSignsOrder(test, 2);
     docketClerkAddsDocketEntryFromOrderOfDismissal(test, 2);
-    docketClerkServesOrder(test, 2);
+    docketClerkServesDocument(test, 2);
 
     docketClerkCreatesAnOrder(test, {
       documentTitle: 'Order of something',
       eventCode: 'O',
       expectedDocumentType: 'Order',
     });
+    docketClerkSignsOrder(test, 3);
     docketClerkAddsDocketEntryFromOrder(test, 3);
-    docketClerkServesOrder(test, 3);
+    docketClerkServesDocument(test, 3);
     docketClerkSealsCase(test);
   });
 
@@ -111,6 +125,7 @@ describe('docket clerk order advanced search', () => {
           caseTitleOrPetitioner: caseDetail.caseCaption,
           docketNumber: caseDetail.docketNumber,
           keyword: 'dismissal',
+          startDate: '2001-01-01',
         },
       });
 
@@ -146,6 +161,7 @@ describe('docket clerk order advanced search', () => {
       test.setState('advancedSearchForm', {
         orderSearch: {
           keyword: 'osteodontolignikeratic',
+          startDate: '2001-01-01',
         },
       });
 
@@ -162,6 +178,7 @@ describe('docket clerk order advanced search', () => {
         orderSearch: {
           docketNumber: docketNumberNoOrders,
           keyword: 'dismissal',
+          startDate: '2001-01-01',
         },
       });
 
@@ -177,6 +194,7 @@ describe('docket clerk order advanced search', () => {
         orderSearch: {
           caseTitleOrPetitioner: caseCaptionNoOrders,
           keyword: 'dismissal',
+          startDate: '2001-01-01',
         },
       });
 
@@ -188,13 +206,9 @@ describe('docket clerk order advanced search', () => {
     it('search for a date range that does not contain served orders', async () => {
       test.setState('advancedSearchForm', {
         orderSearch: {
-          endDateDay: '03',
-          endDateMonth: '01',
-          endDateYear: '2005',
+          endDate: '2005-01-03',
           keyword: 'dismissal',
-          startDateDay: '01',
-          startDateMonth: '01',
-          startDateYear: '2005',
+          startDate: '2005-01-01',
         },
       });
 
@@ -210,6 +224,7 @@ describe('docket clerk order advanced search', () => {
         orderSearch: {
           judge: invalidJudge,
           keyword: 'dismissal',
+          startDate: '2005-01-01',
         },
       });
 
@@ -224,6 +239,7 @@ describe('docket clerk order advanced search', () => {
       test.setState('advancedSearchForm', {
         orderSearch: {
           keyword: 'dismissal',
+          startDate: '1000-01-01',
         },
       });
 
@@ -251,6 +267,7 @@ describe('docket clerk order advanced search', () => {
         orderSearch: {
           docketNumber: caseDetail.docketNumber,
           keyword: 'dismissal',
+          startDate: '1995-01-01',
         },
       });
 
@@ -277,6 +294,7 @@ describe('docket clerk order advanced search', () => {
         orderSearch: {
           caseTitleOrPetitioner: caseDetail.caseCaption,
           keyword: 'dismissal',
+          startDate: '1000-01-01',
         },
       });
 
@@ -299,26 +317,47 @@ describe('docket clerk order advanced search', () => {
     });
 
     it('search for a date range that contains served orders', async () => {
-      const currentDate = new Date();
-      const orderCreationYear = currentDate.getUTCFullYear();
-      const orderCreationMonth = currentDate.getUTCMonth();
-      const orderCreationDate = currentDate.getDate();
+      const endOrderCreationMoment = calculateISODate({
+        howMuch: 1,
+        unit: 'months',
+      });
+      const startOrderCreationMoment = calculateISODate({
+        howMuch: -1,
+        unit: 'months',
+      });
+
+      const {
+        day: endDateDay,
+        month: endDateMonth,
+        year: endDateYear,
+      } = deconstructDate(
+        formatDateString(
+          createISODateString(endOrderCreationMoment),
+          FORMATS.MMDDYYYY,
+        ),
+      );
+      const {
+        day: startDateDay,
+        month: startDateMonth,
+        year: startDateYear,
+      } = deconstructDate(
+        formatDateString(
+          createISODateString(startOrderCreationMoment),
+          FORMATS.MMDDYYYY,
+        ),
+      );
 
       test.setState('advancedSearchForm', {
         orderSearch: {
-          endDateDay: orderCreationDate,
-          endDateMonth: orderCreationMonth + 1,
-          endDateYear: orderCreationYear,
+          endDate: `${endDateYear}-${endDateMonth}-${endDateDay}`,
           keyword: 'dismissal',
-          startDateDay: orderCreationDate,
-          startDateMonth: orderCreationMonth - 1,
-          startDateYear: orderCreationYear,
+          startDate: `${startDateYear}-${startDateMonth}-${startDateDay}`,
         },
       });
 
       await test.runSequence('submitOrderAdvancedSearchSequence');
 
-      await wait(1000);
+      await refreshElasticsearchIndex();
 
       expect(test.getState('searchResults')).toEqual(
         expect.arrayContaining([
@@ -341,6 +380,7 @@ describe('docket clerk order advanced search', () => {
         orderSearch: {
           judge: signedByJudge,
           keyword: 'dismissal',
+          startDate: '1000-01-01',
         },
       });
 
@@ -354,7 +394,7 @@ describe('docket clerk order advanced search', () => {
       expect(test.getState('searchResults')).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            documentId: test.draftOrders[2].documentId,
+            documentId: test.draftOrders[1].documentId,
           }),
         ]),
       );
@@ -364,6 +404,7 @@ describe('docket clerk order advanced search', () => {
       test.setState('advancedSearchForm', {
         orderSearch: {
           keyword: 'Order of Dismissal Entered',
+          startDate: '1000-01-01',
         },
       });
 

@@ -48,11 +48,15 @@ export const caseDetailHeaderHelper = (get, applicationContext) => {
     }
   }
 
-  const showConsolidatedCaseIcon = !!caseDetail.leadCaseId;
+  const showConsolidatedCaseIcon = !!caseDetail.leadDocketNumber;
 
   const showCreateOrderButton = permissions.COURT_ISSUED_DOCUMENT;
 
   const showAddDocketEntryButton = permissions.DOCKET_ENTRY;
+
+  const showNewTabLink = applicationContext
+    .getUtilities()
+    .isInternalUser(user.role);
 
   const showCaseDetailHeaderMenu = !isExternalUser;
 
@@ -60,6 +64,11 @@ export const caseDetailHeaderHelper = (get, applicationContext) => {
     permissions.FILE_EXTERNAL_DOCUMENT && userAssociatedWithCase;
 
   const showAddCorrespondenceButton = permissions.CASE_CORRESPONDENCE;
+
+  const petitionDocument = applicationContext
+    .getUtilities()
+    .getPetitionDocumentFromDocuments(caseDetail.documents);
+  const petitionIsServed = petitionDocument && !!petitionDocument.servedAt;
 
   return {
     hidePublicCaseInformation: !isExternalUser,
@@ -69,9 +78,10 @@ export const caseDetailHeaderHelper = (get, applicationContext) => {
     showConsolidatedCaseIcon,
     showCreateOrderButton,
     showEditCaseButton: permissions.UPDATE_CASE_CONTEXT,
-    showExternalButtons: isExternalUser,
+    showExternalButtons: isExternalUser && petitionIsServed,
     showFileDocumentButton,
     showFileFirstDocumentButton,
+    showNewTabLink,
     showPendingAccessToCaseButton,
     showRequestAccessToCaseButton,
     showSealedCaseBanner: isCaseSealed,

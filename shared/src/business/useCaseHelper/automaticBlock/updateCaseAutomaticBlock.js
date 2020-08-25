@@ -1,4 +1,4 @@
-const { Case } = require('../../entities/cases/Case');
+const { CASE_STATUS_TYPES } = require('../../entities/EntityConstants');
 
 /**
  * updateCaseAutomaticBlock
@@ -15,9 +15,9 @@ exports.updateCaseAutomaticBlock = async ({
   if (!caseEntity.trialDate) {
     const caseDeadlines = await applicationContext
       .getPersistenceGateway()
-      .getCaseDeadlinesByCaseId({
+      .getCaseDeadlinesByDocketNumber({
         applicationContext,
-        caseId: caseEntity.caseId,
+        docketNumber: caseEntity.docketNumber,
       });
 
     caseEntity.updateAutomaticBlocked({ caseDeadlines });
@@ -27,18 +27,18 @@ exports.updateCaseAutomaticBlock = async ({
         .getPersistenceGateway()
         .deleteCaseTrialSortMappingRecords({
           applicationContext,
-          caseId: caseEntity.caseId,
+          docketNumber: caseEntity.docketNumber,
         });
     } else if (
-      caseEntity.status === Case.STATUS_TYPES.generalDocketReadyForTrial &&
+      caseEntity.status === CASE_STATUS_TYPES.generalDocketReadyForTrial &&
       !caseEntity.blocked
     ) {
       await applicationContext
         .getPersistenceGateway()
         .createCaseTrialSortMappingRecords({
           applicationContext,
-          caseId: caseEntity.caseId,
           caseSortTags: caseEntity.generateTrialSortTags(),
+          docketNumber: caseEntity.docketNumber,
         });
     }
   }

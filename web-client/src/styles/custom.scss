@@ -930,6 +930,12 @@ header.usa-header {
   }
 }
 
+#menu-button-new-tab > * {
+  margin-left: -45px;
+  font-size: 18px;
+  transform: rotate(315deg);
+}
+
 .title {
   border-bottom: 1px solid color($theme-color-base-lighter);
   margin-bottom: 20px;
@@ -1501,4 +1507,21 @@ button.change-scanner-button {
 
 .accordion-item-title {
   align-self: center;
+}
+
+.document-viewer--documents {
+  height: 1000px;
+
+  iframe {
+    border: none;
+  }
+}
+
+.message-detail .usa-accordion__heading .accordion-item-title {
+  font-size: 16px;
+  font-weight: $font-regular;
+}
+
+.sealed-in-blackstone {
+  color: color($theme-color-secondary-dark);
 }

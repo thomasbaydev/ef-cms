@@ -1,13 +1,12 @@
 import { OrderWithoutBody } from '../../../shared/src/business/entities/orders/OrderWithoutBody';
 import { applicationContext } from '../../src/applicationContext';
 import { first } from 'lodash';
-import { wait } from '../helpers';
 
 const errorMessages = OrderWithoutBody.VALIDATION_ERROR_MESSAGES;
 
 export const chambersUserAddsOrderToCase = test => {
   return it('Chambers user adds order to case', async () => {
-    await test.runSequence('openCreateMessageModalSequence');
+    await test.runSequence('openCreateOrderChooseTypeModalSequence');
 
     await test.runSequence('submitCreateOrderModalSequence');
 
@@ -27,18 +26,13 @@ export const chambersUserAddsOrderToCase = test => {
     );
 
     await test.runSequence('submitCreateOrderModalSequence');
-
     expect(test.getState('validationErrors')).toEqual({});
-
     await test.runSequence('updateFormValueSequence', {
       key: 'richText',
       value: '<p>This is a test order.</p>',
     });
 
     await test.runSequence('submitCourtIssuedOrderSequence');
-
-    //TODO - fix this when cerebral runSequence starts properly awaiting things
-    await wait(1000);
 
     expect(test.getState('validationErrors')).toEqual({});
     expect(test.getState('pdfPreviewUrl')).toBeDefined();

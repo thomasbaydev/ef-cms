@@ -1,10 +1,9 @@
 const client = require('../../../../../shared/src/persistence/dynamodbClientService');
-const { getUsersBySearchKey } = require('./getUsersBySearchKey');
-const { User } = require('../../../business/entities/User');
-
 const {
   applicationContext,
 } = require('../../../business/test/createTestApplicationContext');
+const { getUsersBySearchKey } = require('./getUsersBySearchKey');
+const { ROLES } = require('../../../business/entities/EntityConstants');
 
 describe('getUsersBySearchKey', () => {
   beforeEach(() => {
@@ -13,7 +12,7 @@ describe('getUsersBySearchKey', () => {
         barNumber: 'PT1234',
         name: 'Test Practitioner',
         pk: 'user|9805d1ab-18d0-43ec-bafb-654e83405416',
-        role: User.ROLES.privatePractitioner,
+        role: ROLES.privatePractitioner,
         section: 'privatePractitioner',
         sk: '9805d1ab-18d0-43ec-bafb-654e83405416',
         userId: '9805d1ab-18d0-43ec-bafb-654e83405416',
@@ -38,7 +37,7 @@ describe('getUsersBySearchKey', () => {
         barNumber: 'PT1234',
         name: 'Test Practitioner',
         pk: 'user|9805d1ab-18d0-43ec-bafb-654e83405416',
-        role: User.ROLES.privatePractitioner,
+        role: ROLES.privatePractitioner,
         section: 'privatePractitioner',
         sk: '9805d1ab-18d0-43ec-bafb-654e83405416',
         userId: '9805d1ab-18d0-43ec-bafb-654e83405416',

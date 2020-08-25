@@ -8,28 +8,31 @@ import { state } from 'cerebral';
  * @param {object} providers the providers object
  * @param {object} providers.applicationContext the application context
  * @param {Function} providers.get the cerebral get helper function
+ * @param {object} providers.props the cerebral props object
  * @returns {Promise} async action
  */
 export const completeDocketEntryQCAction = async ({
   applicationContext,
   get,
+  props,
 }) => {
-  const { caseId, docketNumber } = get(state.caseDetail);
+  const docketNumber = get(state.caseDetail.docketNumber);
   const documentId = get(state.documentId);
+  const { overridePaperServiceAddress } = props;
 
   let entryMetadata = omit(
     {
       ...get(state.form),
     },
-    ['workitems', 'dateReceivedMonth', 'dateReceivedDay', 'dateReceivedYear'],
+    ['workitem', 'dateReceivedMonth', 'dateReceivedDay', 'dateReceivedYear'],
   );
 
   entryMetadata = {
     ...entryMetadata,
-    caseId,
     createdAt: entryMetadata.dateReceived,
     docketNumber,
     documentId,
+    overridePaperServiceAddress,
     receivedAt: entryMetadata.dateReceived,
   };
 
@@ -53,7 +56,7 @@ export const completeDocketEntryQCAction = async ({
       title: 'QC Completed',
     },
     caseDetail,
-    caseId: docketNumber,
+    docketNumber,
     paperServiceDocumentTitle,
     paperServiceParties,
     pdfUrl: paperServicePdfUrl,

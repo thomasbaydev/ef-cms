@@ -1,4 +1,4 @@
-import { AddressDisplay } from '../CaseDetail/PetitionerInformation';
+import { AddressDisplay } from '../CaseDetail/AddressDisplay';
 import { Button } from '../../ustc-ui/Button/Button';
 import { CaseDifferenceModalOverlay } from './CaseDifferenceModalOverlay';
 import { FileUploadErrorModal } from '../FileUploadErrorModal';
@@ -12,7 +12,6 @@ import React from 'react';
 
 export const StartCaseStep5 = connect(
   {
-    constants: state.constants,
     form: state.form,
     formCancelToggleCancelSequence: sequences.formCancelToggleCancelSequence,
     navigateBackSequence: sequences.navigateBackSequence,
@@ -22,7 +21,6 @@ export const StartCaseStep5 = connect(
     user: state.user,
   },
   function StartCaseStep5({
-    constants,
     form,
     formCancelToggleCancelSequence,
     navigateBackSequence,
@@ -173,11 +171,7 @@ export const StartCaseStep5 = connect(
                       </span>
                       {form.contactPrimary && (
                         <address aria-labelledby="primary-label">
-                          {AddressDisplay(form.contactPrimary, constants, {
-                            nameOverride:
-                              startCaseHelper.showCaseTitleForPrimary &&
-                              startCaseHelper.caseTitle,
-                          })}
+                          <AddressDisplay contact={form.contactPrimary} />
                         </address>
                       )}
                     </div>
@@ -190,7 +184,7 @@ export const StartCaseStep5 = connect(
                           >
                             {startCaseHelper.contactSecondaryLabel}
                           </span>
-                          {AddressDisplay(form.contactSecondary, constants)}
+                          <AddressDisplay contact={form.contactSecondary} />
                         </>
                       )}
                     </div>

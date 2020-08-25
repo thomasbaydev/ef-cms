@@ -1,11 +1,12 @@
 import { clearModalAction } from '../actions/clearModalAction';
 import { clearPdfPreviewUrlAction } from '../actions/CourtIssuedOrder/clearPdfPreviewUrlAction';
+import { followRedirectAction } from '../actions/followRedirectAction';
 import { getServeToIrsAlertSuccessAction } from '../actions/StartCaseInternal/getServeToIrsAlertSuccessAction';
 import { navigateToDocumentQCAction } from '../actions/navigateToDocumentQCAction';
 import { serveCaseToIrsAction } from '../actions/StartCaseInternal/serveCaseToIrsAction';
 import { setAlertSuccessAction } from '../actions/setAlertSuccessAction';
 import { setCurrentPageAction } from '../actions/setCurrentPageAction';
-import { setPdfPreviewUrlAction } from '../actions/CourtIssuedOrder/setPdfPreviewUrlAction';
+import { setPdfPreviewUrlSequence } from './setPdfPreviewUrlSequence';
 import { setSaveAlertsForNavigationAction } from '../actions/setSaveAlertsForNavigationAction';
 import { showProgressSequenceDecorator } from '../utilities/sequenceHelpers';
 
@@ -19,11 +20,15 @@ export const serveCaseToIrsSequence = [
         getServeToIrsAlertSuccessAction,
         setAlertSuccessAction,
         setSaveAlertsForNavigationAction,
-        navigateToDocumentQCAction,
+        followRedirectAction,
+        {
+          default: [navigateToDocumentQCAction],
+          success: [],
+        },
       ],
       paper: [
         clearModalAction,
-        setPdfPreviewUrlAction,
+        setPdfPreviewUrlSequence,
         setCurrentPageAction('PrintPaperPetitionReceipt'),
       ],
     },

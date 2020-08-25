@@ -29,7 +29,7 @@ module.exports = [
     actions: [
       'wait for #tab-case-info to be visible',
       'click element #tab-case-info',
-      'wait for #date-received-legend to be visible',
+      'wait for #date-received-date-label to be visible',
     ],
     notes: 'checks a11y of Create Case with inputs revealed - Case Info tab',
     url:
@@ -41,7 +41,7 @@ module.exports = [
       'click element #tab-irs-notice',
       'wait for #irs-verified-notice-radios to be visible',
       'click element #has-irs-verified-notice-yes',
-      'wait for #date-of-notice-legend to be visible',
+      'wait for #date-of-notice-date-label to be visible',
     ],
     notes: 'checks a11y of Create Case with inputs revealed - IRS Notice tab',
     url:
@@ -143,14 +143,29 @@ module.exports = [
   },
   {
     actions: [
-      'wait for #tab-in-progress to be visible',
-      'click element #tab-in-progress',
-      'wait for button[data-document-id="25100ec6-eeeb-4e88-872f-c99fad1fe6c7"] to be visible',
-      'click element button[data-document-id="25100ec6-eeeb-4e88-872f-c99fad1fe6c7"]',
+      'wait for #tab-drafts to be visible',
+      'click element #tab-drafts',
+      'wait for #edit-order-button to be visible',
+      'click element #edit-order-button',
+      'wait for .modal-button-confirm to be visible',
     ],
     notes: 'checks the confirm modal when editing a signed draft document',
     url:
-      'http://localhost:1234/mock-login?token=petitionsclerk&path=/case-detail/101-19&info=edit-signed-order-confirm-modal',
+      'http://localhost:1234/mock-login?token=petitionsclerk&path=/case-detail/109-19&info=edit-signed-order-confirm-modal',
+  },
+  {
+    actions: [
+      'wait for #case-detail-menu-button to be visible',
+      'wait for .progress-indicator to be hidden',
+      'click element #case-detail-menu-button',
+      'wait for #menu-button-add-new-message to be visible',
+      'wait for .progress-indicator to be hidden',
+      'click element #menu-button-add-new-message',
+      'wait for .ustc-create-message-modal to be visible',
+    ],
+    notes: 'checks a11y of create message modal',
+    url:
+      'http://localhost:1234/mock-login?token=petitionsclerk&path=/case-detail/105-19&info=create-message-modal',
   },
   {
     actions: [
@@ -168,12 +183,12 @@ module.exports = [
   },
   {
     actions: [
-      'wait for #tab-deadlines to be visible',
-      'click element #tab-deadlines',
+      'wait for #tab-tracked-items to be visible',
+      'click element #tab-tracked-items',
     ],
     notes: 'checks a11y of deadlines tab',
     url:
-      'http://localhost:1234/mock-login?token=petitionsclerk&path=/case-detail/107-19&info=deadlines-tab',
+      'http://localhost:1234/mock-login?token=petitionsclerk&path=/case-detail/107-19&info=tracked-items-tab',
   },
   {
     actions: [
@@ -183,7 +198,7 @@ module.exports = [
       'wait for #menu-button-add-deadline to be visible',
       'wait for .progress-indicator to be hidden',
       'click element #menu-button-add-deadline',
-      'wait for #deadline-date-legend to be visible',
+      'wait for #deadline-date-date to be visible',
     ],
     notes: 'checks a11y of add deadline modal',
     url:
@@ -202,40 +217,38 @@ module.exports = [
   },
   {
     actions: [
-      'wait for #tab-in-progress to be visible',
-      'click element #tab-in-progress',
+      'wait for #tab-drafts to be visible',
+      'click element #tab-drafts',
     ],
-    notes: 'checks a11y of in progress tab, draft documents secondary tab',
+    notes: 'checks a11y of the draft documents tab',
     url:
-      'http://localhost:1234/mock-login?token=petitionsclerk&path=/case-detail/109-19&info=in-progress-tab-drafts',
+      'http://localhost:1234/mock-login?token=petitionsclerk&path=/case-detail/109-19&info=drafts-tab',
   },
   {
     actions: [
-      'wait for #tab-in-progress to be visible',
-      'click element #tab-in-progress',
-      'wait for #tab-messages to be visible',
-      'click element #tab-messages',
+      'wait for #tab-case-messages to be visible',
+      'click element #tab-case-messages',
     ],
-    notes: 'checks a11y of in progress tab, messages secondary tab',
+    notes: 'checks a11y of case messages tab',
     url:
-      'http://localhost:1234/mock-login?token=petitionsclerk&path=/case-detail/109-19&info=in-progress-tab-messages',
+      'http://localhost:1234/mock-login?token=petitionsclerk&path=/case-detail/109-19&info=case-messages-tab',
   },
   {
     actions: [
-      'wait for #tab-in-progress to be visible',
-      'click element #tab-in-progress',
+      'wait for #tab-tracked-items to be visible',
+      'click element #tab-tracked-items',
       'wait for #tab-pending-report to be visible',
       'click element #tab-pending-report',
     ],
-    notes: 'checks a11y of in progress tab, pending report secondary tab',
+    notes: 'checks a11y of tracked-items tab, pending report secondary tab',
     url:
-      'http://localhost:1234/mock-login?token=petitionsclerk&path=/case-detail/109-19&info=in-progress-tab-pending-report',
+      'http://localhost:1234/mock-login?token=petitionsclerk&path=/case-detail/109-19&info=tracked-items-tab-pending-report',
   },
   {
     actions: [
       'wait for #tab-correspondence to be visible',
       'click element #tab-correspondence',
-      'wait for #correspondence-documents-table to be visible',
+      'wait for .document-viewer to be visible',
     ],
     notes: 'checks a11y of correspondence tab',
     url:
@@ -251,7 +264,7 @@ module.exports = [
     actions: [
       'wait for #tab-correspondence to be visible',
       'click element #tab-correspondence',
-      'wait for #correspondence-documents-table to be visible',
+      'wait for .document-viewer to be visible',
       'click element .edit-correspondence-button',
       'wait for element #edit-correspondence-header to be visible',
     ],
@@ -259,6 +272,7 @@ module.exports = [
     url:
       'http://localhost:1234/mock-login?token=petitionsclerk&path=/case-detail/103-19&info=edit-correspondence',
   },
+  'http://localhost:1234/mock-login?token=petitionsclerk&path=/case-detail/103-20/document-view?documentId=ac62f25a-49f9-46a5-aed7-d6b955a2dc34&info=document-view-review-and-serve-petition-button',
   {
     actions: [
       'wait for #tab-case-information to be visible',
@@ -311,6 +325,18 @@ module.exports = [
     actions: [
       'wait for #tab-case-information to be visible',
       'click element #tab-case-information',
+      'wait for #tab-other-filer to be visible',
+      'click element #tab-other-filer',
+      'wait for #tabContent-otherFiler to be visible',
+    ],
+    notes: 'checks the case detail => case information => other tab',
+    url:
+      'http://localhost:1234/mock-login?token=petitionsclerk&path=/case-detail/105-20',
+  },
+  {
+    actions: [
+      'wait for #tab-case-information to be visible',
+      'click element #tab-case-information',
       'wait for #tab-statistics to be visible',
       'click element #tab-statistics',
       'wait for #tabContent-statistics to be visible',
@@ -353,7 +379,7 @@ module.exports = [
       'click element button#tab-irs-notice',
       'wait for label#has-irs-verified-notice-yes to be visible',
       'click element label#has-irs-verified-notice-yes',
-      'wait for #date-of-notice-month to be visible',
+      'wait for #date-of-notice-date to be visible',
     ],
     notes: 'checks a11y of editable fields exposed when Yes notice attached',
     url:
@@ -365,7 +391,7 @@ module.exports = [
       'click element #tab-irs-notice',
       'wait for #irs-verified-notice-radios to be visible',
       'click element #has-irs-verified-notice-yes',
-      'wait for #date-of-notice-legend to be visible',
+      'wait for #date-of-notice-date to be visible',
       'set field #case-type to Deficiency',
       'check field #case-type',
       'wait for .statistic-form to be visible',
@@ -380,7 +406,7 @@ module.exports = [
       'click element #tab-irs-notice',
       'wait for #irs-verified-notice-radios to be visible',
       'click element #has-irs-verified-notice-yes',
-      'wait for #date-of-notice-legend to be visible',
+      'wait for #date-of-notice-date to be visible',
       'set field #case-type to Deficiency',
       'check field #case-type',
       'wait for .calculate-penalties to be visible',
@@ -391,25 +417,19 @@ module.exports = [
     url:
       'http://localhost:1234/mock-login?token=petitionsclerk&path=/file-a-petition/step-1&info=penalties-modal',
   },
+  {
+    actions: [
+      'wait for .remove-pdf-button to be visible',
+      'click element .remove-pdf-button',
+      'wait for .confirm-replace-petition-modal to be visible',
+    ],
+    notes: 'checks a11y of ConfirmReplacePetitionModal',
+    url:
+      'http://localhost:1234/mock-login?token=petitionsclerk&path=/case-detail/121-20/petition-qc',
+  },
 
   /* review petition */
   'http://localhost:1234/mock-login?token=petitionsclerk&path=/case-detail/104-19/documents/c63be3f2-2240-451e-b6bd-8206d52a070b/review',
-
-  /* document detail */
-  {
-    actions: [
-      'wait for #tab-pending-messages to be visible',
-      'wait for .progress-indicator to be hidden',
-      'click element #tab-pending-messages',
-      'wait for #create-message-button to be visible',
-      'wait for .progress-indicator to be hidden',
-      'click element #create-message-button',
-      'wait for .modal-dialog to be visible',
-    ],
-    notes: 'checks a11y of create message dialog',
-    url:
-      'http://localhost:1234/mock-login?token=petitionsclerk&path=/case-detail/102-19/documents/89c781f6-71ba-4ead-93d8-c681c2183a73&info=create-message-dialog',
-  },
 
   /* trial sessions */
   {
@@ -419,7 +439,7 @@ module.exports = [
       'http://localhost:1234/mock-login?token=petitionsclerk&path=/trial-sessions&info=list-trial-sessions',
   },
   {
-    actions: ['wait for #start-date-month to be visible'],
+    actions: ['wait for #start-date-date to be visible'],
     notes: 'checks a11y of trial sessions add form',
     url:
       'http://localhost:1234/mock-login?token=petitionsclerk&path=/add-a-trial-session&info=add-trial-session',
@@ -468,4 +488,40 @@ module.exports = [
       'http://localhost:1234/mock-login?token=petitionsclerk&path=/search&info=practitioner-search-results',
   },
   'http://localhost:1234/mock-login?token=petitionsclerk&path=/practitioner-detail/PT1234',
+  /* messages */
+  'http://localhost:1234/mock-login?token=petitionsclerk&path=/messages/my/inbox&info=messages-inbox',
+  'http://localhost:1234/mock-login?token=petitionsclerk&path=/messages/my/outbox&info=messages-outbox',
+  'http://localhost:1234/mock-login?token=petitionsclerk&path=/messages/section/inbox&info=messages-section-inbox',
+  'http://localhost:1234/mock-login?token=petitionsclerk&path=/messages/section/outbox&info=messages-section-outbox',
+  'http://localhost:1234/mock-login?token=petitionsclerk&path=/messages/105-20/message-detail/eb0a139a-8951-4de1-8b83-f02a27504105&info=case-message-detail',
+  {
+    actions: [
+      'wait for #button-forward to be visible',
+      'click element #button-forward',
+      'wait for .modal-dialog to be visible',
+    ],
+    notes: 'checks the forward modal',
+    url:
+      'http://localhost:1234/mock-login?token=petitionsclerk&path=/messages/105-20/message-detail/eb0a139a-8951-4de1-8b83-f02a27504105&info=message-detail-forward',
+  },
+  {
+    actions: [
+      'wait for #button-reply to be visible',
+      'click element #button-reply',
+      'wait for .modal-dialog to be visible',
+    ],
+    notes: 'checks the reply modal',
+    url:
+      'http://localhost:1234/mock-login?token=petitionsclerk&path=/messages/105-20/message-detail/eb0a139a-8951-4de1-8b83-f02a27504105&info=message-detail-reply',
+  },
+  {
+    actions: [
+      'wait for #button-complete to be visible',
+      'click element #button-reply',
+      'wait for .modal-dialog to be visible',
+    ],
+    notes: 'checks the complete modal',
+    url:
+      'http://localhost:1234/mock-login?token=petitionsclerk&path=/messages/105-20/message-detail/eb0a139a-8951-4de1-8b83-f02a27504105&info=message-detail-complete',
+  },
 ];

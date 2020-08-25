@@ -6,8 +6,7 @@ const {
   getTrialSessionPlanningReportData,
   runTrialSessionPlanningReportInteractor,
 } = require('./runTrialSessionPlanningReportInteractor');
-const { TrialSession } = require('../../entities/trialSessions/TrialSession');
-const { User } = require('../../entities/User');
+const { ROLES, TRIAL_CITIES } = require('../../entities/EntityConstants');
 
 describe('run trial session planning report', () => {
   const mockPdfUrl = 'www.example.com';
@@ -22,7 +21,7 @@ describe('run trial session planning report', () => {
 
   it('throws error if user is unauthorized', async () => {
     user = {
-      role: User.ROLES.petitioner,
+      role: ROLES.petitioner,
       userId: 'petitioner',
     };
 
@@ -41,13 +40,15 @@ describe('run trial session planning report', () => {
 
   it('returns the created pdf url', async () => {
     user = {
-      role: User.ROLES.petitionsClerk,
+      role: ROLES.petitionsClerk,
       userId: 'petitionsClerk',
     };
 
     applicationContext
       .getPersistenceGateway()
-      .getEligibleCasesForTrialCity.mockReturnValue([{ caseId: '123' }]);
+      .getEligibleCasesForTrialCity.mockReturnValue([
+        { docketNumber: '123-20' },
+      ]);
 
     applicationContext
       .getPersistenceGateway()
@@ -128,15 +129,15 @@ describe('run trial session planning report', () => {
         },
       ];
       user = {
-        role: User.ROLES.petitionsClerk,
+        role: ROLES.petitionsClerk,
         userId: 'petitionsClerk',
       };
 
       applicationContext
         .getPersistenceGateway()
         .getEligibleCasesForTrialCity.mockReturnValue([
-          { caseId: '123' },
-          { caseId: '123' },
+          { docketNumber: '123-20' },
+          { docketNumber: '234-20' },
         ]);
 
       applicationContext
@@ -154,9 +155,7 @@ describe('run trial session planning report', () => {
         { term: 'spring', year: '2019' },
         { term: 'winter', year: '2019' },
       ]);
-      expect(results.trialLocationData.length).toEqual(
-        TrialSession.TRIAL_CITIES.ALL.length,
-      );
+      expect(results.trialLocationData.length).toEqual(TRIAL_CITIES.ALL.length);
       expect(results.trialLocationData[0]).toMatchObject({
         allCaseCount: 4,
         previousTermsData: [['(S) Ashford'], ['(S) Buch', '(R) Armen'], []],
@@ -171,15 +170,27 @@ describe('run trial session planning report', () => {
   describe('get previous term', () => {
     it('returns previous term and previous year if the previous term is winter', () => {
       const result = getPreviousTerm('winter', '2020');
-      expect(result).toEqual({ term: 'fall', year: '2019' });
+      expect(result).toEqual({
+        term: 'fall',
+        termDisplay: 'Fall 2019',
+        year: '2019',
+      });
     });
     it('returns previous term and same year if the previous term is fall', () => {
       const result = getPreviousTerm('fall', '2020');
-      expect(result).toEqual({ term: 'spring', year: '2020' });
+      expect(result).toEqual({
+        term: 'spring',
+        termDisplay: 'Spring 2020',
+        year: '2020',
+      });
     });
     it('returns previous term and same year if the previous term is spring', () => {
       const result = getPreviousTerm('spring', '2020');
-      expect(result).toEqual({ term: 'winter', year: '2020' });
+      expect(result).toEqual({
+        term: 'winter',
+        termDisplay: 'Winter 2020',
+        year: '2020',
+      });
     });
   });
 });

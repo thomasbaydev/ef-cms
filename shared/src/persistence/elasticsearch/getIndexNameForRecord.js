@@ -9,7 +9,7 @@ exports.getIndexNameForRecord = record => {
   ];
 
   const isRecordOfType = (record, type) => {
-    if (record.entityName && record.entityName.S) {
+    if (record && record.entityName && record.entityName.S) {
       if (type === 'User' && userEntityNames.includes(record.entityName.S)) {
         return true;
       }
@@ -26,6 +26,10 @@ exports.getIndexNameForRecord = record => {
     index = 'efcms-document';
   } else if (isRecordOfType(record, 'User')) {
     index = 'efcms-user';
+  } else if (isRecordOfType(record, 'Message')) {
+    index = 'efcms-message';
+  } else if (isRecordOfType(record, 'UserCase')) {
+    index = 'efcms-user-case';
   }
 
   return index;

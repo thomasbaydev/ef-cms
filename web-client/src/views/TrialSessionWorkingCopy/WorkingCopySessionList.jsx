@@ -65,7 +65,7 @@ export const WorkingCopySessionList = connect(
                       sort === 'docket' && 'sortActive',
                     )}
                   >
-                    Docket number
+                    Docket No.
                   </span>
                   {(sort === 'docket' && sortOrder === 'desc' && (
                     <FontAwesomeIcon icon="caret-up" />
@@ -73,7 +73,7 @@ export const WorkingCopySessionList = connect(
                 </Button>
               </th>
               <th aria-label="manually added indicator"></th>
-              <th className="no-wrap">Case title</th>
+              <th className="no-wrap">Case Title</th>
               <th className="no-wrap">
                 <Button
                   link
@@ -90,16 +90,16 @@ export const WorkingCopySessionList = connect(
                       sort === 'practitioner' && 'sortActive',
                     )}
                   >
-                    Petitioner counsel
+                    Petitioner Counsel
                   </span>
                   {(sort === 'practitioner' && sortOrder === 'desc' && (
                     <FontAwesomeIcon icon="caret-up" />
                   )) || <FontAwesomeIcon icon="caret-down" />}
                 </Button>
               </th>
-              <th className="no-wrap">Respondent counsel</th>
+              <th className="no-wrap">Respondent Counsel</th>
               <th className="no-wrap" colSpan="2">
-                Trial status
+                Trial Status
               </th>
             </tr>
           </thead>
@@ -154,7 +154,7 @@ export const WorkingCopySessionList = connect(
                   <td className="no-wrap">
                     <If
                       not
-                      bind={`trialSessionWorkingCopy.userNotes.${item.caseId}.notes`}
+                      bind={`trialSessionWorkingCopy.userNotes.${item.docketNumber}.notes`}
                     >
                       <Button
                         link
@@ -162,7 +162,7 @@ export const WorkingCopySessionList = connect(
                         icon="plus-circle"
                         onClick={() => {
                           openAddEditUserCaseNoteModalFromListSequence({
-                            caseId: item.caseId,
+                            docketNumber: item.docketNumber,
                           });
                         }}
                       >
@@ -172,7 +172,7 @@ export const WorkingCopySessionList = connect(
                   </td>
                 </tr>
                 <If
-                  bind={`trialSessionWorkingCopy.userNotes.${item.caseId}.notes`}
+                  bind={`trialSessionWorkingCopy.userNotes.${item.docketNumber}.notes`}
                 >
                   <tr className="notes-row">
                     <td className="text-right font-body-2xs">
@@ -180,7 +180,7 @@ export const WorkingCopySessionList = connect(
                     </td>
                     <td className="font-body-2xs" colSpan="4">
                       <Text
-                        bind={`trialSessionWorkingCopy.userNotes.${item.caseId}.notes`}
+                        bind={`trialSessionWorkingCopy.userNotes.${item.docketNumber}.notes`}
                       />
                     </td>
                     <td className="no-wrap text-align-right">
@@ -190,7 +190,7 @@ export const WorkingCopySessionList = connect(
                         icon="trash"
                         onClick={() => {
                           openDeleteUserCaseNoteConfirmModalSequence({
-                            caseId: item.caseId,
+                            docketNumber: item.docketNumber,
                           });
                         }}
                       >
@@ -203,7 +203,7 @@ export const WorkingCopySessionList = connect(
                         icon="edit"
                         onClick={() => {
                           openAddEditUserCaseNoteModalFromListSequence({
-                            caseId: item.caseId,
+                            docketNumber: item.docketNumber,
                           });
                         }}
                       >

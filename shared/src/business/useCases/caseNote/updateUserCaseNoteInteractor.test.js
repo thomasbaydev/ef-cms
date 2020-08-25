@@ -4,12 +4,13 @@ const {
 const {
   updateUserCaseNoteInteractor,
 } = require('./updateUserCaseNoteInteractor');
+const { ROLES } = require('../../entities/EntityConstants');
 const { UnauthorizedError } = require('../../../errors/errors');
 const { User } = require('../../entities/User');
 
 describe('updateUserCaseNoteInteractor', () => {
   const mockCaseNote = {
-    caseId: '6805d1ab-18d0-43ec-bafb-654e83405416',
+    docketNumber: '123-45',
     notes: 'hello world',
     userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
   };
@@ -17,50 +18,38 @@ describe('updateUserCaseNoteInteractor', () => {
   it('throws an error if the user is not valid or authorized', async () => {
     applicationContext.getCurrentUser.mockReturnValue({});
 
-    let error;
-    try {
-      await updateUserCaseNoteInteractor({
+    await expect(
+      updateUserCaseNoteInteractor({
         applicationContext,
-        caseId: mockCaseNote.caseId,
+        docketNumber: mockCaseNote.docketNumber,
         notes: mockCaseNote.notes,
-      });
-    } catch (err) {
-      error = err;
-    }
-    expect(error.message).toContain('Unauthorized');
-    expect(error).toBeInstanceOf(UnauthorizedError);
+      }),
+    ).rejects.toThrow(new UnauthorizedError('Unauthorized'));
   });
 
   it('updates a case note', async () => {
     const mockUser = new User({
       name: 'Judge Armen',
-      role: User.ROLES.judge,
+      role: ROLES.judge,
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
     applicationContext.getCurrentUser.mockReturnValue(mockUser);
-    applicationContext.getPersistenceGateway().updateUserCaseNote = v =>
-      v.caseNoteToUpdate;
-    applicationContext.getUseCases.mockReturnValue({
-      getJudgeForUserChambersInteractor: () => ({
-        role: User.ROLES.judge,
+    applicationContext
+      .getPersistenceGateway()
+      .updateUserCaseNote.mockImplementation(v => v.caseNoteToUpdate);
+    applicationContext
+      .getUseCases()
+      .getJudgeForUserChambersInteractor.mockReturnValue({
+        role: ROLES.judge,
         userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
-      }),
+      });
+
+    const caseNote = await updateUserCaseNoteInteractor({
+      applicationContext,
+      docketNumber: mockCaseNote.docketNumber,
+      notes: mockCaseNote.notes,
     });
 
-    let error;
-    let caseNote;
-
-    try {
-      caseNote = await updateUserCaseNoteInteractor({
-        applicationContext,
-        caseId: mockCaseNote.caseId,
-        notes: mockCaseNote.notes,
-      });
-    } catch (e) {
-      error = e;
-    }
-
-    expect(error).toBeUndefined();
     expect(caseNote).toBeDefined();
   });
 });

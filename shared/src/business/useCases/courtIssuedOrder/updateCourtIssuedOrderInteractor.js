@@ -4,6 +4,7 @@ const {
 } = require('../../../authorization/authorizationClientService');
 const { Case } = require('../../entities/cases/Case');
 const { Document } = require('../../entities/Document');
+const { DOCUMENT_RELATIONSHIPS } = require('../../entities/EntityConstants');
 const { NotFoundError, UnauthorizedError } = require('../../../errors/errors');
 
 /**
@@ -20,7 +21,7 @@ exports.updateCourtIssuedOrderInteractor = async ({
   documentMetadata,
 }) => {
   const authorizedUser = applicationContext.getCurrentUser();
-  const { caseId } = documentMetadata;
+  const { docketNumber } = documentMetadata;
 
   if (!isAuthorized(authorizedUser, ROLE_PERMISSIONS.COURT_ISSUED_DOCUMENT)) {
     throw new UnauthorizedError('Unauthorized');
@@ -32,9 +33,9 @@ exports.updateCourtIssuedOrderInteractor = async ({
 
   const caseToUpdate = await applicationContext
     .getPersistenceGateway()
-    .getCaseByCaseId({
+    .getCaseByDocketNumber({
       applicationContext,
-      caseId,
+      docketNumber,
     });
 
   const caseEntity = new Case(caseToUpdate, { applicationContext });
@@ -55,7 +56,7 @@ exports.updateCourtIssuedOrderInteractor = async ({
       richText: documentMetadata.draftState.richText,
     };
 
-    applicationContext.getPersistenceGateway().saveDocumentFromLambda({
+    await applicationContext.getPersistenceGateway().saveDocumentFromLambda({
       applicationContext,
       document: Buffer.from(JSON.stringify(contentToStore)),
       documentId: documentContentsId,
@@ -86,7 +87,7 @@ exports.updateCourtIssuedOrderInteractor = async ({
       documentId: documentIdToEdit,
       filedBy: user.name,
       numberOfPages,
-      relationship: 'primaryDocument',
+      relationship: DOCUMENT_RELATIONSHIPS.PRIMARY,
       userId: user.userId,
     },
     { applicationContext },

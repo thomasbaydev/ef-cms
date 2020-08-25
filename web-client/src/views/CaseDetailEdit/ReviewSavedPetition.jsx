@@ -1,9 +1,10 @@
-import { AddressDisplay } from '../CaseDetail/PetitionerInformation';
+import { AddressDisplay } from '../CaseDetail/AddressDisplay';
 import { Button } from '../../ustc-ui/Button/Button';
 import { CaseDetailHeader } from '../CaseDetail/CaseDetailHeader';
 import { ConfirmModal } from '../../ustc-ui/Modal/ConfirmModal';
 import { Focus } from '../../ustc-ui/Focus/Focus';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { FormCancelModalDialog } from '../FormCancelModalDialog';
 import { OrdersNeededSummary } from '../StartCaseInternal/OrdersNeededSummary';
 import { PDFPreviewButton } from '../PDFPreviewButton';
 import { connect } from '@cerebral/react';
@@ -72,7 +73,7 @@ export const ReviewSavedPetition = connect(
                         link
                         aria-label="edit parties"
                         className="margin-right-0 margin-top-1 padding-0 float-right"
-                        href={`/case-detail/${form.caseId}/petition-qc?tab=partyInfo`}
+                        href={`/case-detail/${form.docketNumber}/petition-qc?tab=partyInfo`}
                         icon="edit"
                       >
                         Edit
@@ -97,11 +98,7 @@ export const ReviewSavedPetition = connect(
                         </span>
                         {form.contactPrimary && (
                           <address aria-labelledby="primary-label">
-                            {AddressDisplay(form.contactPrimary, constants, {
-                              nameOverride:
-                                startCaseHelper.showCaseTitleForPrimary &&
-                                startCaseHelper.caseTitle,
-                            })}
+                            <AddressDisplay contact={form.contactPrimary} />
                           </address>
                         )}
                       </div>
@@ -114,7 +111,7 @@ export const ReviewSavedPetition = connect(
                             >
                               Spouse’s information
                             </span>
-                            {AddressDisplay(form.contactSecondary, constants)}
+                            <AddressDisplay contact={form.contactSecondary} />
                           </>
                         )}
                       </div>
@@ -131,7 +128,7 @@ export const ReviewSavedPetition = connect(
                         link
                         aria-label="edit case information"
                         className="margin-right-0 margin-top-1 padding-0 float-right"
-                        href={`/case-detail/${form.caseId}/petition-qc?tab=caseInfo`}
+                        href={`/case-detail/${form.docketNumber}/petition-qc?tab=caseInfo`}
                         icon="edit"
                       >
                         Edit
@@ -216,7 +213,7 @@ export const ReviewSavedPetition = connect(
                         link
                         aria-label="edit IRS notice information"
                         className="margin-right-0 margin-top-1 padding-0 float-right"
-                        href={`/case-detail/${form.caseId}/petition-qc?tab=irsNotice`}
+                        href={`/case-detail/${form.docketNumber}/petition-qc?tab=irsNotice`}
                         icon="edit"
                       >
                         Edit
@@ -285,6 +282,15 @@ export const ReviewSavedPetition = connect(
                   <div className="content-wrapper">
                     <h3 className="underlined" id="attachments-card">
                       Attachments
+                      <Button
+                        link
+                        aria-label="edit parties"
+                        className="margin-right-0 margin-top-1 padding-0 float-right"
+                        href={`/case-detail/${form.docketNumber}/petition-qc?tab=partyInfo`}
+                        icon="edit"
+                      >
+                        Edit
+                      </Button>
                     </h3>
                     <div>
                       {reviewSavedPetitionHelper.petitionFile && (
@@ -379,6 +385,7 @@ export const ReviewSavedPetition = connect(
             </Button>
             <Button
               link
+              id="cancel-create-case"
               onClick={() => {
                 formCancelToggleCancelSequence();
               }}
@@ -388,6 +395,9 @@ export const ReviewSavedPetition = connect(
           </div>
         </section>
         {showModal == 'ConfirmServeToIrsModal' && <ConfirmServeToIrsModal />}
+        {showModal == 'FormCancelModalDialog' && (
+          <FormCancelModalDialog onCancelSequence="closeModalAndNavigateSequence" />
+        )}
       </>
     );
   },

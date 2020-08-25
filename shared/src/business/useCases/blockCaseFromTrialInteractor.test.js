@@ -3,17 +3,17 @@ const {
 } = require('./blockCaseFromTrialInteractor');
 const { applicationContext } = require('../test/createTestApplicationContext');
 const { MOCK_CASE } = require('../../test/mockCase');
-const { User } = require('../entities/User');
+const { ROLES } = require('../entities/EntityConstants');
 
 describe('blockCaseFromTrialInteractor', () => {
   beforeEach(() => {
     applicationContext.getCurrentUser.mockReturnValue({
-      role: User.ROLES.petitionsClerk,
+      role: ROLES.petitionsClerk,
       userId: 'petitionsclerk',
     });
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(MOCK_CASE);
+      .getCaseByDocketNumber.mockReturnValue(MOCK_CASE);
     applicationContext
       .getPersistenceGateway()
       .updateCase.mockImplementation(({ caseToUpdate }) => caseToUpdate);
@@ -22,7 +22,7 @@ describe('blockCaseFromTrialInteractor', () => {
   it('should update the case with the blocked flag set as true and attach a reason', async () => {
     const result = await blockCaseFromTrialInteractor({
       applicationContext,
-      caseId: MOCK_CASE.caseId,
+      docketNumber: MOCK_CASE.docketNumber,
       reason: 'just because',
     });
 
@@ -36,8 +36,8 @@ describe('blockCaseFromTrialInteractor', () => {
     ).toHaveBeenCalled();
     expect(
       applicationContext.getPersistenceGateway()
-        .deleteCaseTrialSortMappingRecords.mock.calls[0][0].caseId,
-    ).toEqual(MOCK_CASE.caseId);
+        .deleteCaseTrialSortMappingRecords.mock.calls[0][0].docketNumber,
+    ).toEqual(MOCK_CASE.docketNumber);
   });
 
   it('should throw an unauthorized error if the user has no access to block cases', async () => {
@@ -49,7 +49,7 @@ describe('blockCaseFromTrialInteractor', () => {
     await expect(
       blockCaseFromTrialInteractor({
         applicationContext,
-        caseId: '123',
+        docketNumber: '123-45',
       }),
     ).rejects.toThrow('Unauthorized');
   });

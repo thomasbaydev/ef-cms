@@ -20,20 +20,16 @@ export const IndividualWorkQueueInbox = connect(
           <thead>
             <tr>
               <th aria-label="Docket Number" className="small" colSpan="2">
-                <span className="padding-left-2px">Docket number</span>
+                <span className="padding-left-2px">Docket No.</span>
               </th>
               <th className="small">Received</th>
-              <th>Case title</th>
+              <th>Case Title</th>
               <th aria-label="Status Icon" className="padding-right-0">
                 &nbsp;
               </th>
               <th>Document</th>
               {!workQueueHelper.hideFiledByColumn && <th>Filed by</th>}
-              <th>Case status</th>
-              {!workQueueHelper.hideFromColumn && <th>From</th>}
-              {!workQueueHelper.hideSectionColumn && (
-                <th className="small">Section</th>
-              )}
+              <th>Case Status</th>
             </tr>
           </thead>
           {formattedWorkQueue.map((item, idx) => {
@@ -83,14 +79,6 @@ export const IndividualWorkQueueInbox = connect(
                           item.document.documentType}
                       </a>
                     </div>
-                    {workQueueHelper.showMessageContent && (
-                      <div
-                        className="message-document-detail"
-                        id={`detail-${item.workItemId}`}
-                      >
-                        {item.currentMessage.message}
-                      </div>
-                    )}
                   </td>
                   {!workQueueHelper.hideFiledByColumn && (
                     <td className="message-queue-row">
@@ -98,24 +86,12 @@ export const IndividualWorkQueueInbox = connect(
                     </td>
                   )}
                   <td className="message-queue-row">{item.caseStatus}</td>
-                  {!workQueueHelper.hideFromColumn && (
-                    <td className="message-queue-row from">
-                      {item.currentMessage.from}
-                    </td>
-                  )}
-                  {!workQueueHelper.hideSectionColumn && (
-                    <td className="message-queue-row small">
-                      {item.sentBySection}
-                    </td>
-                  )}
                 </tr>
               </tbody>
             );
           })}
         </table>
-        {formattedWorkQueue.length === 0 && (
-          <p>{workQueueHelper.queueEmptyMessage}</p>
-        )}
+        {formattedWorkQueue.length === 0 && <p>There are no documents.</p>}
       </React.Fragment>
     );
   },

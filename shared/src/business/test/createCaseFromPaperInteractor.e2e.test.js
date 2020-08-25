@@ -1,4 +1,11 @@
 const {
+  CASE_STATUS_TYPES,
+  COUNTRY_TYPES,
+  INITIAL_DOCUMENT_TYPES,
+  PAYMENT_STATUS,
+  PETITIONS_SECTION,
+} = require('../entities/EntityConstants');
+const {
   createCaseFromPaperInteractor,
 } = require('../useCases/createCaseFromPaperInteractor');
 const {
@@ -8,10 +15,9 @@ const {
   getDocumentQCInboxForUserInteractor,
 } = require('../useCases/workitems/getDocumentQCInboxForUserInteractor');
 const { applicationContext } = require('../test/createTestApplicationContext');
-const { Case } = require('../entities/cases/Case');
 const { getCaseInteractor } = require('../useCases/getCaseInteractor');
 const { MOCK_CASE } = require('../../test/mockCase');
-const { User } = require('../entities/User');
+const { ROLES } = require('../entities/EntityConstants');
 
 describe('createCaseFromPaperInteractor integration test', () => {
   const RECEIVED_DATE = '2019-02-01T22:54:06.000Z';
@@ -23,7 +29,7 @@ describe('createCaseFromPaperInteractor integration test', () => {
 
     applicationContext.getCurrentUser.mockReturnValue({
       name: 'Alex Petitionsclerk',
-      role: User.ROLES.petitionsClerk,
+      role: ROLES.petitionsClerk,
       userId: 'a805d1ab-18d0-43ec-bafb-654e83405416',
     });
   });
@@ -32,14 +38,14 @@ describe('createCaseFromPaperInteractor integration test', () => {
     MOCK_CASE.contactPrimary = {
       address1: '123 Abc Ln',
       city: 'something',
-      countryType: 'domestic',
+      countryType: COUNTRY_TYPES.DOMESTIC,
       name: 'Bob Jones',
       phone: '1234567890',
       postalCode: '12345',
       state: 'CA',
     };
 
-    const { caseId } = await createCaseFromPaperInteractor({
+    const { docketNumber } = await createCaseFromPaperInteractor({
       applicationContext,
       petitionFileId: 'c7eb4dd9-2e0b-4312-ba72-3e576fd7efd8',
       petitionMetadata: {
@@ -49,7 +55,7 @@ describe('createCaseFromPaperInteractor integration test', () => {
         mailingDate: 'testing',
         petitionFile: { name: 'something' },
         petitionFileSize: 1,
-        petitionPaymentStatus: Case.PAYMENT_STATUS.UNPAID,
+        petitionPaymentStatus: PAYMENT_STATUS.UNPAID,
         receivedAt: RECEIVED_DATE,
         requestForPlaceOfTrialFile: new File(
           [],
@@ -64,7 +70,7 @@ describe('createCaseFromPaperInteractor integration test', () => {
 
     const createdCase = await getCaseInteractor({
       applicationContext,
-      caseId,
+      docketNumber,
     });
 
     expect(createdCase).toMatchObject({
@@ -86,39 +92,27 @@ describe('createCaseFromPaperInteractor integration test', () => {
           eventCode: 'P',
           filedBy: 'Petr. Bob Jones',
           receivedAt: RECEIVED_DATE,
-          workItems: [
-            {
-              assigneeId: 'a805d1ab-18d0-43ec-bafb-654e83405416',
-              assigneeName: 'Alex Petitionsclerk',
-              caseStatus: Case.STATUS_TYPES.new,
-              createdAt: RECEIVED_DATE,
-              docketNumber: '101-19',
-              docketNumberSuffix: null,
-              document: {
-                documentId: 'c7eb4dd9-2e0b-4312-ba72-3e576fd7efd8',
-                documentType: 'Petition',
-                filedBy: 'Petr. Bob Jones',
-              },
-              isInitializeCase: true,
-              messages: [
-                {
-                  createdAt: RECEIVED_DATE,
-                  from: 'Alex Petitionsclerk',
-                  fromUserId: 'a805d1ab-18d0-43ec-bafb-654e83405416',
-                  message:
-                    'Petition filed by Petr. Bob Jones is ready for review.',
-                },
-              ],
-              section: 'petitions',
-              sentBy: 'Alex Petitionsclerk',
-              sentByUserId: 'a805d1ab-18d0-43ec-bafb-654e83405416',
+          workItem: {
+            assigneeId: 'a805d1ab-18d0-43ec-bafb-654e83405416',
+            assigneeName: 'Alex Petitionsclerk',
+            caseStatus: CASE_STATUS_TYPES.new,
+            createdAt: RECEIVED_DATE,
+            docketNumber: '101-19',
+            document: {
+              documentId: 'c7eb4dd9-2e0b-4312-ba72-3e576fd7efd8',
+              documentType: 'Petition',
+              filedBy: 'Petr. Bob Jones',
             },
-          ],
+            isInitializeCase: true,
+            section: PETITIONS_SECTION,
+            sentBy: 'Alex Petitionsclerk',
+            sentByUserId: 'a805d1ab-18d0-43ec-bafb-654e83405416',
+          },
         },
         {
           createdAt: RECEIVED_DATE,
-          documentType: 'Statement of Taxpayer Identification',
-          eventCode: 'STIN',
+          documentType: INITIAL_DOCUMENT_TYPES.stin.documentType,
+          eventCode: INITIAL_DOCUMENT_TYPES.stin.eventCode,
           filedBy: 'Petr. Bob Jones',
           receivedAt: RECEIVED_DATE,
         },
@@ -133,7 +127,7 @@ describe('createCaseFromPaperInteractor integration test', () => {
       orderForRatification: false,
       orderToShowCause: false,
       receivedAt: RECEIVED_DATE,
-      status: Case.STATUS_TYPES.new,
+      status: CASE_STATUS_TYPES.new,
       userId: 'a805d1ab-18d0-43ec-bafb-654e83405416',
     });
 
@@ -145,7 +139,7 @@ describe('createCaseFromPaperInteractor integration test', () => {
     expect(petitionsclerkInbox).toMatchObject([
       {
         assigneeName: 'Alex Petitionsclerk',
-        caseStatus: Case.STATUS_TYPES.new,
+        caseStatus: CASE_STATUS_TYPES.new,
         docketNumber: '101-19',
         docketNumberWithSuffix: '101-19',
         document: {
@@ -154,27 +148,20 @@ describe('createCaseFromPaperInteractor integration test', () => {
           eventCode: 'P',
         },
         isInitializeCase: true,
-        messages: [
-          {
-            from: 'Alex Petitionsclerk',
-            fromUserId: 'a805d1ab-18d0-43ec-bafb-654e83405416',
-            message: 'Petition filed by Petr. Bob Jones is ready for review.',
-          },
-        ],
-        section: 'petitions',
+        section: PETITIONS_SECTION,
         sentBy: 'Alex Petitionsclerk',
       },
     ]);
 
     const petitionsSectionInbox = await getDocumentQCInboxForSectionInteractor({
       applicationContext,
-      section: 'petitions',
+      section: PETITIONS_SECTION,
     });
 
     expect(petitionsSectionInbox).toMatchObject([
       {
         assigneeName: 'Alex Petitionsclerk',
-        caseStatus: Case.STATUS_TYPES.new,
+        caseStatus: CASE_STATUS_TYPES.new,
         docketNumber: '101-19',
         docketNumberWithSuffix: '101-19',
         document: {
@@ -183,14 +170,7 @@ describe('createCaseFromPaperInteractor integration test', () => {
           eventCode: 'P',
         },
         isInitializeCase: true,
-        messages: [
-          {
-            from: 'Alex Petitionsclerk',
-            fromUserId: 'a805d1ab-18d0-43ec-bafb-654e83405416',
-            message: 'Petition filed by Petr. Bob Jones is ready for review.',
-          },
-        ],
-        section: 'petitions',
+        section: PETITIONS_SECTION,
         sentBy: 'Alex Petitionsclerk',
       },
     ]);

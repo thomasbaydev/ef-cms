@@ -3,7 +3,7 @@ const {
 } = require('./updateQcCompleteForTrialInteractor');
 const { applicationContext } = require('../test/createTestApplicationContext');
 const { MOCK_CASE } = require('../../test/mockCase');
-const { User } = require('../entities/User');
+const { ROLES } = require('../entities/EntityConstants');
 
 describe('updateQcCompleteForTrialInteractor', () => {
   let user;
@@ -12,7 +12,7 @@ describe('updateQcCompleteForTrialInteractor', () => {
     applicationContext.getCurrentUser.mockImplementation(() => user);
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockResolvedValue(MOCK_CASE);
+      .getCaseByDocketNumber.mockResolvedValue(MOCK_CASE);
     applicationContext
       .getPersistenceGateway()
       .updateCase.mockImplementation(({ caseToUpdate }) =>
@@ -22,14 +22,14 @@ describe('updateQcCompleteForTrialInteractor', () => {
 
   it('should throw an error if the user is unauthorized to update a trial session', async () => {
     user = {
-      role: User.ROLES.petitioner,
+      role: ROLES.petitioner,
       userId: 'petitioner',
     };
 
     await expect(
       updateQcCompleteForTrialInteractor({
         applicationContext,
-        caseId: MOCK_CASE.caseId,
+        docketNumber: MOCK_CASE.docketNumber,
         qcCompleteForTrial: true,
         trialSessionId: '10aa100f-0330-442b-8423-b01690c76e3f',
       }),
@@ -38,13 +38,13 @@ describe('updateQcCompleteForTrialInteractor', () => {
 
   it('should call updateCase with the updated qcCompleteForTrial value and return the updated case', async () => {
     user = {
-      role: User.ROLES.petitionsClerk,
+      role: ROLES.petitionsClerk,
       userId: 'petitionsClerk',
     };
 
     const result = await updateQcCompleteForTrialInteractor({
       applicationContext,
-      caseId: MOCK_CASE.caseId,
+      docketNumber: MOCK_CASE.docketNumber,
       qcCompleteForTrial: true,
       trialSessionId: '10aa100f-0330-442b-8423-b01690c76e3f',
     });

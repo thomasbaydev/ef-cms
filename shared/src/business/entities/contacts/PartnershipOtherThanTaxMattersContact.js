@@ -1,4 +1,4 @@
-const joi = require('@hapi/joi');
+const joi = require('joi');
 const { ContactFactory } = require('./ContactFactory');
 
 /**
@@ -10,7 +10,8 @@ exports.getPartnershipOtherThanTaxMattersPrimaryContact = ContactFactory.createC
       secondaryName: 'Enter name of partner',
     },
     additionalValidation: {
-      secondaryName: joi.string().required(),
+      secondaryName: joi.string().max(500).required(),
     },
+    contactName: 'PartnershipOtherThanTaxMattersPrimaryContact',
   },
 );

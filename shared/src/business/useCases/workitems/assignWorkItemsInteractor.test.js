@@ -1,19 +1,21 @@
 const {
   applicationContext,
 } = require('../../test/createTestApplicationContext');
+const {
+  CASE_STATUS_TYPES,
+  DOCKET_NUMBER_SUFFIXES,
+} = require('../../entities/EntityConstants');
 const { assignWorkItemsInteractor } = require('./assignWorkItemsInteractor');
-const { Case } = require('../../entities/cases/Case');
 const { omit } = require('lodash');
-const { User } = require('../../entities/User');
+const { ROLES } = require('../../entities/EntityConstants');
 
 const MOCK_WORK_ITEM = {
   assigneeId: null,
   assigneeName: 'bob',
-  caseId: 'e631d81f-a579-4de5-b8a8-b3f10ef619fd',
-  caseStatus: Case.STATUS_TYPES.generalDocket,
+  caseStatus: CASE_STATUS_TYPES.generalDocket,
   createdAt: '2018-12-27T18:06:02.971Z',
   docketNumber: '101-18',
-  docketNumberSuffix: 'S',
+  docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.SMALL,
   document: {
     createdAt: '2018-12-27T18:06:02.968Z',
     documentId: 'b6238482-5f0e-48a8-bb8e-da2957074a08',
@@ -55,11 +57,11 @@ describe('assignWorkItemsInteractor', () => {
   it('fail on validation if the work items provided are invalid', async () => {
     applicationContext
       .getPersistenceGateway()
-      .getWorkItemById.mockReturnValue(omit(MOCK_WORK_ITEM, 'caseId'));
+      .getWorkItemById.mockReturnValue(omit(MOCK_WORK_ITEM, 'docketNumber'));
 
     applicationContext.user = {
       name: 'bob',
-      role: User.ROLES.petitionsClerk,
+      role: ROLES.petitionsClerk,
     };
     let error;
     try {

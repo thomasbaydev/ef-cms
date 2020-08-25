@@ -1,12 +1,15 @@
-import { Document } from '../../../../shared/src/business/entities/Document';
+import { DOCUMENT_EXTERNAL_CATEGORIES_MAP } from '../../../../shared/src/business/entities/EntityConstants';
 import { MOCK_CASE } from '../../../../shared/src/test/mockCase';
 import { applicationContext } from '../../applicationContext';
+import { cloneDeep } from 'lodash';
 import { runCompute } from 'cerebral/test';
 import { selectDocumentTypeHelper as selectDocumentTypeHelperComputed } from './selectDocumentTypeHelper';
 import { withAppContextDecorator } from '../../withAppContext';
 
+const CATEGORY_MAP = cloneDeep(DOCUMENT_EXTERNAL_CATEGORIES_MAP); // end-around deep-freeze of constants for purposes of test
+
 // external filing events don't currently contain Nonstandard I, Nonstandard J -- but if they did ...
-Document.CATEGORY_MAP['Miscellaneous'].push({
+CATEGORY_MAP['Miscellaneous'].push({
   category: 'Miscellaneous',
   documentTitle: '[First, Second, etc.] Something to [anything]',
   documentType: 'Something [anything]',
@@ -18,10 +21,10 @@ Document.CATEGORY_MAP['Miscellaneous'].push({
   scenario: 'Nonstandard I',
 });
 
-Document.CATEGORY_MAP['Decision'].push({
+CATEGORY_MAP['Decision'].push({
   category: 'Decision',
   documentTitle: 'Stipulated Decision Entered [judge] [anything]',
-  documentType: 'Stipulated Decision Entered',
+  documentType: 'Stipulated Decision',
   eventCode: 'SDEC',
   labelFreeText: "Judge's Name",
   labelFreeText2: 'Decision Notes',
@@ -37,7 +40,7 @@ const selectDocumentTypeHelper = withAppContextDecorator(
     getConstants: () => {
       return {
         ...applicationContext.getConstants(),
-        CATEGORY_MAP: Document.CATEGORY_MAP,
+        CATEGORY_MAP,
       };
     },
   },
@@ -100,9 +103,10 @@ describe('selectDocumentTypeHelper', () => {
             documentTitle: 'Petition',
             documentType: 'Petition',
             eventCode: 'P',
+            filedBy: 'Test Petitioner',
+            isFileAttached: true,
             processingStatus: 'pending',
             userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
-            workItems: [],
           },
           {
             createdAt: '2018-11-21T20:49:28.192Z',
@@ -111,9 +115,10 @@ describe('selectDocumentTypeHelper', () => {
             documentTitle: 'Answer',
             documentType: 'Answer',
             eventCode: 'A',
+            filedBy: 'Test Petitioner',
+            isFileAttached: true,
             processingStatus: 'pending',
             userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
-            workItems: [],
           },
           {
             createdAt: '2018-11-21T20:49:28.192Z',
@@ -122,9 +127,10 @@ describe('selectDocumentTypeHelper', () => {
             documentTitle: 'Proposed Stipulated Decision',
             documentType: 'Proposed Stipulated Decision',
             eventCode: 'PSDE',
+            filedBy: 'Test Petitioner',
+            isFileAttached: true,
             processingStatus: 'pending',
             userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
-            workItems: [],
           },
         ],
         showNonstandardForm: true,
@@ -169,9 +175,10 @@ describe('selectDocumentTypeHelper', () => {
             documentTitle: 'Petition',
             documentType: 'Petition',
             eventCode: 'P',
+            filedBy: 'Test Petitioner',
+            isFileAttached: true,
             processingStatus: 'pending',
             userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
-            workItems: [],
           },
           {
             createdAt: '2018-11-21T20:49:28.192Z',
@@ -180,9 +187,10 @@ describe('selectDocumentTypeHelper', () => {
             documentTitle: 'Answer',
             documentType: 'Answer',
             eventCode: 'A',
+            filedBy: 'Test Petitioner',
+            isFileAttached: true,
             processingStatus: 'pending',
             userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
-            workItems: [],
           },
           {
             createdAt: '2018-11-21T20:49:28.192Z',
@@ -191,9 +199,10 @@ describe('selectDocumentTypeHelper', () => {
             documentTitle: 'Proposed Stipulated Decision',
             documentType: 'Proposed Stipulated Decision',
             eventCode: 'PSDE',
+            filedBy: 'Test Petitioner',
+            isFileAttached: true,
             processingStatus: 'pending',
             userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
-            workItems: [],
           },
         ],
         showNonstandardForm: true,
@@ -223,9 +232,10 @@ describe('selectDocumentTypeHelper', () => {
             documentTitle: 'Petition',
             documentType: 'Petition',
             eventCode: 'P',
+            filedBy: 'Test Petitioner',
+            isFileAttached: true,
             processingStatus: 'pending',
             userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
-            workItems: [],
           },
           {
             createdAt: '2018-11-21T20:49:28.192Z',
@@ -234,9 +244,10 @@ describe('selectDocumentTypeHelper', () => {
             documentTitle: 'Answer',
             documentType: 'Answer',
             eventCode: 'A',
+            filedBy: 'Test Petitioner',
+            isFileAttached: true,
             processingStatus: 'pending',
             userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
-            workItems: [],
           },
           {
             createdAt: '2018-11-21T20:49:28.192Z',
@@ -245,9 +256,10 @@ describe('selectDocumentTypeHelper', () => {
             documentTitle: 'Proposed Stipulated Decision',
             documentType: 'Proposed Stipulated Decision',
             eventCode: 'PSDE',
+            filedBy: 'Test Petitioner',
+            isFileAttached: true,
             processingStatus: 'pending',
             userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
-            workItems: [],
           },
         ],
         showDateFields: true,
@@ -295,9 +307,10 @@ describe('selectDocumentTypeHelper', () => {
             documentTitle: 'Petition',
             documentType: 'Petition',
             eventCode: 'P',
+            filedBy: 'Test Petitioner',
+            isFileAttached: true,
             processingStatus: 'pending',
             userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
-            workItems: [],
           },
           {
             createdAt: '2018-11-21T20:49:28.192Z',
@@ -306,9 +319,10 @@ describe('selectDocumentTypeHelper', () => {
             documentTitle: 'Answer',
             documentType: 'Answer',
             eventCode: 'A',
+            filedBy: 'Test Petitioner',
+            isFileAttached: true,
             processingStatus: 'pending',
             userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
-            workItems: [],
           },
           {
             createdAt: '2018-11-21T20:49:28.192Z',
@@ -317,9 +331,10 @@ describe('selectDocumentTypeHelper', () => {
             documentTitle: 'Proposed Stipulated Decision',
             documentType: 'Proposed Stipulated Decision',
             eventCode: 'PSDE',
+            filedBy: 'Test Petitioner',
+            isFileAttached: true,
             processingStatus: 'pending',
             userId: '7805d1ab-18d0-43ec-bafb-654e83405416',
-            workItems: [],
           },
         ],
         showNonstandardForm: true,
@@ -383,7 +398,7 @@ describe('selectDocumentTypeHelper', () => {
   it('should return correct data for Nonstandard J document scenario', () => {
     state.form = {
       category: 'Decision',
-      documentType: 'Stipulated Decision Entered',
+      documentType: 'Stipulated Decision',
     };
     const result = runCompute(selectDocumentTypeHelper, {
       state,

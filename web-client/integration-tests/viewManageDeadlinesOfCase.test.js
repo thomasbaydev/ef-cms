@@ -1,9 +1,4 @@
-import { captureCreatedCase } from './journey/captureCreatedCase';
-import { fakeFile, loginAs, setupTest } from './helpers';
-import { petitionerChoosesCaseType } from './journey/petitionerChoosesCaseType';
-import { petitionerChoosesProcedureType } from './journey/petitionerChoosesProcedureType';
-import { petitionerCreatesNewCase } from './journey/petitionerCreatesNewCase';
-import { petitionerViewsDashboard } from './journey/petitionerViewsDashboard';
+import { loginAs, setupTest, uploadPetition } from './helpers';
 import { petitionsClerkCreatesACaseDeadline } from './journey/petitionsClerkCreatesACaseDeadline';
 import { petitionsClerkDeletesCaseDeadline } from './journey/petitionsClerkDeletesCaseDeadline';
 import { petitionsClerkEditsCaseDeadline } from './journey/petitionsClerkEditsCaseDeadline';
@@ -18,49 +13,47 @@ describe('View and manage the deadlines of a case', () => {
     jest.setTimeout(30000);
   });
 
-  const createdIds = [];
-
   describe('Create a case', () => {
-    loginAs(test, 'petitioner');
-    petitionerChoosesProcedureType(test);
-    petitionerChoosesCaseType(test);
-    petitionerCreatesNewCase(test, fakeFile);
-    petitionerViewsDashboard(test);
-    captureCreatedCase(test, createdIds);
+    loginAs(test, 'petitioner@example.com');
+    it('login as a petitioner and create a case', async () => {
+      const caseDetail = await uploadPetition(test);
+      expect(caseDetail.docketNumber).toBeDefined();
+      test.docketNumber = caseDetail.docketNumber;
+    });
   });
 
   describe('View a case with no deadlines', () => {
-    loginAs(test, 'petitionsclerk');
+    loginAs(test, 'petitionsclerk@example.com');
     petitionsClerkViewsCaseWithNoDeadlines(test);
   });
 
   describe('Create a case deadline', () => {
-    loginAs(test, 'petitionsclerk');
+    loginAs(test, 'petitionsclerk@example.com');
     petitionsClerkCreatesACaseDeadline(test);
   });
 
   describe('View a case deadline list on case', () => {
-    loginAs(test, 'petitionsclerk');
+    loginAs(test, 'petitionsclerk@example.com');
     petitionsClerkViewCaseDeadline(test);
   });
 
   describe('Edit a case deadline on case', () => {
-    loginAs(test, 'petitionsclerk');
+    loginAs(test, 'petitionsclerk@example.com');
     petitionsClerkEditsCaseDeadline(test);
   });
 
   describe('Delete a case deadline on case', () => {
-    loginAs(test, 'petitionsclerk');
+    loginAs(test, 'petitionsclerk@example.com');
     petitionsClerkDeletesCaseDeadline(test);
   });
 
   describe('View a case with no deadlines', () => {
-    loginAs(test, 'petitionsclerk');
+    loginAs(test, 'petitionsclerk@example.com');
     petitionsClerkViewsCaseWithNoDeadlines(test);
   });
 
   describe('View the deadlines report', () => {
-    loginAs(test, 'petitionsclerk');
+    loginAs(test, 'petitionsclerk@example.com');
     petitionsClerkViewsDeadlineReport(test);
   });
 });

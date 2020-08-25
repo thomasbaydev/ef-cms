@@ -3,6 +3,7 @@ const {
 } = require('../../test/createTestApplicationContext');
 const { deleteCaseNoteInteractor } = require('./deleteCaseNoteInteractor');
 const { MOCK_CASE } = require('../../../test/mockCase');
+const { ROLES } = require('../../entities/EntityConstants');
 const { UnauthorizedError } = require('../../../errors/errors');
 const { User } = require('../../entities/User');
 
@@ -14,7 +15,7 @@ describe('deleteCaseNoteInteractor', () => {
     try {
       await deleteCaseNoteInteractor({
         applicationContext,
-        caseId: '6805d1ab-18d0-43ec-bafb-654e83405416',
+        docketNumber: MOCK_CASE.docketNumber,
       });
     } catch (err) {
       error = err;
@@ -26,7 +27,7 @@ describe('deleteCaseNoteInteractor', () => {
   it('deletes a procedural note', async () => {
     const mockUser = new User({
       name: 'Judge Armen',
-      role: User.ROLES.judge,
+      role: ROLES.judge,
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
 
@@ -34,7 +35,7 @@ describe('deleteCaseNoteInteractor', () => {
 
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockResolvedValue({
+      .getCaseByDocketNumber.mockResolvedValue({
         ...MOCK_CASE,
         caseNote: 'My Procedural Note',
       });
@@ -52,7 +53,7 @@ describe('deleteCaseNoteInteractor', () => {
     try {
       result = await deleteCaseNoteInteractor({
         applicationContext,
-        caseId: '6805d1ab-18d0-43ec-bafb-654e83405416',
+        docketNumber: MOCK_CASE.docketNumber,
       });
     } catch (e) {
       error = e;
@@ -61,7 +62,7 @@ describe('deleteCaseNoteInteractor', () => {
     expect(error).toBeUndefined();
     expect(result).toBeDefined();
     expect(
-      applicationContext.getPersistenceGateway().getCaseByCaseId,
+      applicationContext.getPersistenceGateway().getCaseByDocketNumber,
     ).toHaveBeenCalled();
     expect(
       applicationContext.getPersistenceGateway().updateCase,

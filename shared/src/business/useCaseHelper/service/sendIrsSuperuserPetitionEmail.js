@@ -55,13 +55,14 @@ exports.sendIrsSuperuserPetitionEmail = async ({
     .formatDateString(filingDate, 'MM/DD/YY');
 
   const docketNumberWithSuffix = `${docketNumber}${docketNumberSuffix || ''}`;
+  const formattedMailingDate =
+    mailingDate || `Electronically Filed ${filingDateFormatted}`;
 
   const templateHtml = reactTemplateGenerator({
     componentName: 'PetitionService',
     data: {
       caseDetail: {
         caseTitle: Case.getCaseTitle(caseCaption),
-
         docketNumber: docketNumberWithSuffix,
         trialLocation: preferredTrialCity || 'No requested place of trial',
       },
@@ -74,13 +75,13 @@ exports.sendIrsSuperuserPetitionEmail = async ({
         documentTitle: documentType,
         eventCode,
         filingDate: filingDateFormatted,
-        mailingDate,
+        formattedMailingDate,
         servedAtFormatted: applicationContext
           .getUtilities()
           .formatDateString(servedAt, 'DATE_TIME_TZ'),
       },
       practitioners: privatePractitioners,
-      taxCourtLoginUrl: `https://ui-${process.env.STAGE}.${process.env.EFCMS_DOMAIN}`,
+      taxCourtLoginUrl: `https://app.${process.env.EFCMS_DOMAIN}`,
     },
   });
 

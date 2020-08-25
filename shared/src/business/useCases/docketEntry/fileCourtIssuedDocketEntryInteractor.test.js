@@ -2,35 +2,40 @@ const {
   applicationContext,
 } = require('../../test/createTestApplicationContext');
 const {
+  AUTOMATIC_BLOCKED_REASONS,
+  CASE_TYPES_MAP,
+  COUNTRY_TYPES,
+  PARTY_TYPES,
+  ROLES,
+  TRANSCRIPT_EVENT_CODE,
+} = require('../../entities/EntityConstants');
+const {
   fileCourtIssuedDocketEntryInteractor,
 } = require('./fileCourtIssuedDocketEntryInteractor');
-const { Case } = require('../../entities/cases/Case');
-const { ContactFactory } = require('../../entities/contacts/ContactFactory');
-const { User } = require('../../entities/User');
 
 describe('fileCourtIssuedDocketEntryInteractor', () => {
   let caseRecord;
+  const mockUserId = applicationContext.getUniqueId();
 
   beforeEach(() => {
     applicationContext.getPersistenceGateway().getUserById.mockReturnValue({
       name: 'Emmett Lathrop "Doc" Brown, Ph.D.',
-      role: User.ROLES.docketClerk,
+      role: ROLES.docketClerk,
       section: 'docket',
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
 
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(caseRecord);
+      .getCaseByDocketNumber.mockReturnValue(caseRecord);
 
     caseRecord = {
       caseCaption: 'Caption',
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-      caseType: 'Deficiency',
+      caseType: CASE_TYPES_MAP.deficiency,
       contactPrimary: {
         address1: '123 Main St',
         city: 'Somewhere',
-        countryType: 'domestic',
+        countryType: COUNTRY_TYPES.DOMESTIC,
         email: 'fieri@example.com',
         name: 'Guy Fieri',
         phone: '1234567890',
@@ -55,7 +60,8 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
           documentTitle: 'Answer',
           documentType: 'Answer',
           eventCode: 'A',
-          userId: 'e3bb51b1-bb93-494b-8a20-8bce8327fd99',
+          filedBy: 'Test Petitioner',
+          userId: mockUserId,
         },
         {
           docketNumber: '45678-18',
@@ -63,7 +69,8 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
           documentTitle: 'Answer',
           documentType: 'Answer',
           eventCode: 'A',
-          userId: 'e3bb51b1-bb93-494b-8a20-8bce8327fd99',
+          filedBy: 'Test Petitioner',
+          userId: mockUserId,
         },
         {
           docketNumber: '45678-18',
@@ -71,7 +78,8 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
           documentTitle: 'Answer',
           documentType: 'Answer',
           eventCode: 'A',
-          userId: 'e3bb51b1-bb93-494b-8a20-8bce8327fd99',
+          filedBy: 'Test Petitioner',
+          userId: mockUserId,
         },
         {
           docketNumber: '45678-18',
@@ -79,7 +87,10 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
           documentTitle: 'Order',
           documentType: 'Order',
           eventCode: 'O',
-          userId: 'e3bb51b1-bb93-494b-8a20-8bce8327fd99',
+          signedAt: '2019-03-01T21:40:46.415Z',
+          signedByUserId: mockUserId,
+          signedJudgeName: 'Dredd',
+          userId: mockUserId,
         },
         {
           docketNumber: '45678-18',
@@ -87,22 +98,25 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
           documentTitle: 'Order to Show Cause',
           documentType: 'Order to Show Cause',
           eventCode: 'OSC',
-          userId: 'e3bb51b1-bb93-494b-8a20-8bce8327fd99',
+          signedAt: '2019-03-01T21:40:46.415Z',
+          signedByUserId: mockUserId,
+          signedJudgeName: 'Dredd',
+          userId: mockUserId,
         },
         {
           docketNumber: '45678-18',
           documentId: '7f61161c-ede8-43ba-8fab-69e15d057012',
           documentTitle: 'Transcript of [anything] on [date]',
-          documentType: 'TRAN - Transcript',
-          eventCode: 'TRAN',
-          userId: 'e3bb51b1-bb93-494b-8a20-8bce8327fd99',
+          documentType: 'Transcript',
+          eventCode: TRANSCRIPT_EVENT_CODE,
+          userId: mockUserId,
         },
       ],
       filingType: 'Myself',
-      partyType: ContactFactory.PARTY_TYPES.petitioner,
+      partyType: PARTY_TYPES.petitioner,
       preferredTrialCity: 'Fresno, California',
       procedureType: 'Regular',
-      role: User.ROLES.petitioner,
+      role: ROLES.petitioner,
       userId: '8100e22a-c7f2-4574-b4f6-eb092fca9f35',
     };
   });
@@ -114,7 +128,7 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
       fileCourtIssuedDocketEntryInteractor({
         applicationContext,
         documentMeta: {
-          caseId: caseRecord.caseId,
+          docketNumber: caseRecord.docketNumber,
           documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bc',
           documentType: 'Memorandum in Support',
         },
@@ -125,7 +139,7 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
   it('should throw an error if the document is not found on the case', async () => {
     applicationContext.getCurrentUser.mockReturnValue({
       name: 'Emmett Lathrop "Doc" Brown, Ph.D.',
-      role: User.ROLES.docketClerk,
+      role: ROLES.docketClerk,
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
 
@@ -133,7 +147,7 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
       fileCourtIssuedDocketEntryInteractor({
         applicationContext,
         documentMeta: {
-          caseId: caseRecord.caseId,
+          docketNumber: caseRecord.docketNumber,
           documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bd',
           documentType: 'Order',
         },
@@ -144,7 +158,7 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
   it('should call countPagesInDocument, updateCase, createUserInboxRecord, and createSectionInboxRecord', async () => {
     applicationContext.getCurrentUser.mockReturnValue({
       name: 'Emmett Lathrop "Doc" Brown, Ph.D.',
-      role: User.ROLES.docketClerk,
+      role: ROLES.docketClerk,
       section: 'docket',
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
@@ -152,7 +166,7 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
     await fileCourtIssuedDocketEntryInteractor({
       applicationContext,
       documentMeta: {
-        caseId: caseRecord.caseId,
+        docketNumber: caseRecord.docketNumber,
         documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335ba',
         documentTitle: 'Order',
         documentType: 'Order',
@@ -175,7 +189,7 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
   it('should call updateCase and set the case as automatic blocked if the document is a tracked document', async () => {
     applicationContext.getCurrentUser.mockReturnValue({
       name: 'Emmett Lathrop "Doc" Brown, Ph.D.',
-      role: User.ROLES.docketClerk,
+      role: ROLES.docketClerk,
       section: 'docket',
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
@@ -183,7 +197,7 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
     await fileCourtIssuedDocketEntryInteractor({
       applicationContext,
       documentMeta: {
-        caseId: caseRecord.caseId,
+        docketNumber: caseRecord.docketNumber,
         documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bc',
         documentTitle: 'Order to Show Cause',
         documentType: 'Order to Show Cause',
@@ -201,7 +215,7 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
     ).toMatchObject({
       automaticBlocked: true,
       automaticBlockedDate: expect.anything(),
-      automaticBlockedReason: Case.AUTOMATIC_BLOCKED_REASONS.pending,
+      automaticBlockedReason: AUTOMATIC_BLOCKED_REASONS.pending,
     });
     expect(
       applicationContext.getPersistenceGateway()
@@ -212,14 +226,14 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
   it('should call updateCase and set the case as automatic blocked with deadlines if the document is a tracked document and the case has deadlines', async () => {
     applicationContext
       .getPersistenceGateway()
-      .getCaseDeadlinesByCaseId.mockReturnValue([
+      .getCaseDeadlinesByDocketNumber.mockReturnValue([
         {
           deadlineDate: 'sometime',
         },
       ]);
     applicationContext.getCurrentUser.mockReturnValue({
       name: 'Emmett Lathrop "Doc" Brown, Ph.D.',
-      role: User.ROLES.docketClerk,
+      role: ROLES.docketClerk,
       section: 'docket',
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
@@ -227,7 +241,7 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
     await fileCourtIssuedDocketEntryInteractor({
       applicationContext,
       documentMeta: {
-        caseId: caseRecord.caseId,
+        docketNumber: caseRecord.docketNumber,
         documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bc',
         documentTitle: 'Order to Show Cause',
         documentType: 'Order to Show Cause',
@@ -245,7 +259,7 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
     ).toMatchObject({
       automaticBlocked: true,
       automaticBlockedDate: expect.anything(),
-      automaticBlockedReason: Case.AUTOMATIC_BLOCKED_REASONS.pendingAndDueDate,
+      automaticBlockedReason: AUTOMATIC_BLOCKED_REASONS.pendingAndDueDate,
     });
     expect(
       applicationContext.getPersistenceGateway()
@@ -256,7 +270,7 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
   it('should set secondaryDate on the created document if the eventCode is TRAN', async () => {
     applicationContext.getCurrentUser.mockReturnValue({
       name: 'Emmett Lathrop "Doc" Brown, Ph.D.',
-      role: User.ROLES.docketClerk,
+      role: ROLES.docketClerk,
       section: 'docket',
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
@@ -264,12 +278,12 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
     await fileCourtIssuedDocketEntryInteractor({
       applicationContext,
       documentMeta: {
-        caseId: caseRecord.caseId,
         date: '2019-03-01T21:40:46.415Z',
+        docketNumber: caseRecord.docketNumber,
         documentId: '7f61161c-ede8-43ba-8fab-69e15d057012',
         documentTitle: 'Transcript of [anything] on [date]',
-        documentType: 'TRAN - Transcript',
-        eventCode: 'TRAN',
+        documentType: 'Transcript',
+        eventCode: TRANSCRIPT_EVENT_CODE,
         freeText: 'Dogs',
         generatedDocumentTitle: 'Transcript of Dogs on 03-01-19',
       },
@@ -279,10 +293,41 @@ describe('fileCourtIssuedDocketEntryInteractor', () => {
       applicationContext.getPersistenceGateway().updateCase,
     ).toHaveBeenCalled();
     expect(
+      applicationContext.getPersistenceGateway().putWorkItemInUsersOutbox,
+    ).toHaveBeenCalled();
+    expect(
       applicationContext.getPersistenceGateway().updateCase.mock.calls[0][0]
         .caseToUpdate.documents[5],
     ).toMatchObject({
       secondaryDate: '2019-03-01T21:40:46.415Z',
+    });
+  });
+
+  it('should set isDraft to false on a document when creating a court issued docket entry', async () => {
+    await fileCourtIssuedDocketEntryInteractor({
+      applicationContext,
+      documentMeta: {
+        date: '2019-03-01T21:40:46.415Z',
+        docketNumber: caseRecord.docketNumber,
+        documentId: '7f61161c-ede8-43ba-8fab-69e15d057012',
+        documentTitle: 'Transcript of [anything] on [date]',
+        documentType: 'Transcript',
+        eventCode: TRANSCRIPT_EVENT_CODE,
+        freeText: 'Dogs',
+        generatedDocumentTitle: 'Transcript of Dogs on 03-01-19',
+        isDraft: true,
+      },
+    });
+
+    const lastDocumentIndex =
+      applicationContext.getPersistenceGateway().updateCase.mock.calls[0][0]
+        .caseToUpdate.documents.length - 1;
+
+    const newlyFiledDocument = applicationContext.getPersistenceGateway()
+      .updateCase.mock.calls[0][0].caseToUpdate.documents[lastDocumentIndex];
+
+    expect(newlyFiledDocument).toMatchObject({
+      isDraft: false,
     });
   });
 });

@@ -1,17 +1,21 @@
 /* eslint-disable jest/no-export */
-import { CerebralTest } from 'cerebral/test';
+import { CerebralTest, runCompute } from 'cerebral/test';
+import { DynamoDB } from 'aws-sdk';
 import { JSDOM } from 'jsdom';
 import { applicationContext } from '../src/applicationContext';
 import {
   back,
   createObjectURL,
   externalRoute,
-  openInNewTab,
   revokeObjectURL,
   router,
 } from '../src/router';
-
-import { DynamoDB } from 'aws-sdk';
+import {
+  fakeData,
+  getFakeFile,
+} from '../../shared/src/business/test/createTestApplicationContext';
+import { formattedCaseDetail as formattedCaseDetailComputed } from '../src/presenter/computeds/formattedCaseDetail';
+import { formattedCaseMessages as formattedCaseMessagesComputed } from '../src/presenter/computeds/formattedCaseMessages';
 import { formattedWorkQueue as formattedWorkQueueComputed } from '../src/presenter/computeds/formattedWorkQueue';
 import { getScannerInterface } from '../../shared/src/persistence/dynamsoft/getScannerMockInterface';
 import {
@@ -20,22 +24,26 @@ import {
 } from '../../shared/src/business/useCases/scannerMockFiles';
 import { isFunction, mapValues } from 'lodash';
 import { presenter } from '../src/presenter/presenter';
-import { runCompute } from 'cerebral/test';
 import { socketProvider } from '../src/providers/socket';
 import { socketRouter } from '../src/providers/socketRouter';
 import { userMap } from '../../shared/src/test/mockUserTokenMap';
-import jwt from 'jsonwebtoken';
-
 import { withAppContextDecorator } from '../src/withAppContext';
-import axios from 'axios';
-
 import { workQueueHelper as workQueueHelperComputed } from '../src/presenter/computeds/workQueueHelper';
 import FormData from 'form-data';
-const {
-  ContactFactory,
-} = require('../../shared/src/business/entities/contacts/ContactFactory');
+import axios from 'axios';
+import jwt from 'jsonwebtoken';
+import queryString from 'query-string';
+import riotRoute from 'riot-route';
 
+const { CASE_TYPES_MAP, PARTY_TYPES } = applicationContext.getConstants();
+
+const formattedCaseDetail = withAppContextDecorator(
+  formattedCaseDetailComputed,
+);
 const formattedWorkQueue = withAppContextDecorator(formattedWorkQueueComputed);
+const formattedCaseMessages = withAppContextDecorator(
+  formattedCaseMessagesComputed,
+);
 const workQueueHelper = withAppContextDecorator(workQueueHelperComputed);
 
 Object.assign(applicationContext, {
@@ -51,24 +59,34 @@ Object.assign(applicationContext, {
   getScanner: getScannerInterface,
 });
 
-const fakeData =
-  'JVBERi0xLjEKJcKlwrHDqwoKMSAwIG9iagogIDw8IC9UeXBlIC9DYXRhbG9nCiAgICAgL1BhZ2VzIDIgMCBSCiAgPj4KZW5kb2JqCgoyIDAgb2JqCiAgPDwgL1R5cGUgL1BhZ2VzCiAgICAgL0tpZHMgWzMgMCBSXQogICAgIC9Db3VudCAxCiAgICAgL01lZGlhQm94IFswIDAgMzAwIDE0NF0KICA+PgplbmRvYmoKCjMgMCBvYmoKICA8PCAgL1R5cGUgL1BhZ2UKICAgICAgL1BhcmVudCAyIDAgUgogICAgICAvUmVzb3VyY2VzCiAgICAgICA8PCAvRm9udAogICAgICAgICAgIDw8IC9GMQogICAgICAgICAgICAgICA8PCAvVHlwZSAvRm9udAogICAgICAgICAgICAgICAgICAvU3VidHlwZSAvVHlwZTEKICAgICAgICAgICAgICAgICAgL0Jhc2VGb250IC9UaW1lcy1Sb21hbgogICAgICAgICAgICAgICA+PgogICAgICAgICAgID4+CiAgICAgICA+PgogICAgICAvQ29udGVudHMgNCAwIFIKICA+PgplbmRvYmoKCjQgMCBvYmoKICA8PCAvTGVuZ3RoIDg0ID4+CnN0cmVhbQogIEJUCiAgICAvRjEgMTggVGYKICAgIDUgODAgVGQKICAgIChDb25ncmF0aW9ucywgeW91IGZvdW5kIHRoZSBFYXN0ZXIgRWdnLikgVGoKICBFVAplbmRzdHJlYW0KZW5kb2JqCgp4cmVmCjAgNQowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTggMDAwMDAgbiAKMDAwMDAwMDA3NyAwMDAwMCBuIAowMDAwMDAwMTc4IDAwMDAwIG4gCjAwMDAwMDA0NTcgMDAwMDAgbiAKdHJhaWxlcgogIDw8ICAvUm9vdCAxIDAgUgogICAgICAvU2l6ZSA1CiAgPj4Kc3RhcnR4cmVmCjU2NQolJUVPRgo=';
 export const fakeFile = (() => {
-  const myFile = new Buffer.from(fakeData, 'base64', {
-    type: 'application/pdf',
-  });
-  myFile.name = 'fakeFile.pdf';
-  myFile.size = myFile.length;
-  return myFile;
+  return getFakeFile();
 })();
 
 export const getFormattedDocumentQCMyInbox = async test => {
   await test.runSequence('chooseWorkQueueSequence', {
     box: 'inbox',
     queue: 'my',
-    workQueueIsInternal: false,
   });
   return runCompute(formattedWorkQueue, {
+    state: test.getState(),
+  });
+};
+
+export const getFormattedCaseDetailForTest = async test => {
+  await test.runSequence('gotoCaseDetailSequence', {
+    docketNumber: test.docketNumber,
+  });
+  return runCompute(formattedCaseDetail, {
+    state: test.getState(),
+  });
+};
+
+export const getCaseMessagesForCase = async test => {
+  await test.runSequence('gotoCaseDetailSequence', {
+    docketNumber: test.docketNumber,
+  });
+  return runCompute(formattedCaseMessages, {
     state: test.getState(),
   });
 };
@@ -106,7 +124,6 @@ export const getFormattedDocumentQCSectionInbox = async test => {
   await test.runSequence('chooseWorkQueueSequence', {
     box: 'inbox',
     queue: 'section',
-    workQueueIsInternal: false,
   });
   return runCompute(formattedWorkQueue, {
     state: test.getState(),
@@ -117,7 +134,6 @@ export const getFormattedDocumentQCMyOutbox = async test => {
   await test.runSequence('chooseWorkQueueSequence', {
     box: 'outbox',
     queue: 'my',
-    workQueueIsInternal: false,
   });
   return runCompute(formattedWorkQueue, {
     state: test.getState(),
@@ -128,43 +144,10 @@ export const getFormattedDocumentQCSectionOutbox = async test => {
   await test.runSequence('chooseWorkQueueSequence', {
     box: 'outbox',
     queue: 'section',
-    workQueueIsInternal: false,
   });
   return runCompute(formattedWorkQueue, {
     state: test.getState(),
   });
-};
-
-export const signProposedStipulatedDecision = async (test, stipDecision) => {
-  await viewDocumentDetailMessage({
-    docketNumber: stipDecision.docketNumber,
-    documentId: stipDecision.document.documentId,
-    messageId: stipDecision.currentMessage.messageId,
-    test,
-    workItemIdToMarkAsRead: stipDecision.workItemId,
-  });
-
-  await test.runSequence('gotoSignPDFDocumentSequence', {
-    docketNumber: stipDecision.docketNumber,
-    documentId: stipDecision.document.documentId,
-    pageNumber: 1,
-  });
-
-  await test.runSequence('setPDFSignatureDataSequence', {
-    signatureData: {
-      scale: 1,
-      x: 100,
-      y: 100,
-    },
-  });
-
-  test.setState('form', {
-    assigneeId: '1805d1ab-18d0-43ec-bafb-654e83405416',
-    message: 'serve this please!',
-    section: 'docket',
-  });
-
-  await test.runSequence('completeDocumentSigningSequence');
 };
 
 export const serveDocument = async ({ docketNumber, documentId, test }) => {
@@ -174,74 +157,41 @@ export const serveDocument = async ({ docketNumber, documentId, test }) => {
   });
 
   await test.runSequence('openConfirmInitiateServiceModalSequence');
-  await test.runSequence('serveCourtIssuedDocumentSequence');
+  await test.runSequence('serveCourtIssuedDocumentFromDocketEntrySequence');
 };
 
 export const createCourtIssuedDocketEntry = async ({
   docketNumber,
   documentId,
+  eventCode,
   test,
+  trialLocation,
 }) => {
-  await test.runSequence('gotoDocumentDetailSequence', {
-    docketNumber,
-    documentId,
-  });
-
   await test.runSequence('gotoAddCourtIssuedDocketEntrySequence', {
     docketNumber,
     documentId,
   });
+
+  if (eventCode) {
+    await test.runSequence('updateCourtIssuedDocketEntryFormValueSequence', {
+      key: 'eventCode',
+      value: eventCode,
+    });
+  }
 
   await test.runSequence('updateCourtIssuedDocketEntryFormValueSequence', {
     key: 'judge',
     value: 'Judge Buch',
   });
 
+  if (trialLocation) {
+    await test.runSequence('updateCourtIssuedDocketEntryFormValueSequence', {
+      key: 'trialLocation',
+      value: trialLocation,
+    });
+  }
+
   await test.runSequence('submitCourtIssuedDocketEntrySequence');
-};
-
-export const getFormattedMyInbox = async test => {
-  await test.runSequence('chooseWorkQueueSequence', {
-    box: 'inbox',
-    queue: 'my',
-    workQueueIsInternal: true,
-  });
-  return runCompute(formattedWorkQueue, {
-    state: test.getState(),
-  });
-};
-
-export const getFormattedSectionInbox = async test => {
-  await test.runSequence('chooseWorkQueueSequence', {
-    box: 'inbox',
-    queue: 'section',
-    workQueueIsInternal: true,
-  });
-  return runCompute(formattedWorkQueue, {
-    state: test.getState(),
-  });
-};
-
-export const getFormattedMyOutbox = async test => {
-  await test.runSequence('chooseWorkQueueSequence', {
-    box: 'outbox',
-    queue: 'my',
-    workQueueIsInternal: true,
-  });
-  return runCompute(formattedWorkQueue, {
-    state: test.getState(),
-  });
-};
-
-export const getFormattedSectionOutbox = async test => {
-  await test.runSequence('chooseWorkQueueSequence', {
-    box: 'outbox',
-    queue: 'section',
-    workQueueIsInternal: true,
-  });
-  return runCompute(formattedWorkQueue, {
-    state: test.getState(),
-  });
 };
 
 export const getInboxCount = test => {
@@ -250,8 +200,8 @@ export const getInboxCount = test => {
   }).inboxCount;
 };
 
-export const findWorkItemByCaseId = (queue, caseId) => {
-  return queue.find(workItem => workItem.caseId === caseId);
+export const findWorkItemByDocketNumber = (queue, docketNumber) => {
+  return queue.find(workItem => workItem.docketNumber === docketNumber);
 };
 
 export const getNotifications = test => {
@@ -296,7 +246,6 @@ export const uploadExternalDecisionDocument = async test => {
     primaryDocumentFileSize: 115022,
     scenario: 'Standard',
     searchError: false,
-    secondaryDocument: {},
     serviceDate: null,
     supportingDocument: null,
     supportingDocumentFile: null,
@@ -323,58 +272,33 @@ export const uploadProposedStipulatedDecision = async test => {
     privatePractitioners: [],
     scenario: 'Standard',
     searchError: false,
-    secondaryDocument: { certificateOfServiceDate: null },
-    serviceDate: null,
   });
   await test.runSequence('submitExternalDocumentSequence');
-};
-
-export const createMessage = async ({ assigneeId, message, test }) => {
-  test.setState('form', {
-    assigneeId,
-    message,
-    section: 'docket',
-  });
-
-  await test.runSequence('createWorkItemSequence');
-};
-
-export const forwardWorkItem = async (test, to, workItemId, message) => {
-  let assigneeId;
-  if (to === 'docketclerk1') {
-    assigneeId = '2805d1ab-18d0-43ec-bafb-654e83405416';
-  }
-  test.setState('form', {
-    [workItemId]: {
-      assigneeId: assigneeId,
-      forwardMessage: message,
-      section: 'petitions',
-    },
-  });
-
-  await test.runSequence('submitForwardSequence', {
-    workItemId,
-  });
 };
 
 export const uploadPetition = async (
   test,
   overrides = {},
-  loginUsername = 'petitioner',
+  loginUsername = 'petitioner@example.com',
 ) => {
+  if (!userMap[loginUsername]) {
+    throw new Error(`Unable to log into test as ${loginUsername}`);
+  }
   const user = {
     ...userMap[loginUsername],
     sub: userMap[loginUsername].userId,
   };
 
+  const { COUNTRY_TYPES } = applicationContext.getConstants();
+
   const petitionMetadata = {
-    caseType: overrides.caseType || 'CDP (Lien/Levy)',
+    caseType: overrides.caseType || CASE_TYPES_MAP.cdp,
     contactPrimary: {
       address1: '734 Cowley Parkway',
       address2: 'Cum aut velit volupt',
       address3: 'Et sunt veritatis ei',
       city: 'Et id aut est velit',
-      countryType: 'domestic',
+      countryType: COUNTRY_TYPES.DOMESTIC,
       email: user.email,
       name: 'Mona Schultz',
       phone: '+1 (884) 358-9729',
@@ -384,7 +308,7 @@ export const uploadPetition = async (
     contactSecondary: overrides.contactSecondary || {},
     filingType: 'Myself',
     hasIrsNotice: false,
-    partyType: overrides.partyType || ContactFactory.PARTY_TYPES.petitioner,
+    partyType: overrides.partyType || PARTY_TYPES.petitioner,
     preferredTrialCity: overrides.preferredTrialCity || 'Seattle, Washington',
     procedureType: overrides.procedureType || 'Regular',
   };
@@ -395,19 +319,21 @@ export const uploadPetition = async (
   //create token
   const userToken = jwt.sign(user, 'secret');
 
-  const response = await axios.post(
-    'http://localhost:3002/',
-    {
-      petitionFileId,
-      petitionMetadata,
-      stinFileId,
+  const data = {
+    petitionFileId,
+    petitionMetadata,
+    stinFileId,
+  };
+
+  if (overrides.ownershipDisclosureFileId) {
+    data.ownershipDisclosureFileId = overrides.ownershipDisclosureFileId;
+  }
+
+  const response = await axios.post('http://localhost:4000/cases', data, {
+    headers: {
+      Authorization: `Bearer ${userToken}`,
     },
-    {
-      headers: {
-        Authorization: `Bearer ${userToken}`,
-      },
-    },
-  );
+  });
 
   test.setState('caseDetail', response.data);
 
@@ -455,7 +381,7 @@ export const setupTest = ({ useCases = {} } = {}) => {
     return value;
   });
 
-  presenter.state.baseUrl = process.env.API_URL || 'http://localhost:3000';
+  presenter.state.baseUrl = process.env.API_URL || 'http://localhost:4000';
 
   presenter.providers.applicationContext = applicationContext;
 
@@ -501,6 +427,9 @@ export const setupTest = ({ useCases = {} } = {}) => {
       setItem: () => null,
     },
     location: {},
+    pdfjsObj: {
+      getData: () => Promise.resolve(getFakeFile(true)),
+    },
   };
 
   const originalUseCases = applicationContext.getUseCases();
@@ -508,6 +437,7 @@ export const setupTest = ({ useCases = {} } = {}) => {
     return {
       ...originalUseCases,
       ...useCases,
+      loadPDFForSigningInteractor: () => Promise.resolve(null),
     };
   };
 
@@ -535,7 +465,7 @@ export const setupTest = ({ useCases = {} } = {}) => {
     back,
     createObjectURL,
     externalRoute,
-    openInNewTab,
+    openInNewTab: (routeToGoTo = '/') => gotoRoute(routes, routeToGoTo),
     revokeObjectURL,
     route: (routeToGoTo = '/') => gotoRoute(routes, routeToGoTo),
   };
@@ -560,8 +490,14 @@ export const setupTest = ({ useCases = {} } = {}) => {
   return test;
 };
 
+const mockQuery = routeToGoTo => {
+  const paramsString = routeToGoTo.split('?')[1];
+  return queryString.parse(paramsString);
+};
+
 export const gotoRoute = (routes, routeToGoTo) => {
   for (let route of routes) {
+    // eslint-disable-next-line security/detect-non-literal-regexp
     const regex = new RegExp(
       route.route.replace(/\*/g, '([a-z\\-A-Z0-9]+)').replace(/\.\./g, '(.*)') +
         '$',
@@ -570,6 +506,7 @@ export const gotoRoute = (routes, routeToGoTo) => {
       const match = regex.exec(routeToGoTo);
       if (match != null) {
         const args = match.splice(1);
+        riotRoute.query = () => mockQuery(routeToGoTo);
         return route.cb.call(this, ...args);
       }
       return null;
@@ -584,21 +521,6 @@ export const viewCaseDetail = async ({ docketNumber, test }) => {
   });
 };
 
-export const viewDocumentDetailMessage = async ({
-  docketNumber,
-  documentId,
-  messageId,
-  test,
-  workItemIdToMarkAsRead,
-}) => {
-  await test.runSequence('gotoDocumentDetailSequence', {
-    docketNumber,
-    documentId,
-    messageId,
-    workItemIdToMarkAsRead,
-  });
-};
-
 export const wait = time => {
   return new Promise(resolve => {
     setTimeout(resolve, time);
@@ -609,7 +531,8 @@ export const refreshElasticsearchIndex = async () => {
   // refresh all ES indices:
   // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-refresh.html#refresh-api-all-ex
   await axios.post('http://localhost:9200/_refresh');
-  return await wait(1500);
+  await axios.post('http://localhost:9200/_flush');
+  return await wait(2000);
 };
 
 export const base64ToUInt8Array = b64 => {
@@ -648,5 +571,5 @@ export const getPetitionDocumentForCase = caseDetail => {
 
 export const getPetitionWorkItemForCase = caseDetail => {
   const petitionDocument = getPetitionDocumentForCase(caseDetail);
-  return petitionDocument.workItems[0];
+  return petitionDocument.workItem;
 };

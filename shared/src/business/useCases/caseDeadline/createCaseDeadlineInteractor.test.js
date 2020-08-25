@@ -8,15 +8,16 @@ const {
   MOCK_CASE,
   MOCK_CASE_WITHOUT_PENDING,
 } = require('../../../test/mockCase');
-const { Case } = require('../../entities/cases/Case');
+const { AUTOMATIC_BLOCKED_REASONS } = require('../../entities/EntityConstants');
+const { ROLES } = require('../../entities/EntityConstants');
 const { UnauthorizedError } = require('../../../errors/errors');
 const { User } = require('../../entities/User');
 
 describe('createCaseDeadlineInteractor', () => {
   const mockCaseDeadline = {
-    caseId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     deadlineDate: '2019-03-01T21:42:29.073Z',
     description: 'hello world',
+    docketNumber: '123-19',
   };
   let user;
   let mockCase;
@@ -24,7 +25,7 @@ describe('createCaseDeadlineInteractor', () => {
   beforeEach(() => {
     user = new User({
       name: 'Test Petitionsclerk',
-      role: User.ROLES.petitionsClerk,
+      role: ROLES.petitionsClerk,
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
 
@@ -36,10 +37,12 @@ describe('createCaseDeadlineInteractor', () => {
       .createCaseDeadline.mockImplementation(v => v);
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockImplementation(() => mockCase);
+      .getCaseByDocketNumber.mockImplementation(() => mockCase);
     applicationContext
       .getPersistenceGateway()
-      .getCaseDeadlinesByCaseId.mockReturnValue([{ deadline: 'something' }]);
+      .getCaseDeadlinesByDocketNumber.mockReturnValue([
+        { deadline: 'something' },
+      ]);
   });
 
   it('throws an error if the user is not valid or authorized', async () => {
@@ -68,7 +71,7 @@ describe('createCaseDeadlineInteractor', () => {
     ).toMatchObject({
       automaticBlocked: true,
       automaticBlockedDate: expect.anything(),
-      automaticBlockedReason: Case.AUTOMATIC_BLOCKED_REASONS.dueDate,
+      automaticBlockedReason: AUTOMATIC_BLOCKED_REASONS.dueDate,
     });
     expect(
       applicationContext.getPersistenceGateway()
@@ -92,7 +95,7 @@ describe('createCaseDeadlineInteractor', () => {
     ).toMatchObject({
       automaticBlocked: true,
       automaticBlockedDate: expect.anything(),
-      automaticBlockedReason: Case.AUTOMATIC_BLOCKED_REASONS.pendingAndDueDate,
+      automaticBlockedReason: AUTOMATIC_BLOCKED_REASONS.pendingAndDueDate,
     });
     expect(
       applicationContext.getPersistenceGateway()

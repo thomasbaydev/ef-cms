@@ -1,10 +1,12 @@
 const client = require('../../../../../shared/src/persistence/dynamodbClientService');
-const { getCasesByUser } = require('./getCasesByUser');
-const { User } = require('../../../business/entities/User');
-
 const {
   applicationContext,
 } = require('../../../business/test/createTestApplicationContext');
+const {
+  CASE_STATUS_TYPES,
+  ROLES,
+} = require('../../../business/entities/EntityConstants');
+const { getCasesByUser } = require('./getCasesByUser');
 
 let queryStub = jest.fn().mockReturnValue({
   promise: async () => ({
@@ -18,7 +20,7 @@ applicationContext.getDocumentClient.mockReturnValue({
 });
 
 const user = {
-  role: User.ROLES.petitioner,
+  role: ROLES.petitioner,
   userId: '522573b0-dc40-47f7-96fd-64758da315f5',
 };
 
@@ -28,18 +30,18 @@ describe('getCasesByUser', () => {
       .fn()
       .mockReturnValueOnce([
         {
-          caseId: '123',
-          pk: 'case|123',
-          sk: 'case|123',
-          status: 'New',
+          docketNumber: '123-20',
+          pk: 'case|123-20',
+          sk: 'case|123-20',
+          status: CASE_STATUS_TYPES.new,
         },
       ])
       .mockReturnValueOnce([
         {
-          caseId: '123',
-          pk: 'case|123',
-          sk: 'case|123',
-          status: 'New',
+          docketNumber: '123-20',
+          pk: 'case|123-20',
+          sk: 'case|123-20',
+          status: CASE_STATUS_TYPES.new,
         },
       ]);
   });
@@ -52,26 +54,26 @@ describe('getCasesByUser', () => {
 
     expect(result).toEqual([
       {
-        caseId: '123',
         correspondence: [],
+        docketNumber: '123-20',
         docketRecord: [],
         documents: [],
         irsPractitioners: [],
-        pk: 'case|123',
+        pk: 'case|123-20',
         privatePractitioners: [],
-        sk: 'case|123',
-        status: 'New',
+        sk: 'case|123-20',
+        status: CASE_STATUS_TYPES.new,
       },
     ]);
   });
 
-  it('should attempt to do a query using the found caseIds', async () => {
+  it('should attempt to do a query using the found docketNumbers', async () => {
     await getCasesByUser({
       applicationContext,
       user,
     });
     expect(client.query.mock.calls[1][0].ExpressionAttributeValues).toEqual({
-      ':pk': 'case|123',
+      ':pk': 'case|123-20',
     });
   });
 });

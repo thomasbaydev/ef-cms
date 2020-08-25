@@ -32,27 +32,25 @@ describe('Schedule A Trial Session', () => {
 
   test.casesReadyForTrial = [];
 
-  const createdCaseIds = [];
   const createdDocketNumbers = [];
 
   const makeCaseReadyForTrial = (test, id, caseOverrides) => {
-    loginAs(test, 'petitioner');
+    loginAs(test, 'petitioner@example.com');
     it(`Create case ${id}`, async () => {
       const caseDetail = await uploadPetition(test, caseOverrides);
       expect(caseDetail.docketNumber).toBeDefined();
-      createdCaseIds.push(caseDetail.caseId);
       createdDocketNumbers.push(caseDetail.docketNumber);
       test.docketNumber = caseDetail.docketNumber;
     });
 
-    loginAs(test, 'petitionsclerk');
+    loginAs(test, 'petitionsclerk@example.com');
     petitionsClerkSubmitsCaseToIrs(test);
 
-    loginAs(test, 'docketclerk');
+    loginAs(test, 'docketclerk@example.com');
     docketClerkSetsCaseReadyForTrial(test);
   };
 
-  loginAs(test, 'docketclerk');
+  loginAs(test, 'docketclerk@example.com');
   docketClerkCreatesATrialSession(test, overrides);
   docketClerkViewsTrialSessionList(test, overrides);
   docketClerkViewsNewTrialSession(test);
@@ -65,7 +63,7 @@ describe('Schedule A Trial Session', () => {
   // Add case with a different city
   makeCaseReadyForTrial(test, caseCount + 1, {});
 
-  loginAs(test, 'petitionsclerk');
+  loginAs(test, 'petitionsclerk@example.com');
   petitionsClerkViewsATrialSessionsEligibleCases(test, caseCount);
 
   petitionsClerkManuallyAddsCaseToTrial(test);
@@ -79,7 +77,7 @@ describe('Schedule A Trial Session', () => {
 
   // only mark cases 0 and 1 as QCed
   markAllCasesAsQCed(test, () => {
-    return [createdCaseIds[0], createdCaseIds[1]];
+    return [createdDocketNumbers[0], createdDocketNumbers[1]];
   });
 
   petitionsClerkSetsATrialSessionsSchedule(test);

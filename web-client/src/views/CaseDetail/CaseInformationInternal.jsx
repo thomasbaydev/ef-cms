@@ -7,7 +7,6 @@ import { If } from '../../ustc-ui/If/If';
 import { UnconsolidateCasesModal } from './UnconsolidateCasesModal';
 import { connect } from '@cerebral/react';
 import { sequences, state } from 'cerebral';
-
 import React from 'react';
 
 const PetitionDetails = ({
@@ -324,6 +323,7 @@ const TrialInformation = ({
 
 export const CaseInformationInternal = connect(
   {
+    caseDetailHeaderHelper: state.caseDetailHeaderHelper,
     caseDetailHelper: state.caseDetailHelper,
     caseInformationHelper: state.caseInformationHelper,
     formattedCaseDetail: state.formattedCaseDetail,
@@ -339,8 +339,12 @@ export const CaseInformationInternal = connect(
       sequences.openUnblockFromTrialModalSequence,
     openUnprioritizeCaseModalSequence:
       sequences.openUnprioritizeCaseModalSequence,
+    openUpdateCaseModalSequence: sequences.openUpdateCaseModalSequence,
+    resetCaseMenuSequence: sequences.resetCaseMenuSequence,
   },
+
   function CaseInformationInternal({
+    caseDetailHeaderHelper,
     caseDetailHelper,
     caseInformationHelper,
     formattedCaseDetail,
@@ -352,11 +356,29 @@ export const CaseInformationInternal = connect(
     openRemoveFromTrialSessionModalSequence,
     openUnblockFromTrialModalSequence,
     openUnprioritizeCaseModalSequence,
+    openUpdateCaseModalSequence,
+    resetCaseMenuSequence,
   }) {
     return (
       <div className="internal-information">
         <div className="grid-container padding-x-0">
           <div className="grid-row grid-gap">
+            <div className="tablet:grid-col-12 text-right margin-bottom-2">
+              {caseDetailHeaderHelper.showEditCaseButton && (
+                <Button
+                  link
+                  className="margin-0"
+                  icon="edit"
+                  id="menu-edit-case-context-button"
+                  onClick={() => {
+                    resetCaseMenuSequence();
+                    openUpdateCaseModalSequence();
+                  }}
+                >
+                  Edit Case Status/Caption
+                </Button>
+              )}
+            </div>
             <div className="tablet:grid-col-6">
               <div className="card height-full">
                 <div className="content-wrapper">

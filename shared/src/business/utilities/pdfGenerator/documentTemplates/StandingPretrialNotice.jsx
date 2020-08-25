@@ -1,9 +1,8 @@
 const React = require('react');
-
 const { DocketHeader } = require('../components/DocketHeader.jsx');
 const { PrimaryHeader } = require('../components/PrimaryHeader.jsx');
 
-export const StandingPretrialNotice = ({ footerDate, options, trialInfo }) => {
+export const StandingPretrialNotice = ({ options, trialInfo }) => {
   return (
     <>
       <PrimaryHeader />
@@ -88,7 +87,7 @@ export const StandingPretrialNotice = ({ footerDate, options, trialInfo }) => {
             </li>
           </ul>
         </li>
-        <li style={{ paddingTop: '10px' }}>
+        <li>
           <strong>WHAT TO DO THE DAY OF THE TRIAL SESSION</strong>
           <ul>
             <li>
@@ -115,13 +114,6 @@ export const StandingPretrialNotice = ({ footerDate, options, trialInfo }) => {
           Trial Judge
         </p>
       </div>
-      <h3
-        className="text-center text-bold"
-        id="served-stamp"
-        style={{ pageBreakAfter: 'always' }}
-      >
-        Served {footerDate}
-      </h3>
     </>
   );
 };

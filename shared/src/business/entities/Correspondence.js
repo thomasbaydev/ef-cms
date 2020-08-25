@@ -1,10 +1,11 @@
-const joi = require('@hapi/joi');
+const joi = require('joi');
+const {
+  JoiValidationConstants,
+} = require('../../utilities/JoiValidationConstants');
 const {
   joiValidationDecorator,
 } = require('../../utilities/JoiValidationDecorator');
 const { createISODateString } = require('../utilities/DateHandler');
-const { getTimestampSchema } = require('../../utilities/dateSchema');
-const joiStrictTimestamp = getTimestampSchema();
 
 /**
  * @param {object} rawProps the raw document data
@@ -18,27 +19,16 @@ function Correspondence(rawProps) {
   this.filingDate = rawProps.filingDate || createISODateString();
 }
 
-Correspondence.schema = {
-  documentId: joi
-    .string()
-    .uuid({
-      version: ['uuidv4'],
-    })
-    .required(),
+Correspondence.VALIDATION_RULES = {
+  documentId: JoiValidationConstants.UUID.required(),
   documentTitle: joi.string().max(500).required(),
   filedBy: joi.string().max(500).allow('').optional(),
-  filingDate: joiStrictTimestamp
-    .max('now')
+  filingDate: JoiValidationConstants.ISO_DATE.max('now')
     .required()
     .description('Date that this Document was filed.'),
-  userId: joi
-    .string()
-    .uuid({
-      version: ['uuidv4'],
-    })
-    .required(),
+  userId: JoiValidationConstants.UUID.required(),
 };
 
-joiValidationDecorator(Correspondence, Correspondence.schema, {});
+joiValidationDecorator(Correspondence, Correspondence.VALIDATION_RULES, {});
 
 module.exports = { Correspondence };

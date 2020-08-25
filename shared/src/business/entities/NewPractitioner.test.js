@@ -1,5 +1,5 @@
+const { COUNTRY_TYPES, ROLES } = require('./EntityConstants');
 const { NewPractitioner } = require('./NewPractitioner');
-const { User } = require('./User');
 
 describe('NewPractitioner', () => {
   it('Creates a valid NewPractitioner with all required fields', () => {
@@ -13,7 +13,7 @@ describe('NewPractitioner', () => {
         address3: 'Under the stairs',
         city: 'Chicago',
         country: 'Brazil',
-        countryType: 'international',
+        countryType: COUNTRY_TYPES.INTERNATIONAL,
         phone: '+1 (555) 555-5555',
         postalCode: '61234',
         state: 'IL',
@@ -25,14 +25,14 @@ describe('NewPractitioner', () => {
       lastName: 'Practitioner',
       originalBarState: 'Illinois',
       practitionerType: 'Attorney',
-      role: User.ROLES.NewPractitioner,
+      role: ROLES.NewPractitioner,
     });
     expect(user.isValid()).toBeTruthy();
   });
 
   it('Creates an invalid NewPractitioner with missing required fields', () => {
     const user = new NewPractitioner({
-      role: User.ROLES.NewPractitioner,
+      role: ROLES.NewPractitioner,
     });
     expect(user.isValid()).toBeFalsy();
   });
@@ -48,7 +48,7 @@ describe('NewPractitioner', () => {
         address3: 'Under the stairs',
         city: 'Chicago',
         country: 'Brazil',
-        countryType: 'international',
+        countryType: COUNTRY_TYPES.INTERNATIONAL,
         phone: '+1 (555) 555-5555',
         postalCode: '61234',
         state: 'IL',
@@ -58,7 +58,7 @@ describe('NewPractitioner', () => {
       firmName: 'GW Law Offices',
       originalBarState: 'Illinois',
       practitionerType: 'Attorney',
-      role: User.ROLES.NewPractitioner,
+      role: ROLES.NewPractitioner,
     });
     expect(user.isValid()).toBeFalsy();
   });

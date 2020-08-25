@@ -1,4 +1,3 @@
-import { Case } from '../entities/cases/Case';
 import {
   TRANSCRIPT_AGE_DAYS_MIN,
   documentMeetsAgeRequirements,
@@ -9,20 +8,27 @@ import {
   getFormattedCaseDetail,
   sortDocketRecords,
 } from './getFormattedCaseDetail';
-import { User } from '../entities/User';
 import { applicationContext } from '../../../../web-client/src/applicationContext';
 import { calculateISODate, createISODateString } from './DateHandler';
+const {
+  CASE_STATUS_TYPES,
+  DOCKET_NUMBER_SUFFIXES,
+  OBJECTIONS_OPTIONS_MAP,
+  PAYMENT_STATUS,
+  ROLES,
+  SERVED_PARTIES_CODES,
+  TRANSCRIPT_EVENT_CODE,
+} = require('../entities/EntityConstants');
 const { MOCK_USERS } = require('../../test/mockUsers');
 
 applicationContext.getCurrentUser = () =>
   MOCK_USERS['a7d90c05-f6cd-442c-a168-202db587f16f'];
 
 const mockCaseDetailBase = {
-  caseId: '123-456-abc-def',
   correspondence: [],
   createdAt: new Date(),
   docketNumber: '123-45',
-  docketNumberSuffix: 'S',
+  docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.SMALL,
   docketNumberWithSuffix: '123-45S',
   receivedAt: new Date(),
 };
@@ -67,13 +73,11 @@ describe('formatCase', () => {
           documentId: 'd-1-2-3',
           documentType: 'Petition',
           eventCode: 'P',
+          isLegacySealed: true,
           servedAt: getDateISO(),
-          workItems: [
-            {
-              completedAt: getDateISO(),
-              isQC: true,
-            },
-          ],
+          workItem: {
+            completedAt: getDateISO(),
+          },
         },
         {
           createdAt: getDateISO(),
@@ -81,12 +85,9 @@ describe('formatCase', () => {
           documentType: 'Amended Answer',
           eventCode: 'ABC',
           servedAt: getDateISO(),
-          workItems: [
-            {
-              completedAt: getDateISO(),
-              isQC: false,
-            },
-          ],
+          workItem: {
+            completedAt: getDateISO(),
+          },
         },
       ],
     });
@@ -100,7 +101,9 @@ describe('formatCase', () => {
     expect(result.documents[0]).toHaveProperty('isStatusServed');
     expect(result.documents[0]).toHaveProperty('isPetition');
     expect(result.documents[0]).toHaveProperty('servedPartiesCode');
+    expect(result.documents[0].showLegacySealed).toBeTruthy();
 
+    expect(result.documents[1].showLegacySealed).toBeFalsy();
     expect(result.documents[1].qcWorkItemsUntouched).toEqual(false);
   });
 
@@ -174,7 +177,7 @@ describe('formatCase', () => {
         {
           documentId: '47d9735b-ac41-4adf-8a3c-74d73d3622fb',
           documentTitle: 'Order [Judge Name] [Anything]',
-          documentType: 'OAJ - Order that case is assigned',
+          documentType: 'Order that case is assigned',
           eventCode: 'OAJ',
           scenario: 'Type B',
         },
@@ -429,7 +432,7 @@ describe('formatCase', () => {
   it('should format trial details if case status is calendared', () => {
     const result = formatCase(applicationContext, {
       ...mockCaseDetail,
-      status: Case.STATUS_TYPES.calendared,
+      status: CASE_STATUS_TYPES.calendared,
       trialDate: '2011-11-11',
       trialLocation: 'Boise, Idaho',
       trialSessionId: '1f1aa3f7-e2e3-43e6-885d-4ce341588c76',
@@ -469,7 +472,7 @@ describe('formatCase', () => {
   it('should format trial details with incomplete trial information', () => {
     const result = formatCase(applicationContext, {
       ...mockCaseDetail,
-      status: Case.STATUS_TYPES.calendared,
+      status: CASE_STATUS_TYPES.calendared,
       trialDate: undefined,
       trialLocation: undefined,
       trialSessionId: '1f1aa3f7-e2e3-43e6-885d-4ce341588c76',
@@ -494,7 +497,7 @@ describe('formatCase', () => {
   it('should show not scheduled section if case status is closed', () => {
     const result = formatCase(applicationContext, {
       ...mockCaseDetail,
-      status: Case.STATUS_TYPES.closed,
+      status: CASE_STATUS_TYPES.closed,
     });
 
     expect(result).toMatchObject({
@@ -515,10 +518,10 @@ describe('formatCase', () => {
     });
   });
 
-  it('should set isLeadCase true on the case if it has a leadCaseId that matches its caseId', () => {
+  it('should set isLeadCase true on the case if it has a leadDocketNumber that matches its docketNumber', () => {
     const result = formatCase(applicationContext, {
       ...mockCaseDetail,
-      leadCaseId: mockCaseDetail.caseId,
+      leadDocketNumber: mockCaseDetail.docketNumber,
     });
 
     expect(result).toMatchObject({
@@ -526,10 +529,10 @@ describe('formatCase', () => {
     });
   });
 
-  it('should set isLeadCase false on the case if it has a leadCaseId that matches its caseId', () => {
+  it('should set isLeadCase false on the case if it has a leadDocketNumber that matches its docketNumber', () => {
     const result = formatCase(applicationContext, {
       ...mockCaseDetail,
-      leadCaseId: 'notthecaseid',
+      leadDocketNumber: 'notthedocketNumber',
     });
 
     expect(result).toMatchObject({
@@ -598,23 +601,38 @@ describe('formatDocument', () => {
     });
   });
 
+  it('should format only lodged documents with overridden eventCode MISCL', () => {
+    const result = formatDocument(
+      applicationContext,
+
+      {
+        documentId: '5d96bdfd-dc10-40db-b640-ef10c2591b6a',
+        documentType: 'Motion for Leave to File Administrative Record',
+        eventCode: 'M115',
+        lodged: true,
+      },
+    );
+
+    expect(result.eventCode).toEqual('MISCL');
+  });
+
   it('should set the servedPartiesCode to `B` if servedAt date exists and servedParties is an array', () => {
     const results = formatDocument(applicationContext, {
       servedAt: '2019-03-27T21:53:00.297Z',
       servedParties: ['someone', 'someone else'],
     });
     expect(results).toMatchObject({
-      servedPartiesCode: 'B',
+      servedPartiesCode: SERVED_PARTIES_CODES.BOTH,
     });
   });
 
   it('should set the servedPartiesCode to `R` if servedAt date exists and servedParties is an array of length 1 with role irsSuperuser', () => {
     const results = formatDocument(applicationContext, {
       servedAt: '2019-03-27T21:53:00.297Z',
-      servedParties: [{ role: User.ROLES.irsSuperuser }],
+      servedParties: [{ role: ROLES.irsSuperuser }],
     });
     expect(results).toMatchObject({
-      servedPartiesCode: 'R',
+      servedPartiesCode: SERVED_PARTIES_CODES.RESPONDENT,
     });
   });
 });
@@ -627,7 +645,7 @@ describe('getFilingsAndProceedings', () => {
       certificateOfServiceDateFormatted: '11/12/1999',
       exhibits: true,
       lodged: true,
-      objections: 'Yes',
+      objections: OBJECTIONS_OPTIONS_MAP.YES,
     });
 
     expect(result).toEqual(
@@ -641,7 +659,7 @@ describe('getFilingsAndProceedings', () => {
       certificateOfService: false,
       exhibits: false,
       lodged: false,
-      objections: 'No',
+      objections: OBJECTIONS_OPTIONS_MAP.NO,
     });
 
     expect(result).toEqual('(No Objection)');
@@ -679,18 +697,21 @@ describe('getFormattedCaseDetail', () => {
             createdAt: getDateISO(),
             documentId: 'd-1-2-3',
             documentType: 'Order',
+            isDraft: true,
           },
           {
             archived: false,
             createdAt: getDateISO(),
             documentId: 'd-2-3-4',
             documentType: 'Stipulated Decision',
+            isDraft: true,
           },
           {
             archived: false,
             createdAt: getDateISO(),
             documentId: 'd-3-4-5',
-            documentType: 'MISC - Miscellaneous',
+            documentType: 'Miscellaneous',
+            isDraft: true,
           },
         ],
       },
@@ -704,8 +725,8 @@ describe('getFormattedCaseDetail', () => {
         signedAtFormatted: undefined,
       },
       {
-        editUrl: '/case-detail/123-45/documents/d-2-3-4/sign',
-        signUrl: '/case-detail/123-45/documents/d-2-3-4/sign',
+        editUrl: '/case-detail/123-45/edit-order/d-2-3-4',
+        signUrl: '/case-detail/123-45/edit-order/d-2-3-4/sign',
         signedAtFormatted: undefined,
       },
       {
@@ -727,7 +748,7 @@ describe('documentMeetsAgeRequirements', () => {
   });
   it(`indicates success if document is a transcript aged more than ${TRANSCRIPT_AGE_DAYS_MIN} days`, () => {
     const result = documentMeetsAgeRequirements({
-      eventCode: 'TRAN',
+      eventCode: TRANSCRIPT_EVENT_CODE,
       secondaryDate: '2010-01-01T01:02:03.007Z', // 10yr old transcript
     });
     expect(result).toBeTruthy();
@@ -739,7 +760,7 @@ describe('documentMeetsAgeRequirements', () => {
       units: 'hours',
     });
     const result = documentMeetsAgeRequirements({
-      eventCode: 'TRAN',
+      eventCode: TRANSCRIPT_EVENT_CODE,
       secondaryDate: aShortTimeAgo,
     });
     expect(result).toBeFalsy();
@@ -753,7 +774,7 @@ it('should format filing fee string for a paid petition fee', () => {
       ...mockCaseDetailBase,
       petitionPaymentDate: '2019-03-01T21:40:46.415Z',
       petitionPaymentMethod: 'check',
-      petitionPaymentStatus: Case.PAYMENT_STATUS.PAID,
+      petitionPaymentStatus: PAYMENT_STATUS.PAID,
     },
   });
 
@@ -765,7 +786,7 @@ it('should format filing fee string for a waived petition fee', () => {
     applicationContext,
     caseDetail: {
       ...mockCaseDetailBase,
-      petitionPaymentStatus: Case.PAYMENT_STATUS.WAIVED,
+      petitionPaymentStatus: PAYMENT_STATUS.WAIVED,
       petitionPaymentWaivedDate: '2019-03-01T21:40:46.415Z',
     },
   });
@@ -778,7 +799,7 @@ it('should format filing fee string for an unpaid petition fee', () => {
     applicationContext,
     caseDetail: {
       ...mockCaseDetailBase,
-      petitionPaymentStatus: Case.PAYMENT_STATUS.UNPAID,
+      petitionPaymentStatus: PAYMENT_STATUS.UNPAID,
     },
   });
 
@@ -945,5 +966,60 @@ describe('sortDocketRecords', () => {
     const result = sortDocketRecords();
 
     expect(result).toEqual([]);
+  });
+
+  it('should sort items that do not display a filingDate (based on createdAtFormatted) at the bottom', () => {
+    const result = sortDocketRecords(
+      [
+        {
+          index: '2',
+          record: {
+            createdAtFormatted: '2019-08-04T00:10:02.000Z',
+          },
+        },
+        {
+          record: {
+            createdAtFormatted: undefined,
+          },
+        },
+        {
+          index: '1',
+          record: {
+            createdAtFormatted: '2019-08-03T00:10:02.000Z',
+          },
+        },
+        {
+          record: {
+            createdAtFormatted: undefined,
+          },
+        },
+      ],
+      'byIndexDesc',
+    );
+
+    expect(result).toEqual([
+      {
+        index: '1',
+        record: {
+          createdAtFormatted: '2019-08-03T00:10:02.000Z',
+        },
+      },
+      {
+        index: '2',
+        record: {
+          createdAtFormatted: '2019-08-04T00:10:02.000Z',
+        },
+      },
+      {
+        record: {
+          createdAtFormatted: undefined,
+        },
+      },
+      {
+        record: {
+          createdAtFormatted: undefined,
+        },
+      },
+    ]);
   });
 });

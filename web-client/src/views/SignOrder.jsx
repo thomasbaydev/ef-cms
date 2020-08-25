@@ -11,6 +11,8 @@ export const SignOrder = connect(
     currentPageNumber: state.pdfForSigning.pageNumber,
     docketNumber: state.caseDetail.docketNumber,
     documentId: state.documentId,
+    navigateToCaseDetailWithDraftDocumentSequence:
+      sequences.navigateToCaseDetailWithDraftDocumentSequence,
     pdfForSigning: state.pdfForSigning,
     pdfObj: state.pdfForSigning.pdfjsObj,
     pdfSignerHelper: state.pdfSignerHelper,
@@ -18,11 +20,12 @@ export const SignOrder = connect(
     setSignatureData: sequences.setPDFSignatureDataSequence,
     signatureApplied: state.pdfForSigning.signatureApplied,
     signatureData: state.pdfForSigning.signatureData,
+    skipSigningOrderSequence: sequences.skipSigningOrderSequence,
   },
   function SignOrder({
     currentPageNumber,
-    docketNumber,
     documentId,
+    navigateToCaseDetailWithDraftDocumentSequence,
     pdfForSigning,
     pdfObj,
     pdfSignerHelper,
@@ -30,6 +33,7 @@ export const SignOrder = connect(
     setSignatureData,
     signatureApplied,
     signatureData,
+    skipSigningOrderSequence,
   }) {
     const canvasRef = useRef(null);
     const signatureRef = useRef(null);
@@ -151,7 +155,12 @@ export const SignOrder = connect(
             <div className="grid-col-4">
               <Button
                 link
-                href={`/case-detail/${docketNumber}/documents/${documentId}`}
+                onClick={() => {
+                  navigateToCaseDetailWithDraftDocumentSequence({
+                    primaryTab: 'draftDocuments',
+                    viewerDraftDocumentToDisplay: { documentId },
+                  });
+                }}
               >
                 <FontAwesomeIcon icon={['fa', 'arrow-alt-circle-left']} />
                 Back to Draft Document
@@ -162,22 +171,29 @@ export const SignOrder = connect(
             </div>
             <div className="grid-col-4 text-align-right">
               {pdfSignerHelper.isPlaced && (
-                <Button link icon="trash" onClick={() => restart()}>
-                  Delete Signature
+                <>
+                  <Button link icon="trash" onClick={() => restart()}>
+                    Delete Signature
+                  </Button>
+
+                  <Button
+                    className="margin-right-0"
+                    id="save-signature-button"
+                    onClick={() => saveDocumentSigningSequence()}
+                  >
+                    Save Signature
+                  </Button>
+                </>
+              )}
+              {pdfSignerHelper.showSkipSignatureButton && (
+                <Button
+                  className="margin-right-0"
+                  id="skip-signature-button"
+                  onClick={() => skipSigningOrderSequence()}
+                >
+                  Skip Signature
                 </Button>
               )}
-
-              <Button
-                className="margin-right-0"
-                disabled={!pdfSignerHelper.isPlaced}
-                onClick={() =>
-                  saveDocumentSigningSequence({
-                    gotoAfterSigning: 'DocumentDetail',
-                  })
-                }
-              >
-                Save Signature
-              </Button>
             </div>
           </div>
           <div className="grid-row">

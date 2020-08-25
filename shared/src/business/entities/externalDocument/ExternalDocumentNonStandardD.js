@@ -1,4 +1,7 @@
-const joi = require('@hapi/joi');
+const joi = require('joi');
+const {
+  JoiValidationConstants,
+} = require('../../../utilities/JoiValidationConstants');
 const {
   joiValidationDecorator,
 } = require('../../../utilities/JoiValidationDecorator');
@@ -6,10 +9,7 @@ const {
   VALIDATION_ERROR_MESSAGES,
 } = require('./ExternalDocumentInformationFactory');
 const { formatDateString } = require('../../utilities/DateHandler');
-const { getTimestampSchema } = require('../../../utilities/dateSchema');
 const { replaceBracketed } = require('../../utilities/replaceBracketed');
-
-const joiStrictTimestamp = getTimestampSchema();
 
 /**
  *
@@ -47,7 +47,7 @@ ExternalDocumentNonStandardD.schema = {
       documentType: joi.string().required(),
     })
     .required(),
-  serviceDate: joiStrictTimestamp.max('now').required(),
+  serviceDate: JoiValidationConstants.ISO_DATE.max('now').required(),
 };
 
 joiValidationDecorator(

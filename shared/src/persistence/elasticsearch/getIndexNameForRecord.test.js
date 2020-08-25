@@ -2,9 +2,14 @@ const { getIndexNameForRecord } = require('./getIndexNameForRecord');
 
 describe('getIndexNameForRecord', () => {
   it('returns null as a default', () => {
-    const record = {};
+    let record, result;
 
-    const result = getIndexNameForRecord(record);
+    record = undefined;
+    result = getIndexNameForRecord(record);
+    expect(result).toEqual(null);
+
+    record = {};
+    result = getIndexNameForRecord(record);
     expect(result).toEqual(null);
   });
 
@@ -16,6 +21,7 @@ describe('getIndexNameForRecord', () => {
     };
 
     const result = getIndexNameForRecord(record);
+
     expect(result).toEqual('efcms-case');
   });
 
@@ -27,6 +33,7 @@ describe('getIndexNameForRecord', () => {
     };
 
     const result = getIndexNameForRecord(record);
+
     expect(result).toEqual('efcms-document');
   });
 
@@ -38,6 +45,7 @@ describe('getIndexNameForRecord', () => {
     };
 
     const result = getIndexNameForRecord(record);
+
     expect(result).toEqual('efcms-user');
   });
 
@@ -49,6 +57,7 @@ describe('getIndexNameForRecord', () => {
     };
 
     const result = getIndexNameForRecord(record);
+
     expect(result).toEqual('efcms-user');
   });
 
@@ -60,6 +69,7 @@ describe('getIndexNameForRecord', () => {
     };
 
     const result = getIndexNameForRecord(record);
+
     expect(result).toEqual('efcms-user');
   });
 
@@ -71,6 +81,31 @@ describe('getIndexNameForRecord', () => {
     };
 
     const result = getIndexNameForRecord(record);
+
     expect(result).toEqual('efcms-user');
+  });
+
+  it('returns efcms-message for Message records', () => {
+    const record = {
+      entityName: {
+        S: 'Message',
+      },
+    };
+
+    const result = getIndexNameForRecord(record);
+
+    expect(result).toEqual('efcms-message');
+  });
+
+  it('returns efcms-user-case for UserCase records', () => {
+    const record = {
+      entityName: {
+        S: 'UserCase',
+      },
+    };
+
+    const result = getIndexNameForRecord(record);
+
+    expect(result).toEqual('efcms-user-case');
   });
 });

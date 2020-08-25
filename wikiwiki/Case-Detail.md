@@ -20,6 +20,31 @@
 * The assigned judge and the trial session judge do not have to be same (although they normally will be)
 * Chief Judge role is not tied to a user login - a judge acting in the Chief Judge capacity can have cases assigned to them as their judge user login and have cases assigned to the Chief Judge role
 
+### Case Detail Menu
+**New Tab**
+* On click of New Tab, a new browser tab opens with Case Detail > Docket Record of the current case
+
+**Message**
+* On click, displays Create New Message modal
+
+**Deadline**
+* On click, displays Add Deadline modal
+
+**Order or Notice**
+* on click, displays Create Order or Notice modal
+
+**Paper Filing**
+* on click, navigates to Add Paper Filing screen
+
+**PDF Upload**
+* On click, navigates to Upload PDF screen
+
+**Correspondence**
+* on click, navigates to Add Correspondence scren
+
+**Add Case Note**
+* on click, displays Add Case Note modal
+
 ## Docket Record
 * [Docket Record](https://github.com/flexion/ef-cms/wiki/Docket-Record) is the official record for the case, and is visible to all users, including the public (with limited permissions)
 
@@ -28,8 +53,8 @@
 
 ## In Progress
 #### Draft Documents
-* Court-issued documents (Orders, Notices, etc.) created by users are saved as drafts prior to being added to the Docket Record
-* Users can still edit document text, delete the document, and add or remove signatures while in a draft state
+* [Drafts](./Drafts.md) include court-issued documents that have been saved but not added to the Docket Record
+
 
 #### Pending Messages
 * All active messages related to documents on a case are displayed under pending messages
@@ -38,9 +63,6 @@
 #### Pending Report
 * All documents tracked on the Pending Report for a case are displayed under pending report
 * Pending Report documents for a single case can also be printed in a print-optimized PDF
-
-## Case Information
-* Updates to case metadata are immediately visible on the Case Detail page when information is saved
 
 #### Petition Details
 * Docket Clerks / Clerk of the Court role is able to edit petition details from the Case Detail screen

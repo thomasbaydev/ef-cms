@@ -18,6 +18,7 @@ export const docketClerkAddsDocketEntryFromOrder = (test, draftOrderIndex) => {
     );
 
     const { documentId } = test.draftOrders[draftOrderIndex];
+    test.documentId = documentId;
 
     const draftOrderDocument = caseDetailFormatted.draftDocuments.find(
       doc => doc.documentId === documentId,
@@ -36,7 +37,7 @@ export const docketClerkAddsDocketEntryFromOrder = (test, draftOrderIndex) => {
     );
 
     expect(test.getState('form.documentType')).toEqual(
-      `${draftOrderDocument.eventCode} - ${draftOrderDocument.documentType}`,
+      draftOrderDocument.documentType,
     );
 
     // eventCode: O
@@ -186,13 +187,13 @@ export const docketClerkAddsDocketEntryFromOrder = (test, draftOrderIndex) => {
     );
 
     expect(test.getState('form.documentType')).toEqual(
-      `${draftOrderDocument.eventCode} - ${draftOrderDocument.documentType}`,
+      draftOrderDocument.documentType,
     );
 
     await test.runSequence('submitCourtIssuedDocketEntrySequence');
 
     expect(test.getState('alertSuccess').message).toEqual(
-      'Entry added to Docket Record.',
+      'Your entry has been added to docket record.',
     );
 
     await test.runSequence('gotoCaseDetailSequence', {
@@ -211,5 +212,6 @@ export const docketClerkAddsDocketEntryFromOrder = (test, draftOrderIndex) => {
     );
 
     expect(newDocketEntry).toBeTruthy();
+    expect(newDocketEntry.index).toBeFalsy();
   });
 };

@@ -1,4 +1,5 @@
 const { Case } = require('../entities/cases/Case');
+const { CASE_STATUS_TYPES } = require('../entities/EntityConstants');
 const { createISODateString } = require('../utilities/DateHandler');
 
 /**
@@ -28,30 +29,30 @@ exports.checkForReadyForTrialCasesInteractor = async ({
       .getPersistenceGateway()
       .createCaseTrialSortMappingRecords({
         applicationContext,
-        caseId: caseEntity.caseId,
         caseSortTags: caseEntity.generateTrialSortTags(),
+        docketNumber: caseEntity.docketNumber,
       });
   };
 
   const updatedCases = [];
 
   for (let caseRecord of caseCatalog) {
-    const { caseId } = caseRecord;
+    const { docketNumber } = caseRecord;
     const caseToCheck = await applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId({
+      .getCaseByDocketNumber({
         applicationContext,
-        caseId,
+        docketNumber,
       });
 
     if (caseToCheck) {
       const caseEntity = new Case(caseToCheck, { applicationContext });
 
-      if (caseEntity.status === Case.STATUS_TYPES.generalDocket) {
+      if (caseEntity.status === CASE_STATUS_TYPES.generalDocket) {
         caseEntity.checkForReadyForTrial();
 
         if (
-          caseEntity.status === Case.STATUS_TYPES.generalDocketReadyForTrial
+          caseEntity.status === CASE_STATUS_TYPES.generalDocketReadyForTrial
         ) {
           updatedCases.push(updateForTrial(caseEntity));
         }

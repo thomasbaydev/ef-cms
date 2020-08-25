@@ -1,5 +1,6 @@
 const { applicationContext } = require('../test/createTestApplicationContext');
 const { getUserInteractor } = require('./getUserInteractor');
+const { PETITIONS_SECTION, ROLES } = require('../entities/EntityConstants');
 const { User } = require('../entities/User');
 
 describe('getUserInteractor', () => {
@@ -7,20 +8,19 @@ describe('getUserInteractor', () => {
     applicationContext.getCurrentUser.mockReturnValue(
       new User({
         name: 'Test Petitionsclerk',
-        role: User.ROLES.petitionsClerk,
+        role: ROLES.petitionsClerk,
         userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
       }),
     );
     applicationContext.getPersistenceGateway().getUserById.mockReturnValue({
       name: 'Test Petitionsclerk',
-      role: User.ROLES.petitionsClerk,
-      section: 'petitions',
+      role: ROLES.petitionsClerk,
+      section: PETITIONS_SECTION,
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
 
     const user = await getUserInteractor({
       applicationContext,
-      caseId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
 
     expect(user).toEqual({
@@ -28,8 +28,8 @@ describe('getUserInteractor', () => {
       email: undefined,
       entityName: 'User',
       name: 'Test Petitionsclerk',
-      role: User.ROLES.petitionsClerk,
-      section: 'petitions',
+      role: ROLES.petitionsClerk,
+      section: PETITIONS_SECTION,
       token: undefined,
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
@@ -39,20 +39,19 @@ describe('getUserInteractor', () => {
     applicationContext.getCurrentUser.mockReturnValue(
       new User({
         name: 'Test Judge',
-        role: User.ROLES.judge,
+        role: ROLES.judge,
         userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
       }),
     );
     applicationContext.getPersistenceGateway().getUserById.mockReturnValue({
       name: 'Test Judge',
-      role: User.ROLES.judge,
+      role: ROLES.judge,
       section: 'judge',
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
 
     const user = await getUserInteractor({
       applicationContext,
-      caseId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
 
     expect(user).toEqual({
@@ -60,7 +59,7 @@ describe('getUserInteractor', () => {
       email: undefined,
       entityName: 'User',
       name: 'Test Judge',
-      role: User.ROLES.judge,
+      role: ROLES.judge,
       section: 'judge',
       token: undefined,
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',

@@ -7,7 +7,7 @@ const REGION = process.argv[3];
 
 if (!ENV || !REGION) {
   console.error(
-    "Missing required arguments: pleases invoke this script like so 'node smoke-tests ${ENV} ${REGION}'",
+    "Missing required arguments: please invoke this script like so 'node smoke-tests ${ENV} ${REGION}'",
   );
   process.exit(1);
 }
@@ -66,10 +66,10 @@ const getUserToken = async (username, password) => {
     .promise();
 
   const services = apis
-    .filter(api => api.name.includes(`${ENV}-ef-cms`))
+    .filter(api => api.name.includes(`gateway_api_${ENV}`))
     .reduce((obj, api) => {
       obj[
-        api.name.replace(`${ENV}-`, '')
+        api.name.replace(`_${ENV}`, '')
       ] = `https://${api.id}.execute-api.${REGION}.amazonaws.com/${ENV}`;
       return obj;
     }, {});
@@ -79,7 +79,7 @@ const getUserToken = async (username, password) => {
     'Testing1234$',
   );
 
-  const response = await axios.get(`${services['ef-cms-users']}`, {
+  const response = await axios.get(`${services['gateway_api']}/users`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

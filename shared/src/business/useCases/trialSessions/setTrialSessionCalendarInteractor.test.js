@@ -4,9 +4,9 @@ const {
 const {
   setTrialSessionCalendarInteractor,
 } = require('./setTrialSessionCalendarInteractor');
-const { User } = require('../../entities/User');
-
 const { MOCK_CASE } = require('../../../test/mockCase');
+const { PARTY_TYPES, ROLES } = require('../../entities/EntityConstants');
+const { User } = require('../../entities/User');
 
 const MOCK_TRIAL = {
   maxCases: 100,
@@ -30,8 +30,8 @@ describe('setTrialSessionCalendarInteractor', () => {
 
   it('throws an exception when there is a permissions issue', async () => {
     user = new User({
-      name: 'Petitioner',
-      role: User.ROLES.petitioner,
+      name: PARTY_TYPES.petitioner,
+      role: ROLES.petitioner,
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
     applicationContext
@@ -63,7 +63,7 @@ describe('setTrialSessionCalendarInteractor', () => {
 
     user = new User({
       name: 'petitionsClerk',
-      role: User.ROLES.petitionsClerk,
+      role: ROLES.petitionsClerk,
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
 
@@ -72,7 +72,6 @@ describe('setTrialSessionCalendarInteractor', () => {
       .getCalendaredCasesForTrialSession.mockReturnValue([
         {
           ...MOCK_CASE,
-          caseId: '1f1aa3f7-e2e3-43e6-885d-4ce341588c76',
           docketNumber: '102-19',
           qcCompleteForTrial: {
             '6805d1ab-18d0-43ec-bafb-654e83405416': true,
@@ -109,7 +108,7 @@ describe('setTrialSessionCalendarInteractor', () => {
 
     user = new User({
       name: 'petitionsClerk',
-      role: User.ROLES.petitionsClerk,
+      role: ROLES.petitionsClerk,
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
 
@@ -118,7 +117,6 @@ describe('setTrialSessionCalendarInteractor', () => {
       .getCalendaredCasesForTrialSession.mockReturnValue([
         {
           ...MOCK_CASE,
-          caseId: '1f1aa3f7-e2e3-43e6-885d-4ce341588c76',
           docketNumber: '102-19',
           qcCompleteForTrial: {
             '6805d1ab-18d0-43ec-bafb-654e83405416': false,
@@ -149,7 +147,7 @@ describe('setTrialSessionCalendarInteractor', () => {
   it('should set work items as high priority for each case that is calendared', async () => {
     user = new User({
       name: 'petitionsClerk',
-      role: User.ROLES.petitionsClerk,
+      role: ROLES.petitionsClerk,
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
     applicationContext
@@ -157,7 +155,6 @@ describe('setTrialSessionCalendarInteractor', () => {
       .getCalendaredCasesForTrialSession.mockReturnValue([
         {
           ...MOCK_CASE,
-          caseId: '1f1aa3f7-e2e3-43e6-885d-4ce341588c76',
           docketNumber: '102-19',
           qcCompleteForTrial: {
             '6805d1ab-18d0-43ec-bafb-654e83405416': true,
@@ -196,7 +193,6 @@ describe('setTrialSessionCalendarInteractor', () => {
       applicationContext.getPersistenceGateway().setPriorityOnAllWorkItems.mock
         .calls[0][0],
     ).toMatchObject({
-      caseId: '1f1aa3f7-e2e3-43e6-885d-4ce341588c76',
       highPriority: true,
       trialDate: '2025-12-01T00:00:00.000Z',
     });
@@ -204,7 +200,6 @@ describe('setTrialSessionCalendarInteractor', () => {
       applicationContext.getPersistenceGateway().setPriorityOnAllWorkItems.mock
         .calls[1][0],
     ).toMatchObject({
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
       highPriority: true,
       trialDate: '2025-12-01T00:00:00.000Z',
     });

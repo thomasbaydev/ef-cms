@@ -10,7 +10,7 @@ export const docketClerkEditsDocketEntryMetaCourtIssued = test => {
     });
     await test.runSequence('updateCourtIssuedDocketEntryFormValueSequence', {
       key: 'documentType',
-      value: 'OAP - Order for Amended Petition',
+      value: 'Order for Amended Petition',
     });
     await test.runSequence('updateCourtIssuedDocketEntryFormValueSequence', {
       key: 'documentTitle',
@@ -27,7 +27,7 @@ export const docketClerkEditsDocketEntryMetaCourtIssued = test => {
     });
 
     await test.runSequence('submitEditDocketEntryMetaSequence', {
-      caseId: test.docketNumber,
+      docketNumber: test.docketNumber,
     });
 
     expect(test.getState('validationErrors')).toEqual({
@@ -48,7 +48,7 @@ export const docketClerkEditsDocketEntryMetaCourtIssued = test => {
     });
 
     await test.runSequence('submitEditDocketEntryMetaSequence', {
-      caseId: test.docketNumber,
+      docketNumber: test.docketNumber,
     });
 
     expect(test.getState('validationErrors')).toEqual({
@@ -61,7 +61,7 @@ export const docketClerkEditsDocketEntryMetaCourtIssued = test => {
     });
 
     await test.runSequence('submitEditDocketEntryMetaSequence', {
-      caseId: test.docketNumber,
+      docketNumber: test.docketNumber,
     });
 
     expect(test.getState('validationErrors')).toEqual({});

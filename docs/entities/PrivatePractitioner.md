@@ -63,7 +63,7 @@
             - "domestic"
             - "international"
         country: 
-          type: "any"
+          type: "string"
           whens: 
             - 
               ref: 
@@ -79,11 +79,11 @@
                     override: true
                   - "international"
               then: 
-                type: "string"
+                type: "any"
                 flags: 
                   presence: "required"
               otherwise: 
-                type: "string"
+                type: "any"
                 flags: 
                   presence: "optional"
                 allow: 
@@ -132,7 +132,73 @@
                     args: 
                       regex: "/^(\\d{5}|\\d{5}-\\d{4})$/"
         state: 
-          type: "any"
+          type: "string"
+          flags: 
+            only: true
+          allow: 
+            - "AK"
+            - "AL"
+            - "AR"
+            - "AZ"
+            - "CA"
+            - "CO"
+            - "CT"
+            - "DC"
+            - "DE"
+            - "FL"
+            - "GA"
+            - "HI"
+            - "IA"
+            - "ID"
+            - "IL"
+            - "IN"
+            - "KS"
+            - "KY"
+            - "LA"
+            - "MA"
+            - "MD"
+            - "ME"
+            - "MI"
+            - "MN"
+            - "MO"
+            - "MS"
+            - "MT"
+            - "NC"
+            - "ND"
+            - "NE"
+            - "NH"
+            - "NJ"
+            - "NM"
+            - "NV"
+            - "NY"
+            - "OH"
+            - "OK"
+            - "OR"
+            - "PA"
+            - "RI"
+            - "SC"
+            - "SD"
+            - "TN"
+            - "TX"
+            - "UT"
+            - "VA"
+            - "VT"
+            - "WA"
+            - "WI"
+            - "WV"
+            - "WY"
+            - "AA"
+            - "AE"
+            - "AP"
+            - "AS"
+            - "FM"
+            - "GU"
+            - "MH"
+            - "MP"
+            - "PR"
+            - "PW"
+            - "VI"
+            - "N/A"
           whens: 
             - 
               ref: 
@@ -148,25 +214,25 @@
                     override: true
                   - "international"
               then: 
-                type: "string"
+                type: "any"
                 flags: 
                   presence: "optional"
                 allow: 
                   - null
               otherwise: 
-                type: "string"
+                type: "any"
                 flags: 
                   presence: "required"
-                rules: 
-                  - 
-                    name: "max"
-                    args: 
-                      limit: 100
     email: 
       type: "string"
       flags: 
         presence: "optional"
       rules: 
+        - 
+          name: "email"
+          args: 
+            options: 
+              tlds: false
         - 
           name: "max"
           args: 
@@ -178,84 +244,6 @@
         presence: "required"
       allow: 
         - "PrivatePractitioner"
-    name: 
-      type: "string"
-      flags: 
-        presence: "optional"
-      rules: 
-        - 
-          name: "max"
-          args: 
-            limit: 100
-    role: 
-      type: "string"
-      flags: 
-        presence: "required"
-        only: true
-      allow: 
-        - "privatePractitioner"
-    judgeFullName: 
-      type: "any"
-      whens: 
-        - 
-          ref: 
-            path: 
-              - "role"
-          is: 
-            type: "any"
-            flags: 
-              only: true
-              presence: "required"
-            allow: 
-              - 
-                override: true
-              - "judge"
-          then: 
-            type: "string"
-            flags: 
-              presence: "optional"
-            rules: 
-              - 
-                name: "max"
-                args: 
-                  limit: 100
-          otherwise: 
-            type: "any"
-            flags: 
-              presence: "optional"
-            allow: 
-              - null
-    judgeTitle: 
-      type: "any"
-      whens: 
-        - 
-          ref: 
-            path: 
-              - "role"
-          is: 
-            type: "any"
-            flags: 
-              only: true
-              presence: "required"
-            allow: 
-              - 
-                override: true
-              - "judge"
-          then: 
-            type: "string"
-            flags: 
-              presence: "optional"
-            rules: 
-              - 
-                name: "max"
-                args: 
-                  limit: 100
-          otherwise: 
-            type: "any"
-            flags: 
-              presence: "optional"
-            allow: 
-              - null
     section: 
       type: "string"
       flags: 
@@ -285,6 +273,7 @@
         - "halpernsChambers"
         - "holmesChambers"
         - "jacobsChambers"
+        - "jonesChambers"
         - "kerrigansChambers"
         - "laubersChambers"
         - "leydensChambers"
@@ -296,6 +285,7 @@
         - "pughsChambers"
         - "ruwesChambers"
         - "thorntonsChambers"
+        - "torosChambers"
         - "urdasChambers"
         - "vasquezsChambers"
         - "wellsChambers"
@@ -326,6 +316,99 @@
             options: 
               version: 
                 - "uuidv4"
+    name: 
+      type: "string"
+      flags: 
+        presence: "optional"
+      rules: 
+        - 
+          name: "max"
+          args: 
+            limit: 100
+    role: 
+      type: "string"
+      flags: 
+        presence: "required"
+        only: true
+      allow: 
+        - "privatePractitioner"
+    judgeFullName: 
+      type: "string"
+      rules: 
+        - 
+          name: "max"
+          args: 
+            limit: 100
+      whens: 
+        - 
+          ref: 
+            path: 
+              - "role"
+          is: 
+            type: "any"
+            flags: 
+              only: true
+              presence: "required"
+            allow: 
+              - 
+                override: true
+              - "judge"
+          then: 
+            type: "any"
+            flags: 
+              presence: "optional"
+          otherwise: 
+            type: "any"
+            flags: 
+              presence: "optional"
+            allow: 
+              - null
+    judgeTitle: 
+      type: "string"
+      rules: 
+        - 
+          name: "max"
+          args: 
+            limit: 100
+      whens: 
+        - 
+          ref: 
+            path: 
+              - "role"
+          is: 
+            type: "any"
+            flags: 
+              only: true
+              presence: "required"
+            allow: 
+              - 
+                override: true
+              - "judge"
+          then: 
+            type: "any"
+            flags: 
+              presence: "optional"
+          otherwise: 
+            type: "any"
+            flags: 
+              presence: "optional"
+            allow: 
+              - null
+    representing: 
+      type: "array"
+      flags: 
+        presence: "optional"
+        description: "List of contact IDs of contacts"
+      items: 
+        - 
+          type: "string"
+          rules: 
+            - 
+              name: "guid"
+              args: 
+                options: 
+                  version: 
+                    - "uuidv4"
     representingPrimary: 
       type: "boolean"
       flags: 

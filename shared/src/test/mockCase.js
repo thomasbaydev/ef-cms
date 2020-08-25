@@ -1,13 +1,19 @@
+const {
+  CASE_STATUS_TYPES,
+  CASE_TYPES_MAP,
+  COUNTRY_TYPES,
+  PARTY_TYPES,
+} = require('../business/entities/EntityConstants');
 const { MOCK_DOCUMENTS } = require('./mockDocuments');
 
 exports.MOCK_CASE = {
   caseCaption: 'Test Petitioner, Petitioner',
-  caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-  caseType: 'Other',
+  caseType: CASE_TYPES_MAP.other,
   contactPrimary: {
     address1: '123 Main St',
     city: 'Somewhere',
-    countryType: 'domestic',
+    contactId: '76a6050f-a423-47bb-943b-a5661fe08a6b',
+    countryType: COUNTRY_TYPES.DOMESTIC,
     email: 'petitioner@example.com',
     name: 'Test Petitioner',
     phone: '1234567',
@@ -16,6 +22,7 @@ exports.MOCK_CASE = {
     title: 'Executor',
   },
   correspondence: [],
+  createdAt: '2018-03-01T21:40:46.415Z',
   docketNumber: '101-18',
   docketNumberWithSuffix: '101-18',
   docketRecord: [
@@ -47,21 +54,21 @@ exports.MOCK_CASE = {
   documents: MOCK_DOCUMENTS,
   filingType: 'Myself',
   irsNoticeDate: '2018-03-01T00:00:00.000Z',
-  partyType: 'Petitioner',
+  partyType: PARTY_TYPES.petitioner,
   preferredTrialCity: 'Washington, District of Columbia',
   procedureType: 'Regular',
-  status: 'New',
+  status: CASE_STATUS_TYPES.new,
   userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
 };
 
 exports.MOCK_CASE_WITHOUT_PENDING = {
   caseCaption: 'Test Petitioner, Petitioner',
-  caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-  caseType: 'Other',
+  caseType: CASE_TYPES_MAP.other,
   contactPrimary: {
     address1: '123 Main St',
     city: 'Somewhere',
-    countryType: 'domestic',
+    contactId: '76a6050f-a423-47bb-943b-a5661fe08a6b',
+    countryType: COUNTRY_TYPES.DOMESTIC,
     email: 'petitioner@example.com',
     name: 'Test Petitioner',
     phone: '1234567',
@@ -99,19 +106,18 @@ exports.MOCK_CASE_WITHOUT_PENDING = {
   documents: MOCK_DOCUMENTS.slice(0, 3), // exclude proposed stipulated decision
   filingType: 'Myself',
   irsNoticeDate: '2018-03-01T00:00:00.000Z',
-  partyType: 'Petitioner',
+  partyType: PARTY_TYPES.petitioner,
   preferredTrialCity: 'Washington, District of Columbia',
   procedureType: 'Regular',
-  status: 'New',
+  status: CASE_STATUS_TYPES.new,
   userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
 };
 
 exports.MOCK_CASE_WITHOUT_NOTICE = {
-  caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
   contactPrimary: {
     address1: '123 Main St',
     city: 'Somewhere',
-    countryType: 'domestic',
+    countryType: COUNTRY_TYPES.DOMESTIC,
     email: 'petitioner@example.com',
     name: 'Test Petitioner',
     phone: '1234567',
@@ -132,8 +138,8 @@ exports.MOCK_CASE_WITHOUT_NOTICE = {
   ],
   documents: MOCK_DOCUMENTS,
   filingType: 'Myself',
-  partyType: 'Petitioner',
+  partyType: PARTY_TYPES.petitioner,
   preferredTrialCity: 'Washington, District of Columbia',
   procedureType: 'Regular',
-  status: 'New',
+  status: CASE_STATUS_TYPES.new,
 };

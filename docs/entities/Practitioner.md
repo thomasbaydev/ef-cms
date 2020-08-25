@@ -67,7 +67,7 @@
             - "domestic"
             - "international"
         country: 
-          type: "any"
+          type: "string"
           whens: 
             - 
               ref: 
@@ -83,11 +83,11 @@
                     override: true
                   - "international"
               then: 
-                type: "string"
+                type: "any"
                 flags: 
                   presence: "required"
               otherwise: 
-                type: "string"
+                type: "any"
                 flags: 
                   presence: "optional"
                 allow: 
@@ -136,7 +136,73 @@
                     args: 
                       regex: "/^(\\d{5}|\\d{5}-\\d{4})$/"
         state: 
-          type: "any"
+          type: "string"
+          flags: 
+            only: true
+          allow: 
+            - "AK"
+            - "AL"
+            - "AR"
+            - "AZ"
+            - "CA"
+            - "CO"
+            - "CT"
+            - "DC"
+            - "DE"
+            - "FL"
+            - "GA"
+            - "HI"
+            - "IA"
+            - "ID"
+            - "IL"
+            - "IN"
+            - "KS"
+            - "KY"
+            - "LA"
+            - "MA"
+            - "MD"
+            - "ME"
+            - "MI"
+            - "MN"
+            - "MO"
+            - "MS"
+            - "MT"
+            - "NC"
+            - "ND"
+            - "NE"
+            - "NH"
+            - "NJ"
+            - "NM"
+            - "NV"
+            - "NY"
+            - "OH"
+            - "OK"
+            - "OR"
+            - "PA"
+            - "RI"
+            - "SC"
+            - "SD"
+            - "TN"
+            - "TX"
+            - "UT"
+            - "VA"
+            - "VT"
+            - "WA"
+            - "WI"
+            - "WV"
+            - "WY"
+            - "AA"
+            - "AE"
+            - "AP"
+            - "AS"
+            - "FM"
+            - "GU"
+            - "MH"
+            - "MP"
+            - "PR"
+            - "PW"
+            - "VI"
+            - "N/A"
           whens: 
             - 
               ref: 
@@ -152,25 +218,25 @@
                     override: true
                   - "international"
               then: 
-                type: "string"
+                type: "any"
                 flags: 
                   presence: "optional"
                 allow: 
                   - null
               otherwise: 
-                type: "string"
+                type: "any"
                 flags: 
                   presence: "required"
-                rules: 
-                  - 
-                    name: "max"
-                    args: 
-                      limit: 100
     email: 
       type: "string"
       flags: 
         presence: "optional"
       rules: 
+        - 
+          name: "email"
+          args: 
+            options: 
+              tlds: false
         - 
           name: "max"
           args: 
@@ -182,6 +248,78 @@
         presence: "required"
       allow: 
         - "Practitioner"
+    section: 
+      type: "string"
+      flags: 
+        only: true
+        presence: "optional"
+      allow: 
+        - "adc"
+        - "admissions"
+        - "chambers"
+        - "clerkofcourt"
+        - "docket"
+        - "petitions"
+        - "trialClerks"
+        - "armensChambers"
+        - "ashfordsChambers"
+        - "buchsChambers"
+        - "carluzzosChambers"
+        - "cohensChambers"
+        - "colvinsChambers"
+        - "copelandsChambers"
+        - "foleysChambers"
+        - "galesChambers"
+        - "gerbersChambers"
+        - "goekesChambers"
+        - "gustafsonsChambers"
+        - "guysChambers"
+        - "halpernsChambers"
+        - "holmesChambers"
+        - "jacobsChambers"
+        - "jonesChambers"
+        - "kerrigansChambers"
+        - "laubersChambers"
+        - "leydensChambers"
+        - "marvelsChambers"
+        - "morrisonsChambers"
+        - "negasChambers"
+        - "panuthosChambers"
+        - "parisChambers"
+        - "pughsChambers"
+        - "ruwesChambers"
+        - "thorntonsChambers"
+        - "torosChambers"
+        - "urdasChambers"
+        - "vasquezsChambers"
+        - "wellsChambers"
+        - "admin"
+        - "admissionsclerk"
+        - "docketclerk"
+        - "floater"
+        - "inactivePractitioner"
+        - "irsPractitioner"
+        - "irsSuperuser"
+        - "judge"
+        - "petitioner"
+        - "petitionsclerk"
+        - "privatePractitioner"
+        - "trialclerk"
+    token: 
+      type: "string"
+      flags: 
+        presence: "optional"
+    userId: 
+      type: "string"
+      flags: 
+        presence: "required"
+      rules: 
+        - 
+          name: "guid"
+          args: 
+            options: 
+              version: 
+                - "uuidv4"
     name: 
       type: "string"
       flags: 
@@ -220,7 +358,12 @@
             allow: 
               - "inactivePractitioner"
     judgeFullName: 
-      type: "any"
+      type: "string"
+      rules: 
+        - 
+          name: "max"
+          args: 
+            limit: 100
       whens: 
         - 
           ref: 
@@ -236,14 +379,9 @@
                 override: true
               - "judge"
           then: 
-            type: "string"
+            type: "any"
             flags: 
               presence: "optional"
-            rules: 
-              - 
-                name: "max"
-                args: 
-                  limit: 100
           otherwise: 
             type: "any"
             flags: 
@@ -251,7 +389,12 @@
             allow: 
               - null
     judgeTitle: 
-      type: "any"
+      type: "string"
+      rules: 
+        - 
+          name: "max"
+          args: 
+            limit: 100
       whens: 
         - 
           ref: 
@@ -267,90 +410,15 @@
                 override: true
               - "judge"
           then: 
-            type: "string"
+            type: "any"
             flags: 
               presence: "optional"
-            rules: 
-              - 
-                name: "max"
-                args: 
-                  limit: 100
           otherwise: 
             type: "any"
             flags: 
               presence: "optional"
             allow: 
               - null
-    section: 
-      type: "string"
-      flags: 
-        only: true
-        presence: "optional"
-      allow: 
-        - "adc"
-        - "admissions"
-        - "chambers"
-        - "clerkofcourt"
-        - "docket"
-        - "petitions"
-        - "trialClerks"
-        - "armensChambers"
-        - "ashfordsChambers"
-        - "buchsChambers"
-        - "carluzzosChambers"
-        - "cohensChambers"
-        - "colvinsChambers"
-        - "copelandsChambers"
-        - "foleysChambers"
-        - "galesChambers"
-        - "gerbersChambers"
-        - "goekesChambers"
-        - "gustafsonsChambers"
-        - "guysChambers"
-        - "halpernsChambers"
-        - "holmesChambers"
-        - "jacobsChambers"
-        - "kerrigansChambers"
-        - "laubersChambers"
-        - "leydensChambers"
-        - "marvelsChambers"
-        - "morrisonsChambers"
-        - "negasChambers"
-        - "panuthosChambers"
-        - "parisChambers"
-        - "pughsChambers"
-        - "ruwesChambers"
-        - "thorntonsChambers"
-        - "urdasChambers"
-        - "vasquezsChambers"
-        - "wellsChambers"
-        - "admin"
-        - "admissionsclerk"
-        - "docketclerk"
-        - "floater"
-        - "inactivePractitioner"
-        - "irsPractitioner"
-        - "irsSuperuser"
-        - "judge"
-        - "petitioner"
-        - "petitionsclerk"
-        - "privatePractitioner"
-        - "trialclerk"
-    token: 
-      type: "string"
-      flags: 
-        presence: "optional"
-    userId: 
-      type: "string"
-      flags: 
-        presence: "required"
-      rules: 
-        - 
-          name: "guid"
-          args: 
-            options: 
-              version: 
-                - "uuidv4"
     additionalPhone: 
       type: "string"
       flags: 
@@ -395,6 +463,11 @@
         presence: "optional"
         description: "An alternate email address for the practitioner."
       rules: 
+        - 
+          name: "email"
+          args: 
+            options: 
+              tlds: false
         - 
           name: "max"
           args: 

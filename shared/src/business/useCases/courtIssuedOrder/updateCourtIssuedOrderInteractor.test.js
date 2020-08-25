@@ -2,6 +2,12 @@ const {
   applicationContext,
 } = require('../../test/createTestApplicationContext');
 const {
+  CASE_TYPES_MAP,
+  COUNTRY_TYPES,
+  PARTY_TYPES,
+  ROLES,
+} = require('../../entities/EntityConstants');
+const {
   updateCourtIssuedOrderInteractor,
 } = require('./updateCourtIssuedOrderInteractor');
 const { User } = require('../../entities/User');
@@ -9,15 +15,15 @@ const { User } = require('../../entities/User');
 describe('updateCourtIssuedOrderInteractor', () => {
   let mockCurrentUser;
   let mockUserById;
+  const mockUserId = applicationContext.getUniqueId();
 
   let caseRecord = {
     caseCaption: 'Caption',
-    caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-    caseType: 'Deficiency',
+    caseType: CASE_TYPES_MAP.deficiency,
     contactPrimary: {
       address1: '123 Main St',
       city: 'Somewhere',
-      countryType: 'domestic',
+      countryType: COUNTRY_TYPES.DOMESTIC,
       email: 'fieri@example.com',
       name: 'Guy Fieri',
       phone: '1234567890',
@@ -41,33 +47,39 @@ describe('updateCourtIssuedOrderInteractor', () => {
         documentContentsId: '442f46fd-727b-485c-8998-a0138593cebe',
         documentId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
         documentType: 'Answer',
-        userId: '2db02773-6583-42d8-ab91-52529d1993cf',
+        eventCode: 'A',
+        filedBy: 'Test Petitioner',
+        userId: mockUserId,
       },
       {
         docketNumber: '45678-18',
         documentId: 'a75e4cc8-deed-42d0-b7b0-3846004fe3f9',
         documentType: 'Answer',
-        userId: '2db02773-6583-42d8-ab91-52529d1993cf',
+        eventCode: 'A',
+        filedBy: 'Test Petitioner',
+        userId: mockUserId,
       },
       {
         docketNumber: '45678-18',
         documentId: 'd3cc11ab-bbee-4d09-bc66-da267f3cfd07',
         documentType: 'Answer',
-        userId: '2db02773-6583-42d8-ab91-52529d1993cf',
+        eventCode: 'A',
+        filedBy: 'Test Petitioner',
+        userId: mockUserId,
       },
     ],
     filingType: 'Myself',
-    partyType: 'Petitioner',
+    partyType: PARTY_TYPES.petitioner,
     preferredTrialCity: 'Fresno, California',
     procedureType: 'Regular',
-    role: User.ROLES.petitioner,
+    role: ROLES.petitioner,
     userId: '3433e36f-3b50-4c92-aa55-6efb4e432883',
   };
 
   beforeEach(() => {
     mockCurrentUser = new User({
       name: 'Olivia Jade',
-      role: User.ROLES.petitionsClerk,
+      role: ROLES.petitionsClerk,
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
 
@@ -84,11 +96,11 @@ describe('updateCourtIssuedOrderInteractor', () => {
 
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockResolvedValue(caseRecord);
+      .getCaseByDocketNumber.mockResolvedValue(caseRecord);
   });
 
   it('should throw an error if not authorized', async () => {
-    mockCurrentUser.role = User.ROLES.privatePractitioner;
+    mockCurrentUser.role = ROLES.privatePractitioner;
     mockUserById = { name: 'bob' };
 
     await expect(
@@ -96,8 +108,9 @@ describe('updateCourtIssuedOrderInteractor', () => {
         applicationContext,
         documentIdToEdit: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
         documentMetadata: {
-          caseId: caseRecord.caseId,
+          docketNumber: caseRecord.docketNumber,
           documentType: 'Order to Show Cause',
+          eventCode: 'OSC',
         },
       }),
     ).rejects.toThrow('Unauthorized');
@@ -111,8 +124,9 @@ describe('updateCourtIssuedOrderInteractor', () => {
         applicationContext,
         documentIdToEdit: '986fece3-6325-4418-bb28-a7095e6707b4',
         documentMetadata: {
-          caseId: caseRecord.caseId,
+          docketNumber: caseRecord.docketNumber,
           documentType: 'Order to Show Cause',
+          eventCode: 'OSC',
         },
       }),
     ).rejects.toThrow('Document not found');
@@ -123,13 +137,15 @@ describe('updateCourtIssuedOrderInteractor', () => {
       applicationContext,
       documentIdToEdit: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
       documentMetadata: {
-        caseId: caseRecord.caseId,
+        docketNumber: caseRecord.docketNumber,
         documentType: 'Order to Show Cause',
+        draftState: {},
+        eventCode: 'OSC',
       },
     });
 
     expect(
-      applicationContext.getPersistenceGateway().getCaseByCaseId,
+      applicationContext.getPersistenceGateway().getCaseByDocketNumber,
     ).toBeCalled();
     expect(
       applicationContext.getPersistenceGateway().updateCase.mock.calls[0][0]
@@ -142,14 +158,18 @@ describe('updateCourtIssuedOrderInteractor', () => {
       applicationContext,
       documentIdToEdit: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
       documentMetadata: {
-        caseId: caseRecord.caseId,
+        docketNumber: caseRecord.docketNumber,
         documentContents: 'the contents!',
         documentType: 'Order to Show Cause',
         draftState: {
           documentContents: 'the contents!',
           richText: '<b>the contents!</b>',
         },
+        eventCode: 'OSC',
         richText: '<b>the contents!</b>',
+        signedAt: '2019-03-01T21:40:46.415Z',
+        signedByUserId: mockUserId,
+        signedJudgeName: 'Dredd',
       },
     });
 
@@ -172,14 +192,16 @@ describe('updateCourtIssuedOrderInteractor', () => {
       applicationContext,
       documentIdToEdit: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
       documentMetadata: {
-        caseId: caseRecord.caseId,
+        docketNumber: caseRecord.docketNumber,
         documentType: 'Order to Show Cause',
+        draftState: {},
+        eventCode: 'OSC',
         judge: 'Judge Judgy',
       },
     });
 
     expect(
-      applicationContext.getPersistenceGateway().getCaseByCaseId,
+      applicationContext.getPersistenceGateway().getCaseByDocketNumber,
     ).toBeCalled();
     expect(
       applicationContext.getPersistenceGateway().updateCase.mock.calls[0][0]

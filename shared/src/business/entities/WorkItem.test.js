@@ -1,6 +1,8 @@
+const {
+  CASE_STATUS_TYPES,
+  DOCKET_NUMBER_SUFFIXES,
+} = require('./EntityConstants');
 const { applicationContext } = require('../test/createTestApplicationContext');
-const { Case } = require('./cases/Case');
-const { Message } = require('./Message');
 const { WorkItem } = require('./WorkItem');
 
 describe('WorkItem', () => {
@@ -14,14 +16,11 @@ describe('WorkItem', () => {
         {
           assigneeId: '8b4cd447-6278-461b-b62b-d9e357eea62c',
           assigneeName: 'bob',
-          caseId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
-          caseStatus: Case.STATUS_TYPES.new,
+          caseStatus: CASE_STATUS_TYPES.new,
           caseTitle: 'Johnny Joe Jacobson',
           docketNumber: '101-18',
-          docketNumberSuffix: 'S',
+          docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.SMALL,
           document: {},
-          isQC: true,
-          messages: [],
           section: 'docket',
           sentBy: 'bob',
         },
@@ -30,19 +29,35 @@ describe('WorkItem', () => {
       expect(workItem.isValid()).toBeTruthy();
     });
 
+    it('Creates a valid workitem when using setStatus', () => {
+      const workItem = new WorkItem(
+        {
+          assigneeId: '8b4cd447-6278-461b-b62b-d9e357eea62c',
+          assigneeName: 'bob',
+          caseTitle: 'Johnny Joe Jacobson',
+          docketNumber: '101-18',
+          docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.SMALL,
+          document: {},
+          section: 'docket',
+          sentBy: 'bob',
+        },
+        { applicationContext },
+      );
+      workItem.setStatus(CASE_STATUS_TYPES.new);
+      expect(workItem.caseStatus).toEqual(CASE_STATUS_TYPES.new);
+      expect(workItem.isValid()).toBeTruthy();
+    });
+
     it('Update a valid workitem with a workItemId', () => {
       const workItem = new WorkItem(
         {
           assigneeId: '8b4cd447-6278-461b-b62b-d9e357eea62c',
           assigneeName: 'bob',
-          caseId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
-          caseStatus: Case.STATUS_TYPES.new,
+          caseStatus: CASE_STATUS_TYPES.new,
           caseTitle: 'Johnny Joe Jacobson',
           docketNumber: '101-18',
-          docketNumberSuffix: 'S',
+          docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.SMALL,
           document: {},
-          isQC: true,
-          messages: [],
           section: 'docket',
           sentBy: 'bob',
           workItemId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
@@ -57,15 +72,12 @@ describe('WorkItem', () => {
         {
           assigneeId: '8b4cd447-6278-461b-b62b-d9e357eea62c',
           assigneeName: 'bob',
-          caseId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
-          caseStatus: Case.STATUS_TYPES.new,
+          caseStatus: CASE_STATUS_TYPES.new,
           caseTitle: 'Johnny Joe Jacobson',
           docketNumber: '101-18',
-          docketNumberSuffix: 'S',
+          docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.SMALL,
           document: {},
-          isQC: true,
           isRead: true,
-          messages: [],
           section: 'docket',
           sentBy: 'bob',
           workItemId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
@@ -74,107 +86,32 @@ describe('WorkItem', () => {
       );
       expect(workItem.isValid()).toBeTruthy();
     });
-
-    it('Create a valid workitem without messages', () => {
-      const workItem = new WorkItem(
-        {
-          assigneeId: '8b4cd447-6278-461b-b62b-d9e357eea62c',
-          assigneeName: 'bob',
-          caseId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
-          caseStatus: Case.STATUS_TYPES.new,
-          caseTitle: 'Johnny Joe Jacobson',
-          docketNumber: '101-18',
-          docketNumberSuffix: 'S',
-          document: {},
-          isQC: true,
-          section: 'docket',
-          sentBy: 'bob',
-        },
-        { applicationContext },
-      );
-      expect(workItem.isValid()).toBeTruthy();
-    });
-
-    it('Create a valid workitem with real message', () => {
-      const workItem = new WorkItem(
-        {
-          assigneeId: '8b4cd447-6278-461b-b62b-d9e357eea62c',
-          assigneeName: 'bob',
-          caseId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
-          caseStatus: Case.STATUS_TYPES.new,
-          caseTitle: 'Johnny Joe Jacobson',
-          docketNumber: '101-18',
-          docketNumberSuffix: 'S',
-          document: {},
-          isQC: true,
-          messages: [
-            {
-              from: 'abc',
-              fromUserId: '6805d1ab-18d0-43ec-bafb-654e83405416',
-              message: 'abc',
-            },
-          ],
-          section: 'docket',
-          sentBy: 'bob',
-        },
-        { applicationContext },
-      );
-      expect(workItem.isValid()).toBeTruthy();
-    });
   });
 
-  describe('acquires messages', () => {
-    it('when calling add message', () => {
-      const workItem = new WorkItem(
-        {
-          assigneeId: '8b4cd447-6278-461b-b62b-d9e357eea62c',
-          assigneeName: 'bob',
-          caseId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
-          caseStatus: Case.STATUS_TYPES.new,
-          caseTitle: 'Johnny Joe Jacobson',
-          docketNumber: '101-18',
-          docketNumberSuffix: 'S',
-          document: {},
-          isQC: true,
-          messages: [],
-          sentBy: 'bob',
-        },
-        { applicationContext },
-      );
-      workItem.addMessage(
-        new Message(
-          {
-            from: 'abc',
-            fromUserId: '6805d1ab-18d0-43ec-bafb-654e83405416',
-            message: 'abc',
-          },
-          { applicationContext },
-        ),
-      );
-      expect(workItem.messages.length).toEqual(1);
-    });
+  it('assigns user provided to `assignUser`', () => {
+    const workItem = new WorkItem(
+      {
+        assigneeId: '8b4cd447-6278-461b-b62b-d9e357eea62c',
+        assigneeName: 'bob',
+        caseStatus: CASE_STATUS_TYPES.new,
+        caseTitle: 'Johnny Joe Jacobson',
+        docketNumber: '101-18',
+        docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.SMALL,
+        document: {},
+        sentBy: 'bob',
+      },
+      { applicationContext },
+    );
 
-    it('no message added when set as completed', () => {
-      const workItem = new WorkItem(
-        {
-          assigneeId: '8b4cd447-6278-461b-b62b-d9e357eea62c',
-          assigneeName: 'bob',
-          caseId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
-          caseStatus: Case.STATUS_TYPES.new,
-          caseTitle: 'Johnny Joe Jacobson',
-          docketNumber: '101-18',
-          docketNumberSuffix: 'S',
-          document: {},
-          isQC: true,
-          messages: [],
-          sentBy: 'bob',
-        },
-        { applicationContext },
-      );
-      workItem.setAsCompleted({
-        user: { name: 'jane', userId: '6805d1ab-18d0-43ec-bafb-654e83405416' },
-      });
-      expect(workItem.messages.length === 0).toBe(true);
-    });
+    const assignment = {
+      assigneeId: '111cd447-6278-461b-b62b-d9e357eea62c',
+      assigneeName: 'Joe',
+      section: 'Some Section',
+      sentBy: 'Sender Name',
+      sentBySection: 'Sender Section',
+      sentByUserId: '222cd447-6278-461b-b62b-d9e357eea62c',
+    };
+    workItem.assignToUser(assignment);
+    expect(workItem.toRawObject()).toMatchObject(assignment);
   });
 });

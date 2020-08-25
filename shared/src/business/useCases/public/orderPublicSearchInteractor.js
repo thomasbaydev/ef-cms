@@ -1,5 +1,5 @@
-const { Document } = require('../../entities/Document');
 const { DocumentSearch } = require('../../entities/documents/DocumentSearch');
+const { ORDER_EVENT_CODES } = require('../../entities/EntityConstants');
 
 /**
  * orderPublicSearchInteractor
@@ -12,26 +12,18 @@ exports.orderPublicSearchInteractor = async ({
   applicationContext,
   caseTitleOrPetitioner,
   docketNumber,
-  endDateDay,
-  endDateMonth,
-  endDateYear,
+  endDate,
   judge,
   keyword,
-  startDateDay,
-  startDateMonth,
-  startDateYear,
+  startDate,
 }) => {
   const orderSearch = new DocumentSearch({
     caseTitleOrPetitioner,
     docketNumber,
-    endDateDay,
-    endDateMonth,
-    endDateYear,
+    endDate,
     judge,
     keyword,
-    startDateDay,
-    startDateMonth,
-    startDateYear,
+    startDate,
   });
 
   const rawSearch = orderSearch.validate().toRawObject();
@@ -40,7 +32,7 @@ exports.orderPublicSearchInteractor = async ({
     .getPersistenceGateway()
     .advancedDocumentSearch({
       applicationContext,
-      documentEventCodes: Document.ORDER_DOCUMENT_TYPES,
+      documentEventCodes: ORDER_EVENT_CODES,
       judgeType: 'signedJudgeName',
       ...rawSearch,
     });

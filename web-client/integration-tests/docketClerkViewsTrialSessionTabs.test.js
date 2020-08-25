@@ -30,27 +30,25 @@ describe('Docket Clerk Views Trial Session Tabs', () => {
 
   test.casesReadyForTrial = [];
 
-  const createdCaseIds = [];
   const createdDocketNumbers = [];
 
   const makeCaseReadyForTrial = (test, id, caseOverrides) => {
-    loginAs(test, 'petitioner');
+    loginAs(test, 'petitioner@example.com');
     it(`Create case ${id}`, async () => {
       const caseDetail = await uploadPetition(test, caseOverrides);
       expect(caseDetail.docketNumber).toBeDefined();
-      createdCaseIds.push(caseDetail.caseId);
       createdDocketNumbers.push(caseDetail.docketNumber);
       test.docketNumber = caseDetail.docketNumber;
     });
 
-    loginAs(test, 'petitionsclerk');
+    loginAs(test, 'petitionsclerk@example.com');
     petitionsClerkSubmitsCaseToIrs(test);
 
-    loginAs(test, 'docketclerk');
+    loginAs(test, 'docketclerk@example.com');
     docketClerkSetsCaseReadyForTrial(test);
   };
 
-  loginAs(test, 'docketclerk');
+  loginAs(test, 'docketclerk@example.com');
   docketClerkCreatesATrialSession(test, overrides);
   docketClerkViewsTrialSessionList(test, overrides);
   // Trial Session should exist in New tab
@@ -61,24 +59,24 @@ describe('Docket Clerk Views Trial Session Tabs', () => {
     makeCaseReadyForTrial(test, id, overrides);
   }
 
-  loginAs(test, 'petitionsclerk');
+  loginAs(test, 'petitionsclerk@example.com');
   petitionsClerkViewsATrialSessionsEligibleCases(test, caseCount);
 
   petitionsClerkManuallyAddsCaseToTrial(test);
   // only mark cases 0 and 1 as QCed
   markAllCasesAsQCed(test, () => {
-    return [createdCaseIds[1]];
+    return [createdDocketNumbers[1]];
   });
   petitionsClerkSetsATrialSessionsSchedule(test);
 
-  loginAs(test, 'docketclerk');
+  loginAs(test, 'docketclerk@example.com');
   // Trial Session should exist in Open tab
   docketClerkViewsTrialSessionsTab(test, { tab: 'Open' });
 
-  loginAs(test, 'petitionsclerk');
+  loginAs(test, 'petitionsclerk@example.com');
   petitionsClerkManuallyRemovesCaseFromTrial(test);
 
-  loginAs(test, 'docketclerk');
+  loginAs(test, 'docketclerk@example.com');
   // Trial Session should exist in Closed tab
   docketClerkViewsTrialSessionsTab(test, { tab: 'Closed' });
   // Trial Session should exist in All tab

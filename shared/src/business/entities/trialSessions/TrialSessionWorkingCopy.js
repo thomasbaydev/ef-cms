@@ -1,19 +1,11 @@
-const joi = require('@hapi/joi');
+const joi = require('joi');
+const {
+  JoiValidationConstants,
+} = require('../../../utilities/JoiValidationConstants');
 const {
   joiValidationDecorator,
 } = require('../../../utilities/JoiValidationDecorator');
-const { DOCKET_NUMBER_MATCHER } = require('../cases/CaseConstants');
-
-TrialSessionWorkingCopy.TRIAL_STATUS_TYPES = [
-  'Set for Trial',
-  'Dismissed',
-  'Continued',
-  'Rule 122',
-  'A Basis Reached',
-  'Settled',
-  'Recall',
-  'Taken Under Advisement',
-];
+const { DOCKET_NUMBER_MATCHER } = require('../EntityConstants');
 
 TrialSessionWorkingCopy.validationName = 'TrialSessionWorkingCopy';
 
@@ -81,18 +73,8 @@ TrialSessionWorkingCopy.validationRules = {
   sessionNotes: joi.string().optional(),
   sort: joi.string().optional(),
   sortOrder: joi.string().optional(),
-  trialSessionId: joi
-    .string()
-    .uuid({
-      version: ['uuidv4'],
-    })
-    .required(),
-  userId: joi
-    .string()
-    .uuid({
-      version: ['uuidv4'],
-    })
-    .required(),
+  trialSessionId: JoiValidationConstants.UUID.required(),
+  userId: JoiValidationConstants.UUID.required(),
 };
 
 joiValidationDecorator(

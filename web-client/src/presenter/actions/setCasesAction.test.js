@@ -2,28 +2,43 @@ import { runAction } from 'cerebral/test';
 import { setCasesAction } from './setCasesAction';
 
 describe('setCasesAction', () => {
-  it('sets state.cases from props.caseList', async () => {
+  it('sets state.openCases from props.openCaseList and state.closedCases from props.closedCaseList', async () => {
     const { state } = await runAction(setCasesAction, {
       props: {
-        caseList: [
+        closedCaseList: [
           {
-            caseId: '1234',
+            docketNumber: '123-45',
           },
           {
-            caseId: '2345',
+            docketNumber: '678-90',
+          },
+        ],
+        openCaseList: [
+          {
+            docketNumber: '09-876',
+          },
+          {
+            docketNumber: '543-21',
           },
         ],
       },
       state: {
-        cases: [],
+        closedCases: [],
+        openCases: [],
       },
     });
 
-    expect(state.cases).toEqual([
+    expect(state.openCases).toEqual([
       {
-        caseId: '1234',
+        docketNumber: '09-876',
       },
-      { caseId: '2345' },
+      { docketNumber: '543-21' },
+    ]);
+    expect(state.closedCases).toEqual([
+      {
+        docketNumber: '123-45',
+      },
+      { docketNumber: '678-90' },
     ]);
   });
 });

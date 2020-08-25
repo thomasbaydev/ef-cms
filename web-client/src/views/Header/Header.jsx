@@ -1,5 +1,5 @@
 import { AccountMenu } from './AccountMenu';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Button } from '../../ustc-ui/Button/Button';
 import { ReportsMenu } from './ReportsMenu';
 import { SearchBox } from './SearchBox';
 import { connect } from '@cerebral/react';
@@ -38,17 +38,17 @@ const BetaBar = toggleBetaBarSequence => {
 };
 
 const NavigationItems = (
-  helper,
+  headerHelper,
   { isReportsMenuOpen, signOutSequence, toggleMobileMenuSequence },
 ) => {
   return (
     <ul className="usa-nav__primary usa-accordion ustc-navigation-items">
-      {helper.showHomeIcon && (
+      {headerHelper.showHomeIcon && (
         <li className="usa-nav__primary-item">
           <a
             className={classNames(
               'usa-nav__link',
-              helper.pageIsHome && 'usa-current',
+              headerHelper.pageIsHome && 'usa-current',
             )}
             href="/"
             onClick={() => toggleMobileMenuSequence()}
@@ -57,49 +57,40 @@ const NavigationItems = (
           </a>
         </li>
       )}
-      {helper.showMessages && (
+      {headerHelper.showMessages && (
         <li className={classNames('usa-nav__primary-item')}>
           <a
             className={classNames(
               'usa-nav__link',
-              helper.pageIsMessages && 'usa-current',
+              headerHelper.pageIsMessages && 'usa-current',
             )}
             href="/messages/my/inbox"
             onClick={() => toggleMobileMenuSequence()}
           >
-            Messages{' '}
-            {helper.showMessagesIcon && (
-              <FontAwesomeIcon
-                aria-hidden="false"
-                aria-label="unread message"
-                className="iconStatusUnread"
-                icon={['fas', 'envelope']}
-                size="sm"
-              />
-            )}
+            Messages
           </a>
         </li>
       )}
-      {helper.showDocumentQC && (
+      {headerHelper.showDocumentQC && (
         <li className={classNames('usa-nav__primary-item')}>
           <a
             className={classNames(
               'usa-nav__link',
-              helper.pageIsDocumentQC && 'usa-current',
+              headerHelper.pageIsDocumentQC && 'usa-current',
             )}
-            href={helper.defaultQCBoxPath}
+            href={headerHelper.defaultQCBoxPath}
             onClick={() => toggleMobileMenuSequence()}
           >
             Document QC
           </a>
         </li>
       )}
-      {helper.showMyCases && (
+      {headerHelper.showMyCases && (
         <li className={classNames('usa-nav__primary-item')}>
           <a
             className={classNames(
               'usa-nav__link',
-              helper.pageIsMyCases && 'usa-current',
+              headerHelper.pageIsMyCases && 'usa-current',
             )}
             href="/"
             onClick={() => toggleMobileMenuSequence()}
@@ -108,12 +99,12 @@ const NavigationItems = (
           </a>
         </li>
       )}
-      {helper.showSearchNavItem && (
+      {headerHelper.showSearchNavItem && (
         <li className={classNames('usa-nav__primary-item')}>
           <a
             className={classNames(
               'usa-nav__link',
-              helper.pageIsDashboard && 'usa-current',
+              headerHelper.pageIsDashboard && 'usa-current',
             )}
             href="/"
             onClick={() => toggleMobileMenuSequence()}
@@ -122,12 +113,12 @@ const NavigationItems = (
           </a>
         </li>
       )}
-      {helper.showTrialSessions && (
+      {headerHelper.showTrialSessions && (
         <li className={classNames('usa-nav__primary-item')}>
           <a
             className={classNames(
               'usa-nav__link',
-              helper.pageIsTrialSessions && 'usa-current',
+              headerHelper.pageIsTrialSessions && 'usa-current',
             )}
             href="/trial-sessions"
             onClick={() => toggleMobileMenuSequence()}
@@ -136,7 +127,7 @@ const NavigationItems = (
           </a>
         </li>
       )}
-      {helper.showReports && (
+      {headerHelper.showReports && (
         <li
           className={classNames(
             'usa-nav__primary-item',
@@ -242,16 +233,15 @@ export const Header = connect(
                 )}
                 role="navigation"
               >
-                <button
-                  className="usa-nav__close"
+                <Button
+                  iconRight
+                  link
+                  className="usa-nav__close float-right margin-right-0 padding-top-0"
+                  icon="times-circle"
                   onClick={() => toggleMobileMenuSequence()}
                 >
-                  Close{' '}
-                  <FontAwesomeIcon
-                    className="account-menu-icon"
-                    icon={['fa', 'times-circle']}
-                  />
-                </button>
+                  Close
+                </Button>
                 {user &&
                   NavigationItems(headerHelper, {
                     isReportsMenuOpen,

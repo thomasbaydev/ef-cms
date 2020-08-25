@@ -4,19 +4,19 @@ const {
 const {
   getPractitionersByNameInteractor,
 } = require('./getPractitionersByNameInteractor');
-const { User } = require('../../entities/User');
+const { ROLES } = require('../../entities/EntityConstants');
 
 describe('getPractitionersByNameInteractor', () => {
   beforeEach(() => {
     applicationContext.getCurrentUser.mockReturnValue({
-      role: User.ROLES.petitionsClerk,
+      role: ROLES.petitionsClerk,
       userId: 'petitionsClerk',
     });
   });
 
   it('returns an unauthorized error on petitioner user role', async () => {
     applicationContext.getCurrentUser.mockReturnValue({
-      role: User.ROLES.petitioner,
+      role: ROLES.petitioner,
       userId: 'petitioner',
     });
 
@@ -42,13 +42,13 @@ describe('getPractitionersByNameInteractor', () => {
         {
           barNumber: 'PT1234',
           name: 'Test Practitioner1',
-          role: 'irsPractitioner',
+          role: ROLES.irsPractitioner,
           userId: '8190d648-e643-4964-988e-141e4e0db861',
         },
         {
           barNumber: 'PT5432',
           name: 'Test Practitioner2',
-          role: 'privatePractitioner',
+          role: ROLES.privatePractitioner,
           userId: '12d5bb3a-e867-4066-bda5-2f178a76191f',
         },
       ]);
@@ -62,13 +62,13 @@ describe('getPractitionersByNameInteractor', () => {
       {
         barNumber: 'PT1234',
         name: 'Test Practitioner1',
-        role: 'irsPractitioner',
+        role: ROLES.irsPractitioner,
         userId: '8190d648-e643-4964-988e-141e4e0db861',
       },
       {
         barNumber: 'PT5432',
         name: 'Test Practitioner2',
-        role: 'privatePractitioner',
+        role: ROLES.privatePractitioner,
         userId: '12d5bb3a-e867-4066-bda5-2f178a76191f',
       },
     ]);

@@ -4,8 +4,9 @@ const {
 const {
   deleteCaseDeadlineInteractor,
 } = require('./deleteCaseDeadlineInteractor');
-const { Case } = require('../../entities/cases/Case');
+const { AUTOMATIC_BLOCKED_REASONS } = require('../../entities/EntityConstants');
 const { MOCK_CASE_WITHOUT_PENDING } = require('../../../test/mockCase');
+const { ROLES } = require('../../entities/EntityConstants');
 const { UnauthorizedError } = require('../../../errors/errors');
 const { User } = require('../../entities/User');
 
@@ -20,17 +21,17 @@ describe('deleteCaseDeadlineInteractor', () => {
     applicationContext.environment.stage = 'local';
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(mockCase);
+      .getCaseByDocketNumber.mockReturnValue(mockCase);
 
     applicationContext
       .getPersistenceGateway()
-      .getCaseDeadlinesByCaseId.mockImplementation(() => mockDeadlines);
+      .getCaseDeadlinesByDocketNumber.mockImplementation(() => mockDeadlines);
   });
 
   beforeEach(() => {
     user = new User({
       name: 'Test Petitionsclerk',
-      role: User.ROLES.petitionsClerk,
+      role: ROLES.petitionsClerk,
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
 
@@ -43,7 +44,7 @@ describe('deleteCaseDeadlineInteractor', () => {
       deleteCaseDeadlineInteractor({
         applicationContext,
         caseDeadlineId: '6805d1ab-18d0-43ec-bafb-654e83405416',
-        caseId: '6805d1ab-18d0-43ec-bafb-654e83405416',
+        docketNumber: '123-20',
       }),
     ).rejects.toThrow(UnauthorizedError);
   });
@@ -54,7 +55,7 @@ describe('deleteCaseDeadlineInteractor', () => {
     await deleteCaseDeadlineInteractor({
       applicationContext,
       caseDeadlineId: '6805d1ab-18d0-43ec-bafb-654e83405416',
-      caseId: '6805d1ab-18d0-43ec-bafb-654e83405416',
+      docketNumber: '123-20',
     });
 
     expect(
@@ -62,7 +63,7 @@ describe('deleteCaseDeadlineInteractor', () => {
         .calls[0][0],
     ).toMatchObject({
       caseDeadlineId: '6805d1ab-18d0-43ec-bafb-654e83405416',
-      caseId: '6805d1ab-18d0-43ec-bafb-654e83405416',
+      docketNumber: '123-20',
     });
     expect(
       applicationContext.getPersistenceGateway().updateCase.mock.calls[0][0]
@@ -84,7 +85,7 @@ describe('deleteCaseDeadlineInteractor', () => {
     await deleteCaseDeadlineInteractor({
       applicationContext,
       caseDeadlineId: '6805d1ab-18d0-43ec-bafb-654e83405416',
-      caseId: '6805d1ab-18d0-43ec-bafb-654e83405416',
+      docketNumber: '123-20',
     });
 
     expect(
@@ -92,7 +93,7 @@ describe('deleteCaseDeadlineInteractor', () => {
         .calls[0][0],
     ).toMatchObject({
       caseDeadlineId: '6805d1ab-18d0-43ec-bafb-654e83405416',
-      caseId: '6805d1ab-18d0-43ec-bafb-654e83405416',
+      docketNumber: '123-20',
     });
     expect(
       applicationContext.getPersistenceGateway().updateCase.mock.calls[0][0]
@@ -100,7 +101,7 @@ describe('deleteCaseDeadlineInteractor', () => {
     ).toMatchObject({
       automaticBlocked: true,
       automaticBlockedDate: expect.anything(),
-      automaticBlockedReason: Case.AUTOMATIC_BLOCKED_REASONS.dueDate,
+      automaticBlockedReason: AUTOMATIC_BLOCKED_REASONS.dueDate,
     });
     expect(
       applicationContext.getPersistenceGateway()

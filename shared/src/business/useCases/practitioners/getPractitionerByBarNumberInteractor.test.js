@@ -4,6 +4,7 @@ const {
 const {
   getPractitionerByBarNumberInteractor,
 } = require('./getPractitionerByBarNumberInteractor');
+const { ROLES } = require('../../entities/EntityConstants');
 const { User } = require('../../entities/User');
 
 describe('getPractitionerByBarNumberInteractor', () => {
@@ -11,7 +12,7 @@ describe('getPractitionerByBarNumberInteractor', () => {
     applicationContext.getCurrentUser.mockReturnValue(
       new User({
         name: 'Test Petitioner',
-        role: User.ROLES.petitioner,
+        role: ROLES.petitioner,
         userId: '1005d1ab-18d0-43ec-bafb-654e83405416',
       }),
     );
@@ -28,7 +29,7 @@ describe('getPractitionerByBarNumberInteractor', () => {
     applicationContext.getCurrentUser.mockReturnValue(
       new User({
         name: 'Test Petitionsclerk',
-        role: User.ROLES.petitionsClerk,
+        role: ROLES.petitionsClerk,
         userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
       }),
     );
@@ -46,8 +47,8 @@ describe('getPractitionerByBarNumberInteractor', () => {
         name: 'Private Practitioner',
         originalBarState: 'Oklahoma',
         practitionerType: 'Attorney',
-        role: User.ROLES.privatePractitioner,
-        section: 'privatePractitioner',
+        role: ROLES.privatePractitioner,
+        section: ROLES.privatePractitioner,
         userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
       });
 
@@ -73,8 +74,8 @@ describe('getPractitionerByBarNumberInteractor', () => {
       name: 'Private Practitioner',
       originalBarState: 'Oklahoma',
       practitionerType: 'Attorney',
-      role: User.ROLES.privatePractitioner,
-      section: 'privatePractitioner',
+      role: ROLES.privatePractitioner,
+      section: ROLES.privatePractitioner,
       suffix: undefined,
       token: undefined,
       userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
@@ -85,7 +86,7 @@ describe('getPractitionerByBarNumberInteractor', () => {
     applicationContext.getCurrentUser.mockReturnValue(
       new User({
         name: 'Test Petitionsclerk',
-        role: User.ROLES.petitionsClerk,
+        role: ROLES.petitionsClerk,
         userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
       }),
     );
@@ -103,8 +104,8 @@ describe('getPractitionerByBarNumberInteractor', () => {
         name: 'IRS Practitioner',
         originalBarState: 'Oklahoma',
         practitionerType: 'Attorney',
-        role: User.ROLES.irsPractitioner,
-        section: 'privatePractitioner',
+        role: ROLES.irsPractitioner,
+        section: ROLES.privatePractitioner,
         userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
       });
 
@@ -130,7 +131,7 @@ describe('getPractitionerByBarNumberInteractor', () => {
       name: 'IRS Practitioner',
       originalBarState: 'Oklahoma',
       practitionerType: 'Attorney',
-      role: 'privatePractitioner',
+      role: ROLES.privatePractitioner,
       section: 'privatePractitioner',
       suffix: undefined,
       token: undefined,
@@ -142,7 +143,7 @@ describe('getPractitionerByBarNumberInteractor', () => {
     applicationContext.getCurrentUser.mockReturnValue(
       new User({
         name: 'Test Petitionsclerk',
-        role: User.ROLES.petitionsClerk,
+        role: ROLES.petitionsClerk,
         userId: '6805d1ab-18d0-43ec-bafb-654e83405416',
       }),
     );

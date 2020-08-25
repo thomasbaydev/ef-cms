@@ -15,21 +15,17 @@ const { post } = require('../requests');
 exports.fileDocketEntryInteractor = ({
   applicationContext,
   documentMetadata,
+  isSavingForLater,
   primaryDocumentFileId,
-  secondaryDocumentFileId,
-  secondarySupportingDocumentFileId,
-  supportingDocumentFileId,
 }) => {
-  const { caseId } = documentMetadata;
+  const { docketNumber } = documentMetadata;
   return post({
     applicationContext,
     body: {
       documentMetadata,
+      isSavingForLater,
       primaryDocumentFileId,
-      secondaryDocumentFileId,
-      secondarySupportingDocumentFileId,
-      supportingDocumentFileId,
     },
-    endpoint: `/case-documents/${caseId}/docket-entry`,
+    endpoint: `/case-documents/${docketNumber}/docket-entry`,
   });
 };

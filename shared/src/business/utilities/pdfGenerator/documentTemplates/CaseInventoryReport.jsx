@@ -1,6 +1,5 @@
 const React = require('react');
-import { PrimaryHeader } from '../components/PrimaryHeader';
-
+const { PrimaryHeader } = require('../components/PrimaryHeader');
 const { ReportsHeader } = require('../components/ReportsHeader.jsx');
 
 export const CaseInventoryReport = ({
@@ -17,8 +16,8 @@ export const CaseInventoryReport = ({
       <table>
         <thead>
           <tr>
-            <th>Docket</th>
-            <th>Case title</th>
+            <th>Docket No.</th>
+            <th>Case Title</th>
             {showStatusColumn && <th className="status-header">Case Status</th>}
             {showJudgeColumn && <th className="judge-header">Judge</th>}
           </tr>

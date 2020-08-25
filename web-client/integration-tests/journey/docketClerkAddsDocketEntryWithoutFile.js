@@ -1,8 +1,10 @@
 import { DocketEntryFactory } from '../../../shared/src/business/entities/docketEntry/DocketEntryFactory';
-
-const { VALIDATION_ERROR_MESSAGES } = DocketEntryFactory;
+import { applicationContextForClient as applicationContext } from '../../../shared/src/business/test/createTestApplicationContext';
 
 export const docketClerkAddsDocketEntryWithoutFile = test => {
+  const { VALIDATION_ERROR_MESSAGES } = DocketEntryFactory;
+  const { OBJECTIONS_OPTIONS_MAP } = applicationContext.getConstants();
+
   return it('Docketclerk adds docket entry data without a file', async () => {
     await test.runSequence('gotoCaseDetailSequence', {
       docketNumber: test.docketNumber,
@@ -12,13 +14,9 @@ export const docketClerkAddsDocketEntryWithoutFile = test => {
       docketNumber: test.docketNumber,
     });
 
-    await test.runSequence('updateScreenMetadataSequence', {
-      key: 'supportingDocument',
-      value: false,
-    });
-
-    await test.runSequence('submitDocketEntrySequence', {
+    await test.runSequence('fileDocketEntrySequence', {
       docketNumber: test.docketNumber,
+      isSavingForLater: true,
     });
 
     expect(test.getState('validationErrors')).toEqual({
@@ -57,14 +55,35 @@ export const docketClerkAddsDocketEntryWithoutFile = test => {
       value: 'Administrative Record',
     });
 
-    await test.runSequence('updateScreenMetadataSequence', {
-      key: 'supportingDocument',
-      value: false,
+    await test.runSequence('updateDocketEntryFormValueSequence', {
+      key: 'objections',
+      value: OBJECTIONS_OPTIONS_MAP.NO,
     });
 
     await test.runSequence('updateDocketEntryFormValueSequence', {
-      key: 'objections',
-      value: 'No',
+      key: 'hasOtherFilingParty',
+      value: true,
     });
+
+    await test.runSequence('fileDocketEntrySequence', {
+      docketNumber: test.docketNumber,
+      isSavingForLater: true,
+    });
+
+    expect(test.getState('validationErrors')).toEqual({
+      otherFilingParty: VALIDATION_ERROR_MESSAGES.otherFilingParty,
+    });
+
+    await test.runSequence('updateDocketEntryFormValueSequence', {
+      key: 'otherFilingParty',
+      value: 'Brianna Noble',
+    });
+
+    await test.runSequence('fileDocketEntrySequence', {
+      docketNumber: test.docketNumber,
+      isSavingForLater: true,
+    });
+
+    expect(test.getState('validationErrors')).toEqual({});
   });
 };

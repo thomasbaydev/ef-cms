@@ -15,31 +15,24 @@ import { petitionerCreatesNewCase } from '../integration-tests/journey/petitione
 import { docketClerkAddsDocketEntryFromOrderOfDismissal } from '../integration-tests/journey/docketClerkAddsDocketEntryFromOrderOfDismissal';
 import { docketClerkAddsTranscriptDocketEntryFromOrder } from '../integration-tests/journey/docketClerkAddsTranscriptDocketEntryFromOrder';
 import { docketClerkCreatesAnOrder } from '../integration-tests/journey/docketClerkCreatesAnOrder';
-import { docketClerkServesOrder } from '../integration-tests/journey/docketClerkServesOrder';
+import { docketClerkServesDocument } from '../integration-tests/journey/docketClerkServesDocument';
 
 // Public User
+import { docketClerkSignsOrder } from '../integration-tests/journey/docketClerkSignsOrder';
 import { unauthedUserNavigatesToPublicSite } from './journey/unauthedUserNavigatesToPublicSite';
 import { unauthedUserSearchesByDocketNumber } from './journey/unauthedUserSearchesByDocketNumber';
 import { unauthedUserSearchesByMeta } from './journey/unauthedUserSearchesByMeta';
 import { unauthedUserViewsCaseDetail } from './journey/unauthedUserViewsCaseDetail';
 import { unauthedUserViewsPrintableDocketRecord } from './journey/unauthedUserViewsPrintableDocketRecord';
 
-const test = setupTest({
-  useCases: {
-    loadPDFForSigningInteractor: () => Promise.resolve(null),
-  },
-});
+const test = setupTest();
 
-const testClient = setupTestClient({
-  useCases: {
-    loadPDFForSigningInteractor: () => Promise.resolve(null),
-  },
-});
+const testClient = setupTestClient();
 testClient.draftOrders = [];
 
 describe('Petitioner creates cases to search for', () => {
   jest.setTimeout(10000);
-  loginAs(testClient, 'petitioner');
+  loginAs(testClient, 'petitioner@example.com');
   petitionerCancelsCreateCase(testClient);
   petitionerChoosesProcedureType(testClient);
   petitionerChoosesCaseType(testClient);
@@ -47,7 +40,7 @@ describe('Petitioner creates cases to search for', () => {
 });
 
 describe('Docket clerk creates a draft order (should not be viewable to the public)', () => {
-  loginAs(testClient, 'docketclerk');
+  loginAs(testClient, 'docketclerk@example.com');
   docketClerkCreatesAnOrder(testClient, {
     documentTitle: 'Order to do something',
     eventCode: 'O',
@@ -56,18 +49,19 @@ describe('Docket clerk creates a draft order (should not be viewable to the publ
 });
 
 describe('Docket clerk creates and serves an order (should be viewable to the public)', () => {
-  loginAs(testClient, 'docketclerk');
+  loginAs(testClient, 'docketclerk@example.com');
   docketClerkCreatesAnOrder(testClient, {
     documentTitle: 'Order of Dismissal',
     eventCode: 'OD',
     expectedDocumentType: 'Order of Dismissal',
   });
+  docketClerkSignsOrder(testClient, 1);
   docketClerkAddsDocketEntryFromOrderOfDismissal(testClient, 1);
-  docketClerkServesOrder(testClient, 1);
+  docketClerkServesDocument(testClient, 1);
 });
 
 describe('Docket clerk creates and serves a transcript (should not be viewable to the public)', () => {
-  loginAs(testClient, 'docketclerk');
+  loginAs(testClient, 'docketclerk@example.com');
   docketClerkCreatesAnOrder(testClient, {
     documentTitle: 'Order of Dismissal',
     eventCode: 'OD',
@@ -78,7 +72,7 @@ describe('Docket clerk creates and serves a transcript (should not be viewable t
     month: '01',
     year: '2019',
   });
-  docketClerkServesOrder(testClient, 2);
+  docketClerkServesDocument(testClient, 2);
 });
 
 describe('Unauthed user searches for a case and views a case detail page', () => {

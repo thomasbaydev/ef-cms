@@ -1,10 +1,11 @@
-const joi = require('@hapi/joi');
+const joi = require('joi');
+const {
+  JoiValidationConstants,
+} = require('../../utilities/JoiValidationConstants');
 const {
   joiValidationDecorator,
 } = require('../../utilities/JoiValidationDecorator');
 const { createISODateString } = require('../utilities/DateHandler');
-const { getTimestampSchema } = require('../../utilities/dateSchema');
-const joiStrictTimestamp = getTimestampSchema();
 
 /**
  * Case Deadline entity
@@ -20,16 +21,15 @@ function CaseDeadline(rawProps, { applicationContext }) {
 
   this.caseDeadlineId =
     rawProps.caseDeadlineId || applicationContext.getUniqueId();
-  this.caseId = rawProps.caseId;
   this.createdAt = rawProps.createdAt || createISODateString();
   this.deadlineDate = rawProps.deadlineDate;
   this.description = rawProps.description;
+  this.docketNumber = rawProps.docketNumber;
 }
 
 CaseDeadline.validationName = 'CaseDeadline';
 
 CaseDeadline.VALIDATION_ERROR_MESSAGES = {
-  caseId: 'You must have a case ID.',
   deadlineDate: 'Enter a valid deadline date',
   description: [
     {
@@ -38,35 +38,28 @@ CaseDeadline.VALIDATION_ERROR_MESSAGES = {
     },
     'Enter a description of this deadline',
   ],
+  docketNumber: 'You must have a docket number.',
 };
 
 CaseDeadline.schema = joi.object().keys({
-  caseDeadlineId: joi
-    .string()
-    .uuid({
-      version: ['uuidv4'],
-    })
-    .required()
-    .description('Unique Case Deadline ID only used by the system.'),
-  caseId: joi
-    .string()
-    .uuid({
-      version: ['uuidv4'],
-    })
-    .required()
-    .description('Unique Case ID only used by the system.'),
-  createdAt: joiStrictTimestamp
-    .required()
-    .description('When the Case Deadline was added to the system.'),
-  deadlineDate: joiStrictTimestamp
-    .required()
-    .description('When the Case Deadline expires.'),
+  caseDeadlineId: JoiValidationConstants.UUID.required().description(
+    'Unique Case Deadline ID only used by the system.',
+  ),
+  createdAt: JoiValidationConstants.ISO_DATE.required().description(
+    'When the Case Deadline was added to the system.',
+  ),
+  deadlineDate: JoiValidationConstants.ISO_DATE.required().description(
+    'When the Case Deadline expires.',
+  ),
   description: joi
     .string()
     .max(120)
     .min(1)
     .required()
     .description('User provided description of the Case Deadline.'),
+  docketNumber: JoiValidationConstants.DOCKET_NUMBER.required().description(
+    'Docket number of the case containing the Case Deadline.',
+  ),
   entityName: joi.string().valid('CaseDeadline').required(),
 });
 

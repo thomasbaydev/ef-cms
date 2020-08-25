@@ -1,9 +1,10 @@
-import { ContactFactory } from '../../shared/src/business/entities/contacts/ContactFactory';
+import { applicationContextForClient as applicationContext } from '../../shared/src/business/test/createTestApplicationContext';
 import { docketClerkAddsDocketEntryFromOrder } from '../integration-tests/journey/docketClerkAddsDocketEntryFromOrder';
 import { docketClerkAddsDocketEntryFromOrderOfDismissal } from '../integration-tests/journey/docketClerkAddsDocketEntryFromOrderOfDismissal';
 import { docketClerkCreatesAnOrder } from '../integration-tests/journey/docketClerkCreatesAnOrder';
 import { docketClerkSealsCase } from '../integration-tests/journey/docketClerkSealsCase';
-import { docketClerkServesOrder } from '../integration-tests/journey/docketClerkServesOrder';
+import { docketClerkServesDocument } from '../integration-tests/journey/docketClerkServesDocument';
+import { docketClerkSignsOrder } from '../integration-tests/journey/docketClerkSignsOrder';
 import {
   loginAs,
   setupTest as setupTestClient,
@@ -16,32 +17,29 @@ import { unauthedUserSearchesForOrderByKeyword } from './journey/unauthedUserSea
 import { unauthedUserSearchesForSealedCaseOrderByKeyword } from './journey/unauthedUserSearchesForSealedCaseOrderByKeyword';
 
 const test = setupTest();
-const testClient = setupTestClient({
-  useCases: {
-    loadPDFForSigningInteractor: () => Promise.resolve(null),
-  },
-});
+const testClient = setupTestClient();
 testClient.draftOrders = [];
+const { COUNTRY_TYPES, PARTY_TYPES } = applicationContext.getConstants();
 
 describe('Petitioner creates case', () => {
   beforeAll(() => {
     jest.setTimeout(10000);
   });
 
-  loginAs(testClient, 'petitioner');
+  loginAs(testClient, 'petitioner@example.com');
 
   it('Create case', async () => {
     const caseDetail = await uploadPetition(testClient, {
       contactSecondary: {
         address1: '734 Cowley Parkway',
         city: 'Somewhere',
-        countryType: 'domestic',
+        countryType: COUNTRY_TYPES.DOMESTIC,
         name: 'NOTAREALNAMEFORTESTINGPUBLIC',
         phone: '+1 (884) 358-9729',
         postalCode: '77546',
         state: 'CT',
       },
-      partyType: ContactFactory.PARTY_TYPES.petitionerSpouse,
+      partyType: PARTY_TYPES.petitionerSpouse,
     });
     expect(caseDetail.docketNumber).toBeDefined();
     test.docketNumber = caseDetail.docketNumber;
@@ -50,29 +48,32 @@ describe('Petitioner creates case', () => {
 });
 
 describe('Docket clerk creates orders to search for', () => {
-  loginAs(testClient, 'docketclerk');
+  loginAs(testClient, 'docketclerk@example.com');
   docketClerkCreatesAnOrder(testClient, {
     documentTitle: 'Order',
     eventCode: 'O',
     expectedDocumentType: 'Order',
     signedAtFormatted: '01/02/2020',
   });
+  docketClerkSignsOrder(testClient, 0);
   docketClerkAddsDocketEntryFromOrder(testClient, 0);
-  docketClerkServesOrder(testClient, 0);
+  docketClerkServesDocument(testClient, 0);
 
   docketClerkCreatesAnOrder(testClient, {
     documentTitle: 'Order of Dismissal',
     eventCode: 'OD',
     expectedDocumentType: 'Order of Dismissal',
   });
+  docketClerkSignsOrder(testClient, 1);
   docketClerkAddsDocketEntryFromOrderOfDismissal(testClient, 1);
-  docketClerkServesOrder(testClient, 1);
+  docketClerkServesDocument(testClient, 1);
 
   docketClerkCreatesAnOrder(testClient, {
     documentTitle: 'Order of Dismissal',
     eventCode: 'OD',
     expectedDocumentType: 'Order of Dismissal',
   });
+  docketClerkSignsOrder(testClient, 2);
   docketClerkAddsDocketEntryFromOrderOfDismissal(testClient, 2);
 });
 
@@ -83,7 +84,7 @@ describe('Unauthed user searches for an order by keyword', () => {
 });
 
 describe('Docket clerk seals case', () => {
-  loginAs(testClient, 'docketclerk');
+  loginAs(testClient, 'docketclerk@example.com');
   docketClerkSealsCase(testClient);
 });
 

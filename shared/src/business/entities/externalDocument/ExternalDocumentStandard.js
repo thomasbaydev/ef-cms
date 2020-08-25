@@ -1,4 +1,4 @@
-const joi = require('@hapi/joi');
+const joi = require('joi');
 const {
   joiValidationDecorator,
 } = require('../../../utilities/JoiValidationDecorator');
@@ -34,7 +34,7 @@ ExternalDocumentStandard.schema = joi.object({
     .required()
     .when('selectedCases', {
       is: joi.array().min(1).required(),
-      then: joi.string().required().invalid('Proposed Stipulated Decision'),
+      then: joi.string().invalid('Proposed Stipulated Decision'),
     }),
   selectedCases: joi.array().items(joi.string()).optional(),
 });

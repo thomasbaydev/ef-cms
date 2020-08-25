@@ -7,27 +7,24 @@ import { petitionsClerkAddsDocketEntryFromOrder } from './journey/petitionsClerk
 import { petitionsClerkAddsNoticeToCase } from './journey/petitionsClerkAddsNoticeToCase';
 import { petitionsClerkViewsCaseDetail } from './journey/petitionsClerkViewsCaseDetail';
 import { petitionsClerkViewsCaseDetailAfterAddingNotice } from './journey/petitionsClerkViewsCaseDetailAfterAddingNotice';
-import { petitionsClerkViewsDocumentDetail } from './journey/petitionsClerkViewsDocumentDetail';
 import { petitionsClerkViewsDraftDocumentsForNotice } from './journey/petitionsClerkViewsDraftDocumentsForNotice';
 
 const test = setupTest();
-
 describe('Petitions Clerk Create Notice Journey', () => {
   beforeAll(() => {
     jest.setTimeout(30000);
   });
 
-  loginAs(test, 'petitioner');
+  loginAs(test, 'petitioner@example.com');
   petitionerChoosesProcedureType(test);
   petitionerChoosesCaseType(test);
   petitionerCreatesNewCase(test, fakeFile);
   petitionerViewsDashboard(test);
 
-  loginAs(test, 'petitionsclerk');
+  loginAs(test, 'petitionsclerk@example.com');
   petitionsClerkViewsCaseDetail(test);
   petitionsClerkAddsNoticeToCase(test);
   petitionsClerkViewsCaseDetailAfterAddingNotice(test);
   petitionsClerkViewsDraftDocumentsForNotice(test, 1);
-  petitionsClerkViewsDocumentDetail(test);
   petitionsClerkAddsDocketEntryFromOrder(test);
 });

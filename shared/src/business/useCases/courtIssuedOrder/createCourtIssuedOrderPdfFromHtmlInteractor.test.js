@@ -4,15 +4,19 @@ const {
 const {
   createCourtIssuedOrderPdfFromHtmlInteractor,
 } = require('./createCourtIssuedOrderPdfFromHtmlInteractor');
+const { ROLES } = require('../../entities/EntityConstants');
 
 describe('createCourtIssuedOrderPdfFromHtmlInteractor', () => {
   const mockPdfUrl = 'www.example.com';
 
   beforeAll(() => {
-    applicationContext.getPersistenceGateway().getCaseByCaseId.mockReturnValue({
-      caseCaption: 'Dr. Leo Marvin, Petitioner',
-      caseId: '123',
-    });
+    applicationContext
+      .getPersistenceGateway()
+      .getCaseByDocketNumber.mockReturnValue({
+        caseCaption: 'Dr. Leo Marvin, Petitioner',
+        docketNumber: '123-45',
+        docketNumberWithSuffix: '123-45W',
+      });
 
     applicationContext
       .getUseCaseHelpers()
@@ -21,14 +25,14 @@ describe('createCourtIssuedOrderPdfFromHtmlInteractor', () => {
 
   beforeEach(() => {
     applicationContext.getCurrentUser.mockReturnValue({
-      role: 'docketclerk',
+      role: ROLES.docketClerk,
       userId: '321',
     });
   });
 
   it('throws an error if the user is not authorized', async () => {
     applicationContext.getCurrentUser.mockReturnValue({
-      role: 'petitioner',
+      role: ROLES.petitioner,
       userId: '432',
     });
 
@@ -44,7 +48,7 @@ describe('createCourtIssuedOrderPdfFromHtmlInteractor', () => {
       applicationContext,
     });
     expect(
-      applicationContext.getPersistenceGateway().getCaseByCaseId,
+      applicationContext.getPersistenceGateway().getCaseByDocketNumber,
     ).toHaveBeenCalled();
   });
 
@@ -52,7 +56,15 @@ describe('createCourtIssuedOrderPdfFromHtmlInteractor', () => {
     await createCourtIssuedOrderPdfFromHtmlInteractor({
       applicationContext,
     });
-    expect(applicationContext.getDocumentGenerators().order).toHaveBeenCalled();
+    expect(
+      applicationContext.getDocumentGenerators().order,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          docketNumberWithSuffix: '123-45W',
+        }),
+      }),
+    );
   });
 
   it('returns the pdf url from the temp documents bucket', async () => {

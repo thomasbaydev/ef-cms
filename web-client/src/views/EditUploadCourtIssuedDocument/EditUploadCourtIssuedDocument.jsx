@@ -1,6 +1,6 @@
 import { Button } from '../../ustc-ui/Button/Button';
 import { CaseDetailHeader } from '../CaseDetail/CaseDetailHeader';
-import { DocumentDisplayIframe } from '../DocumentDetail/DocumentDisplayIframe';
+import { DocumentDisplayIframe } from '../DocumentDisplayIframe';
 import { ErrorNotification } from '../ErrorNotification';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FormCancelModalDialog } from '../FormCancelModalDialog';
@@ -178,7 +178,7 @@ export const EditUploadCourtIssuedDocument = connect(
                 <Button
                   onClick={() => {
                     editUploadCourtIssuedDocumentSequence({
-                      tab: 'inProgress',
+                      tab: 'drafts',
                     });
                   }}
                 >

@@ -1,21 +1,26 @@
 const {
+  CASE_STATUS_TYPES,
+  CASE_TYPES_MAP,
+  COUNTRY_TYPES,
+  DOCKET_NUMBER_SUFFIXES,
+  PARTY_TYPES,
+  PETITIONS_SECTION,
+  ROLES,
+} = require('../entities/EntityConstants');
+const {
   saveCaseDetailInternalEditInteractor,
 } = require('./saveCaseDetailInternalEditInteractor');
 const { applicationContext } = require('../test/createTestApplicationContext');
-const { Case } = require('../entities/cases/Case');
-const { ContactFactory } = require('../entities/contacts/ContactFactory');
 const { omit } = require('lodash');
-const { User } = require('../entities/User');
 
 describe('updateCase', () => {
   const MOCK_CASE = {
     caseCaption: 'Caption',
-    caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-    caseType: 'Other',
+    caseType: CASE_TYPES_MAP.other,
     contactPrimary: {
       address1: '123 Main St',
       city: 'Somewhere',
-      countryType: 'domestic',
+      countryType: COUNTRY_TYPES.DOMESTIC,
       email: 'fieri@example.com',
       name: 'Guy Fieri',
       phone: '1234567890',
@@ -24,47 +29,60 @@ describe('updateCase', () => {
     },
     createdAt: new Date().toISOString(),
     docketNumber: '56789-18',
+    docketRecord: [
+      {
+        description: 'Petition',
+        docketRecordId: '000ba5a9-b37b-479d-9201-067ec6e33000',
+        documentId: 'a6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
+        eventCode: 'P',
+        filedBy: 'Test User',
+        filingDate: '2019-01-01T00:01:00.000Z',
+        index: 1,
+      },
+    ],
     documents: [
       {
         documentId: 'a6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
         documentType: 'Petition',
+        eventCode: 'P',
+        filedBy: 'Test Petitioner',
         userId: '50c62fa0-dd90-4244-b7c7-9cb2302d7688',
-        workItems: [
-          {
-            caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-            docketNumber: '56789-18',
-            document: { documentId: 'a6b81f4d-1e47-423a-8caf-6d2fdc3d3859' },
-            isInitializeCase: true,
-            isQC: true,
-            section: 'petitions',
-            sentBy: 'petitioner',
-            workItemId: '4a57f4fe-991f-4d4b-bca4-be2a3f5bb5f8',
-          },
-        ],
+        workItem: {
+          docketNumber: '56789-18',
+          document: { documentId: 'a6b81f4d-1e47-423a-8caf-6d2fdc3d3859' },
+          isInitializeCase: true,
+          section: PETITIONS_SECTION,
+          sentBy: 'petitioner',
+          workItemId: '4a57f4fe-991f-4d4b-bca4-be2a3f5bb5f8',
+        },
       },
       {
         documentId: 'b6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
         documentType: 'Answer',
+        eventCode: 'A',
+        filedBy: 'Test Petitioner',
         userId: '50c62fa0-dd90-4244-b7c7-9cb2302d7688',
       },
       {
         documentId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
-        documentType: 'Motion',
+        documentType: 'Motion for Continuance',
+        eventCode: 'M006',
+        filedBy: 'Test Petitioner',
         userId: '50c62fa0-dd90-4244-b7c7-9cb2302d7688',
       },
     ],
     filingType: 'Myself',
-    partyType: ContactFactory.PARTY_TYPES.petitioner,
+    partyType: PARTY_TYPES.petitioner,
     petitioners: [{ name: 'Test Petitioner' }],
     preferredTrialCity: 'Washington, District of Columbia',
     procedureType: 'Regular',
-    status: Case.STATUS_TYPES.new,
-    userId: 'userId',
+    status: CASE_STATUS_TYPES.new,
+    userId: 'e8577e31-d6d5-4c4a-adc6-520075f3dde5',
   };
 
   const petitionsClerkUser = {
     name: 'petitions clerk',
-    role: User.ROLES.petitionsClerk,
+    role: ROLES.petitionsClerk,
     userId: '54cddcd9-d012-4874-b74f-73732c95d42b',
   };
 
@@ -77,15 +95,15 @@ describe('updateCase', () => {
 
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(MOCK_CASE);
+      .getCaseByDocketNumber.mockReturnValue(MOCK_CASE);
   });
 
   it('should throw an error if the caseToUpdate passed in is an invalid case', async () => {
     await expect(
       saveCaseDetailInternalEditInteractor({
         applicationContext,
-        caseId: MOCK_CASE.caseId,
-        caseToUpdate: omit(MOCK_CASE, 'docketNumber'),
+        caseToUpdate: omit(MOCK_CASE, 'caseCaption'),
+        docketNumber: MOCK_CASE.docketNumber,
       }),
     ).rejects.toThrow('The Case entity was invalid');
   });
@@ -94,7 +112,7 @@ describe('updateCase', () => {
     await expect(
       saveCaseDetailInternalEditInteractor({
         applicationContext,
-        caseId: MOCK_CASE.caseId,
+        docketNumber: MOCK_CASE.docketNumber,
       }),
     ).rejects.toThrow('cannot process');
   });
@@ -104,17 +122,16 @@ describe('updateCase', () => {
 
     const updatedCase = await saveCaseDetailInternalEditInteractor({
       applicationContext,
-      caseId: caseToUpdate.caseId,
       caseToUpdate: {
         ...caseToUpdate,
         caseCaption: 'Iola Snow & Linda Singleton, Petitioners',
-        caseType: 'Innocent Spouse',
+        caseType: CASE_TYPES_MAP.innocentSpouse,
         contactPrimary: {
           address1: '193 South Hague Freeway',
           address2: 'Sunt maiores vitae ',
           address3: 'Culpa ex aliquip ven',
           city: 'Aperiam minim sunt r',
-          countryType: 'domestic',
+          countryType: COUNTRY_TYPES.DOMESTIC,
           email: 'petitioner@example.com',
           name: 'Iola Snow',
           phone: '+1 (772) 246-3448',
@@ -126,23 +143,23 @@ describe('updateCase', () => {
           address2: 'Aperiam aliquip volu',
           address3: 'Eos consequuntur max',
           city: 'Deleniti lorem sit ',
-          countryType: 'domestic',
+          countryType: COUNTRY_TYPES.DOMESTIC,
           name: 'Linda Singleton',
           phone: '+1 (153) 683-1448',
           postalCode: '89985',
           state: 'FL',
         },
         createdAt: '2019-07-24T16:30:01.940Z',
-        docketNumber: '168-19',
-        docketNumberSuffix: 'S',
+        docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.SMALL,
         filingType: 'Myself and my spouse',
         hasVerifiedIrsNotice: false,
         isPaper: false,
-        partyType: ContactFactory.PARTY_TYPES.petitionerSpouse,
+        partyType: PARTY_TYPES.petitionerSpouse,
         preferredTrialCity: 'Mobile, Alabama',
         privatePractitioners: [],
         procedureType: 'Small',
       },
+      docketNumber: caseToUpdate.docketNumber,
     });
 
     const returnedDocument = omit(updatedCase.documents[0], 'createdAt');
@@ -155,11 +172,11 @@ describe('updateCase', () => {
 
     await saveCaseDetailInternalEditInteractor({
       applicationContext,
-      caseId: caseToUpdate.caseId,
       caseToUpdate: {
         ...caseToUpdate,
         caseCaption: 'Iola Snow & Linda Singleton, Petitioners',
       },
+      docketNumber: caseToUpdate.docketNumber,
     });
 
     expect(
@@ -182,11 +199,11 @@ describe('updateCase', () => {
 
     await saveCaseDetailInternalEditInteractor({
       applicationContext,
-      caseId: caseToUpdate.caseId,
       caseToUpdate: {
         ...caseToUpdate,
         caseCaption: 'Iola Snow & Linda Singleton, Petitioners',
       },
+      docketNumber: caseToUpdate.docketNumber,
     });
 
     expect(
@@ -200,12 +217,12 @@ describe('updateCase', () => {
     await expect(
       saveCaseDetailInternalEditInteractor({
         applicationContext,
-        caseId: caseToUpdate.caseId,
         caseToUpdate: {
           ...caseToUpdate,
           contactPrimary: null,
           contactSecondary: {},
         },
+        docketNumber: caseToUpdate.docketNumber,
       }),
     ).rejects.toThrow('The Case entity was invalid');
   });
@@ -219,8 +236,8 @@ describe('updateCase', () => {
     await expect(
       saveCaseDetailInternalEditInteractor({
         applicationContext,
-        caseId: MOCK_CASE.caseId,
         caseToUpdate: MOCK_CASE,
+        docketNumber: MOCK_CASE.docketNumber,
       }),
     ).rejects.toThrow('Unauthorized for update case');
   });
@@ -234,9 +251,43 @@ describe('updateCase', () => {
     await expect(
       saveCaseDetailInternalEditInteractor({
         applicationContext,
-        caseId: '123',
         caseToUpdate: MOCK_CASE,
+        docketNumber: '123',
       }),
     ).rejects.toThrow('Unauthorized for update case');
+  });
+
+  it('should remove a new initial filing document from the case', async () => {
+    applicationContext.getCurrentUser.mockReturnValue(petitionsClerkUser);
+    const mockRQT = {
+      documentId: 'b6b81f4d-1e47-423a-8caf-6d2fdc3d3850',
+      documentType: 'Request for Place of Trial',
+      eventCode: 'RQT',
+      filedBy: 'Test Petitioner',
+      userId: '50c62fa0-dd90-4244-b7c7-9cb2302d7688',
+    };
+
+    applicationContext
+      .getPersistenceGateway()
+      .getCaseByDocketNumber.mockReturnValue({
+        ...MOCK_CASE,
+        documents: [...MOCK_CASE.documents, mockRQT],
+        isPaper: true,
+      });
+
+    await saveCaseDetailInternalEditInteractor({
+      applicationContext,
+      caseToUpdate: {
+        ...MOCK_CASE,
+        documents: [...MOCK_CASE.documents, mockRQT],
+        isPaper: true,
+        mailingDate: 'yesterday',
+      },
+      docketNumber: MOCK_CASE.docketNumber,
+    });
+
+    expect(
+      applicationContext.getUseCaseHelpers().updateInitialFilingDocuments,
+    ).toHaveBeenCalled();
   });
 });

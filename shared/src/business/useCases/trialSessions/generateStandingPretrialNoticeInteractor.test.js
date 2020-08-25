@@ -4,6 +4,7 @@ const {
 const {
   generateStandingPretrialNoticeInteractor,
 } = require('./generateStandingPretrialNoticeInteractor');
+const { DOCKET_NUMBER_SUFFIXES } = require('../../entities/EntityConstants');
 
 describe('generateStandingPretrialNoticeInteractor', () => {
   beforeEach(() => {
@@ -28,7 +29,7 @@ describe('generateStandingPretrialNoticeInteractor', () => {
           return {
             caseCaption: 'Test Case Caption',
             docketNumber: '234-56',
-            docketNumberSuffix: 'S',
+            docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.SMALL,
             docketNumberWithSuffix: '234-56S',
             irsPractitioners: [
               {
@@ -51,7 +52,7 @@ describe('generateStandingPretrialNoticeInteractor', () => {
         postalCode: '12345',
         startDate: '2020-02-03T09:00:00.000Z',
         startTime: '09:00',
-        state: 'ST',
+        state: 'AL',
       });
   });
 
@@ -125,5 +126,16 @@ describe('generateStandingPretrialNoticeInteractor', () => {
     expect(data.trialInfo.fullStartDate).toEqual('Monday, February 3, 2020');
     expect(data.trialInfo.startDay).toEqual('Monday');
     expect(data.trialInfo.startTime).toEqual('09:00 AM');
+  });
+
+  it('should add a served stamp to the document', async () => {
+    await generateStandingPretrialNoticeInteractor({
+      applicationContext,
+      docketNumber: '234-56',
+      trialSessionId: '959c4338-0fac-42eb-b0eb-d53b8d0195cc',
+    });
+    expect(
+      applicationContext.getUseCaseHelpers().addServedStampToDocument,
+    ).toHaveBeenCalled();
   });
 });

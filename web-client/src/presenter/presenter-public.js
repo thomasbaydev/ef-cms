@@ -1,5 +1,3 @@
-import { state } from './state-public';
-
 import { advancedSearchTabChangeSequence } from './sequences/advancedSearchTabChangeSequence';
 import { cerebralBindSimpleSetStateSequence } from './sequences/cerebralBindSimpleSetStateSequence';
 import { clearAdvancedSearchFormSequence } from './sequences/clearAdvancedSearchFormSequence';
@@ -7,11 +5,14 @@ import { clearPdfPreviewUrlSequence } from './sequences/clearPdfPreviewUrlSequen
 import { gotoPublicCaseDetailSequence } from './sequences/public/gotoPublicCaseDetailSequence';
 import { gotoPublicPrintableDocketRecordSequence } from './sequences/public/gotoPublicPrintableDocketRecordSequence';
 import { gotoPublicSearchSequence } from './sequences/public/gotoPublicSearchSequence';
+import { gotoTodaysOpinionsSequence } from './sequences/public/gotoTodaysOpinionsSequence';
 import { navigateBackSequence } from './sequences/navigateBackSequence';
 import { navigateToCognitoSequence } from './sequences/navigateToCognitoSequence';
 import { navigateToPublicSiteSequence } from './sequences/public/navigateToPublicSiteSequence';
 import { notFoundErrorSequence } from './sequences/notFoundErrorSequence';
+import { openCaseDocumentDownloadUrlSequence } from './sequences/openCaseDocumentDownloadUrlSequence';
 import { showMoreResultsSequence } from './sequences/showMoreResultsSequence';
+import { state } from './state-public';
 import { submitPublicCaseAdvancedSearchSequence } from './sequences/public/submitPublicCaseAdvancedSearchSequence';
 import { submitPublicCaseDocketNumberSearchSequence } from './sequences/public/submitPublicCaseDocketNumberSearchSequence';
 import { submitPublicOpinionAdvancedSearchSequence } from './sequences/public/submitPublicOpinionAdvancedSearchSequence';
@@ -37,10 +38,12 @@ export const presenter = {
     gotoPublicCaseDetailSequence,
     gotoPublicPrintableDocketRecordSequence,
     gotoPublicSearchSequence,
+    gotoTodaysOpinionsSequence,
     navigateBackSequence,
     navigateToCognitoSequence,
     navigateToPublicSiteSequence,
     notFoundErrorSequence,
+    openCaseDocumentDownloadUrlSequence,
     showMoreResultsSequence,
     submitPublicCaseAdvancedSearchSequence: submitPublicCaseAdvancedSearchSequence,
     submitPublicCaseDocketNumberSearchSequence,

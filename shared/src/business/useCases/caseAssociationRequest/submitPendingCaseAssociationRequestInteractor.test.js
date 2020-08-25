@@ -4,25 +4,24 @@ const {
 const {
   submitPendingCaseAssociationRequestInteractor,
 } = require('./submitPendingCaseAssociationRequestInteractor');
-const { User } = require('../../entities/User');
+const { ROLES } = require('../../entities/EntityConstants');
 
 describe('submitPendingCaseAssociationRequest', () => {
   let caseRecord = {
-    caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     docketNumber: '123-19',
   };
 
   it('should throw an error when not authorized', async () => {
     applicationContext.getCurrentUser.mockReturnValue({
       name: 'Emmett Lathrop "Doc" Brown, Ph.D.',
-      role: User.ROLES.adc,
+      role: ROLES.adc,
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
 
     await expect(
       submitPendingCaseAssociationRequestInteractor({
         applicationContext,
-        caseId: caseRecord.caseId,
+        docketNumber: caseRecord.docketNumber,
         userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
       }),
     ).rejects.toThrow('Unauthorized');
@@ -31,12 +30,12 @@ describe('submitPendingCaseAssociationRequest', () => {
   it('should not add mapping if already associated', async () => {
     applicationContext.getCurrentUser.mockReturnValue({
       name: 'Emmett Lathrop "Doc" Brown, Ph.D.',
-      role: User.ROLES.privatePractitioner,
+      role: ROLES.privatePractitioner,
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
     applicationContext.getPersistenceGateway().getUserById.mockReturnValue({
       name: 'Emmett Lathrop "Doc" Brown, Ph.D.',
-      role: User.ROLES.privatePractitioner,
+      role: ROLES.privatePractitioner,
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
     applicationContext
@@ -45,7 +44,7 @@ describe('submitPendingCaseAssociationRequest', () => {
 
     await submitPendingCaseAssociationRequestInteractor({
       applicationContext,
-      caseId: caseRecord.caseId,
+      docketNumber: caseRecord.docketNumber,
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
 
@@ -57,7 +56,7 @@ describe('submitPendingCaseAssociationRequest', () => {
   it('should not add mapping if these is already a pending association', async () => {
     await submitPendingCaseAssociationRequestInteractor({
       applicationContext,
-      caseId: caseRecord.caseId,
+      docketNumber: caseRecord.docketNumber,
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
 
@@ -76,7 +75,7 @@ describe('submitPendingCaseAssociationRequest', () => {
 
     await submitPendingCaseAssociationRequestInteractor({
       applicationContext,
-      caseId: caseRecord.caseId,
+      docketNumber: caseRecord.docketNumber,
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
     });
 

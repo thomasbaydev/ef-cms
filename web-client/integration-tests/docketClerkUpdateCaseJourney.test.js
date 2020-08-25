@@ -26,26 +26,25 @@ describe('docket clerk update case journey', () => {
     test.closeSocket();
   });
 
-  loginAs(test, 'petitioner');
+  loginAs(test, 'petitioner@example.com');
 
   it('create a case', async () => {
     const caseDetail = await uploadPetition(test, overrides);
     expect(caseDetail.docketNumber).toBeDefined();
-    test.caseId = caseDetail.caseId;
     test.docketNumber = caseDetail.docketNumber;
   });
 
-  loginAs(test, 'docketclerk');
+  loginAs(test, 'docketclerk@example.com');
   docketClerkUpdatesCaseStatusToReadyForTrial(test);
   docketClerkCreatesATrialSession(test, overrides);
   docketClerkViewsTrialSessionList(test, overrides);
   docketClerkViewsEligibleCasesForTrialSession(test);
 
-  loginAs(test, 'petitionsclerk');
-  markAllCasesAsQCed(test, () => [test.caseId]);
+  loginAs(test, 'petitionsclerk@example.com');
+  markAllCasesAsQCed(test, () => [test.docketNumber]);
   petitionsClerkSetsATrialSessionsSchedule(test);
 
-  loginAs(test, 'docketclerk');
+  loginAs(test, 'docketclerk@example.com');
   docketClerkUpdatesCaseStatusFromCalendaredToSubmitted(test);
   docketClerkViewsInactiveCasesForTrialSession(test);
   docketClerkUpdatesCaseStatusToReadyForTrial(test);

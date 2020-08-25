@@ -1,10 +1,17 @@
-const joi = require('@hapi/joi');
+const joi = require('joi');
+const {
+  BUSINESS_TYPES,
+  FILING_TYPES,
+  MAX_FILE_SIZE_BYTES,
+  PARTY_TYPES,
+  PROCEDURE_TYPES,
+  ROLES,
+  TRIAL_CITY_STRINGS,
+  TRIAL_LOCATION_MATCHER,
+} = require('../EntityConstants');
 const {
   joiValidationDecorator,
 } = require('../../../utilities/JoiValidationDecorator');
-const {
-  MAX_FILE_SIZE_BYTES,
-} = require('../../../persistence/s3/getUploadPolicy');
 const { Case } = require('./Case');
 const { ContactFactory } = require('../contacts/ContactFactory');
 
@@ -15,13 +22,19 @@ const { ContactFactory } = require('../contacts/ContactFactory');
  * @param {object} rawCase the raw case data
  * @constructor
  */
-function CaseExternal(rawCase) {
-  CaseExternal.prototype.init.call(this, rawCase);
-  CaseExternal.prototype.initContacts.call(this, rawCase);
+function CaseExternal(rawCase, { applicationContext }) {
+  CaseExternal.prototype.init.call(this, rawCase, { applicationContext });
+  CaseExternal.prototype.initContacts.call(this, rawCase, {
+    applicationContext,
+  });
 }
 
-CaseExternal.prototype.initContacts = function (rawCase) {
+CaseExternal.prototype.initContacts = function (
+  rawCase,
+  { applicationContext },
+) {
   const contacts = ContactFactory.createContacts({
+    applicationContext,
     contactInfo: {
       primary: rawCase.contactPrimary,
       secondary: rawCase.contactSecondary,
@@ -54,42 +67,79 @@ CaseExternal.prototype.init = function (rawCase) {
 CaseExternal.VALIDATION_ERROR_MESSAGES = Case.VALIDATION_ERROR_MESSAGES;
 
 CaseExternal.commonRequirements = {
-  businessType: joi.string().optional().allow(null),
-  caseType: joi.when('hasIrsNotice', {
+  businessType: joi
+    .string()
+    .valid(...Object.values(BUSINESS_TYPES))
+    .optional()
+    .allow(null),
+  caseType: joi.string().when('hasIrsNotice', {
     is: joi.exist(),
     otherwise: joi.optional().allow(null),
-    then: joi.string().required(),
+    then: joi.required(),
   }),
-  contactPrimary: joi.object().optional(),
-  contactSecondary: joi.object().optional(),
+  contactPrimary: joi.object().optional(), // validated with the ContactFactory
+  contactSecondary: joi.object().optional(), // validated with the ContactFactory
   countryType: joi.string().optional(),
-  filingType: joi.string().required(),
+  filingType: joi
+    .string()
+    .valid(
+      ...FILING_TYPES[ROLES.petitioner],
+      ...FILING_TYPES[ROLES.privatePractitioner],
+    )
+    .required(),
   hasIrsNotice: joi.boolean().required(),
   ownershipDisclosureFile: joi.object().when('filingType', {
     is: 'A business',
     otherwise: joi.optional().allow(null),
     then: joi.required(),
   }),
-  ownershipDisclosureFileSize: joi.when('ownershipDisclosureFile', {
-    is: joi.exist(),
-    otherwise: joi.optional().allow(null),
-    then: joi.number().required().min(1).max(MAX_FILE_SIZE_BYTES).integer(),
-  }),
-  partyType: joi.string().required(),
-  petitionFile: joi.object().required(),
-  petitionFileSize: joi.when('petitionFile', {
-    is: joi.exist(),
-    otherwise: joi.optional().allow(null),
-    then: joi.number().required().min(1).max(MAX_FILE_SIZE_BYTES).integer(),
-  }),
-  preferredTrialCity: joi.string().required(),
-  procedureType: joi.string().required(),
-  stinFile: joi.object().required(),
-  stinFileSize: joi.when('stinFile', {
-    is: joi.exist(),
-    otherwise: joi.optional().allow(null),
-    then: joi.number().required().min(1).max(MAX_FILE_SIZE_BYTES).integer(),
-  }),
+  ownershipDisclosureFileSize: joi
+    .number()
+    .integer()
+    .min(1)
+    .max(MAX_FILE_SIZE_BYTES)
+    .when('ownershipDisclosureFile', {
+      is: joi.exist(),
+      otherwise: joi.optional().allow(null),
+      then: joi.required(),
+    }),
+  partyType: joi
+    .string()
+    .valid(...Object.values(PARTY_TYPES))
+    .required(),
+  petitionFile: joi.object().required(), // object of type File
+  petitionFileSize: joi
+    .number()
+    .integer()
+    .min(1)
+    .max(MAX_FILE_SIZE_BYTES)
+    .when('petitionFile', {
+      is: joi.exist(),
+      otherwise: joi.optional().allow(null),
+      then: joi.required(),
+    }),
+  preferredTrialCity: joi
+    .alternatives()
+    .try(
+      joi.string().valid(...TRIAL_CITY_STRINGS, null),
+      joi.string().pattern(TRIAL_LOCATION_MATCHER), // Allow unique values for testing
+    )
+    .required(),
+  procedureType: joi
+    .string()
+    .valid(...PROCEDURE_TYPES)
+    .required(),
+  stinFile: joi.object().required(), // object of type File
+  stinFileSize: joi
+    .number()
+    .integer()
+    .min(1)
+    .max(MAX_FILE_SIZE_BYTES)
+    .when('stinFile', {
+      is: joi.exist(),
+      otherwise: joi.optional().allow(null),
+      then: joi.required(),
+    }),
 };
 
 joiValidationDecorator(

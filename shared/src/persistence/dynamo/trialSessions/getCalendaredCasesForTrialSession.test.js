@@ -3,16 +3,20 @@ const {
   applicationContext,
 } = require('../../../business/test/createTestApplicationContext');
 const {
+  CASE_STATUS_TYPES,
+} = require('../../../business/entities/EntityConstants');
+const {
   getCalendaredCasesForTrialSession,
 } = require('./getCalendaredCasesForTrialSession');
+const { MOCK_CASE } = require('../../../test/mockCase');
 
 describe('getCalendaredCasesForTrialSession', () => {
   beforeEach(() => {
     client.get = jest.fn().mockReturnValue({
       caseOrder: [
         {
-          caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
           disposition: 'something',
+          docketNumber: MOCK_CASE.docketNumber,
           removedFromTrial: true,
         },
       ],
@@ -20,29 +24,29 @@ describe('getCalendaredCasesForTrialSession', () => {
 
     client.query = jest.fn().mockReturnValue([
       {
-        caseId: '123',
-        pk: 'case|123',
-        sk: 'case|23',
+        docketNumber: MOCK_CASE.docketNumber,
+        pk: `case|${MOCK_CASE.docketNumber}`,
+        sk: `case|${MOCK_CASE.docketNumber}`,
         status: 'New',
       },
       {
-        pk: 'case|123',
+        pk: `case|${MOCK_CASE.docketNumber}`,
         sk: 'irsPractitioner|123',
         userId: 'abc-123',
       },
       {
-        pk: 'case|123',
+        pk: `case|${MOCK_CASE.docketNumber}`,
         sk: 'privatePractitioner|123',
         userId: 'abc-123',
       },
       {
         docketRecordId: 'abc-123',
-        pk: 'case|123',
+        pk: `case|${MOCK_CASE.docketNumber}`,
         sk: 'docket-record|123',
       },
       {
         documentId: 'abc-123',
-        pk: 'case|123',
+        pk: `case|${MOCK_CASE.docketNumber}`,
         sk: 'document|123',
       },
     ]);
@@ -54,41 +58,41 @@ describe('getCalendaredCasesForTrialSession', () => {
     });
     expect(result).toEqual([
       {
-        caseId: '123',
         correspondence: [],
         disposition: 'something',
+        docketNumber: MOCK_CASE.docketNumber,
         docketRecord: [
           {
             docketRecordId: 'abc-123',
-            pk: 'case|123',
+            pk: `case|${MOCK_CASE.docketNumber}`,
             sk: 'docket-record|123',
           },
         ],
         documents: [
           {
             documentId: 'abc-123',
-            pk: 'case|123',
+            pk: `case|${MOCK_CASE.docketNumber}`,
             sk: 'document|123',
           },
         ],
         irsPractitioners: [
           {
-            pk: 'case|123',
+            pk: `case|${MOCK_CASE.docketNumber}`,
             sk: 'irsPractitioner|123',
             userId: 'abc-123',
           },
         ],
-        pk: 'case|123',
+        pk: `case|${MOCK_CASE.docketNumber}`,
         privatePractitioners: [
           {
-            pk: 'case|123',
+            pk: `case|${MOCK_CASE.docketNumber}`,
             sk: 'privatePractitioner|123',
             userId: 'abc-123',
           },
         ],
         removedFromTrial: true,
-        sk: 'case|23',
-        status: 'New',
+        sk: `case|${MOCK_CASE.docketNumber}`,
+        status: CASE_STATUS_TYPES.new,
       },
     ]);
   });

@@ -3,7 +3,7 @@ const {
 } = require('./archiveDraftDocumentInteractor');
 const { applicationContext } = require('../test/createTestApplicationContext');
 const { MOCK_CASE } = require('../../test/mockCase');
-const { User } = require('../entities/User');
+const { ROLES } = require('../entities/EntityConstants');
 
 describe('archiveDraftDocumentInteractor', () => {
   it('returns an unauthorized error on non petitionsclerk users', async () => {
@@ -12,7 +12,7 @@ describe('archiveDraftDocumentInteractor', () => {
     await expect(
       archiveDraftDocumentInteractor({
         applicationContext,
-        caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+        docketNumber: '101-20',
         documentId: 'a54ba5a9-b37b-479d-9201-067ec6e335bb',
       }),
     ).rejects.toThrow('Unauthorized');
@@ -20,15 +20,15 @@ describe('archiveDraftDocumentInteractor', () => {
 
   it('expect the updated case to contain the archived document', async () => {
     applicationContext.getCurrentUser.mockReturnValue({
-      role: User.ROLES.petitionsClerk,
+      role: ROLES.petitionsClerk,
     });
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockReturnValue(MOCK_CASE);
+      .getCaseByDocketNumber.mockReturnValue(MOCK_CASE);
 
     await archiveDraftDocumentInteractor({
       applicationContext,
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+      docketNumber: '101-20',
       documentId: 'abc81f4d-1e47-423a-8caf-6d2fdc3d3859',
     });
 

@@ -5,29 +5,31 @@ const {
   associatePrivatePractitionerToCase,
 } = require('./associatePrivatePractitionerToCase');
 const {
+  CASE_TYPES_MAP,
+  COUNTRY_TYPES,
+  PARTY_TYPES,
+  ROLES,
   SERVICE_INDICATOR_TYPES,
-} = require('../../entities/cases/CaseConstants');
+} = require('../../entities/EntityConstants');
 const { MOCK_USERS } = require('../../../test/mockUsers');
-const { User } = require('../../entities/User');
 
 describe('associatePrivatePractitionerToCase', () => {
   let caseRecord;
 
   const practitionerUser = {
     name: 'Emmett Lathrop "Doc" Brown, Ph.D.',
-    role: User.ROLES.privatePractitioner,
+    role: ROLES.privatePractitioner,
     userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
   };
 
   beforeEach(() => {
     caseRecord = {
       caseCaption: 'Case Caption',
-      caseId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
-      caseType: 'Deficiency',
+      caseType: CASE_TYPES_MAP.deficiency,
       contactPrimary: {
         address1: '123 Main St',
         city: 'Somewhere',
-        countryType: 'domestic',
+        countryType: COUNTRY_TYPES.DOMESTIC,
         email: 'petitioner@example.com',
         name: 'Test Petitioner',
         phone: '1234567',
@@ -38,7 +40,7 @@ describe('associatePrivatePractitionerToCase', () => {
       contactSecondary: {
         address1: '123 Main St',
         city: 'Somewhere',
-        countryType: 'domestic',
+        countryType: COUNTRY_TYPES.DOMESTIC,
         name: 'Test Petitioner Secondary',
         phone: '1234567',
         postalCode: '12345',
@@ -61,14 +63,17 @@ describe('associatePrivatePractitionerToCase', () => {
           documentId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
           documentTitle: 'Petition',
           documentType: 'Petition',
+          eventCode: 'P',
+          filedBy: 'Test Petitioner',
           processingStatus: 'pending',
           userId: '8100e22a-c7f2-4574-b4f6-eb092fca9f35',
         },
       ],
       filingType: 'Myself',
-      partyType: 'Petitioner & spouse',
+      partyType: PARTY_TYPES.petitionerSpouse,
       preferredTrialCity: 'Fresno, California',
       procedureType: 'Regular',
+      userId: 'e8577e31-d6d5-4c4a-adc6-520075f3dde5',
     };
 
     applicationContext.getCurrentUser.mockReturnValue(
@@ -76,7 +81,7 @@ describe('associatePrivatePractitionerToCase', () => {
     );
     applicationContext
       .getPersistenceGateway()
-      .getCaseByCaseId.mockResolvedValue(caseRecord);
+      .getCaseByDocketNumber.mockResolvedValue(caseRecord);
   });
 
   it('should not add mapping if already there', async () => {
@@ -86,7 +91,7 @@ describe('associatePrivatePractitionerToCase', () => {
 
     await associatePrivatePractitionerToCase({
       applicationContext,
-      caseId: caseRecord.caseId,
+      docketNumber: caseRecord.docketNumber,
       representingPrimary: true,
       representingSecondary: false,
       user: practitionerUser,
@@ -107,7 +112,7 @@ describe('associatePrivatePractitionerToCase', () => {
 
     await associatePrivatePractitionerToCase({
       applicationContext,
-      caseId: caseRecord.caseId,
+      docketNumber: caseRecord.docketNumber,
       representingPrimary: true,
       representingSecondary: false,
       user: practitionerUser,
@@ -128,7 +133,7 @@ describe('associatePrivatePractitionerToCase', () => {
 
     await associatePrivatePractitionerToCase({
       applicationContext,
-      caseId: caseRecord.caseId,
+      docketNumber: caseRecord.docketNumber,
       representingPrimary: true,
       representingSecondary: true,
       user: practitionerUser,
@@ -156,7 +161,7 @@ describe('associatePrivatePractitionerToCase', () => {
 
     await associatePrivatePractitionerToCase({
       applicationContext,
-      caseId: caseRecord.caseId,
+      docketNumber: caseRecord.docketNumber,
       representingPrimary: false,
       representingSecondary: true,
       user: practitionerUser,

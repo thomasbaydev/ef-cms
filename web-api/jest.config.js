@@ -11,6 +11,10 @@ module.exports = {
     '!src/**/*Handlers.js',
     '!src/**/*Lambda.js',
     '!src/**/*.test.js',
+    '!src/app.js',
+    '!src/app-public.js',
+    '!src/app-local.js',
+    '!src/app-public-local.js',
   ],
   verbose: false,
 };

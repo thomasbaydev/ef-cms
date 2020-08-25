@@ -1,4 +1,4 @@
-const joi = require('@hapi/joi');
+const joi = require('joi');
 const { ContactFactory } = require('./ContactFactory');
 
 /**
@@ -9,6 +9,7 @@ exports.getPetitionerTrustContact = ContactFactory.createContactFactory({
     secondaryName: 'Enter name of trustee',
   },
   additionalValidation: {
-    secondaryName: joi.string().required(),
+    secondaryName: joi.string().max(500).required(),
   },
+  contactName: 'PetitionerTrustContact',
 });

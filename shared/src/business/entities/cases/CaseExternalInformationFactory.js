@@ -1,4 +1,4 @@
-const joi = require('@hapi/joi');
+const joi = require('joi');
 const {
   joiValidationDecorator,
 } = require('../../../utilities/JoiValidationDecorator');
@@ -13,12 +13,14 @@ const { CaseExternal } = require('./CaseExternal');
  * @param {object} rawCase the raw case data
  * @constructor
  */
-function CaseExternalInformationFactory(rawCase) {
-  CaseExternal.prototype.init.call(this, rawCase);
+function CaseExternalInformationFactory(rawCase, { applicationContext }) {
+  CaseExternal.prototype.init.call(this, rawCase, { applicationContext });
   this.wizardStep = rawCase.wizardStep;
 
   if (+this.wizardStep >= 3) {
-    CaseExternal.prototype.initContacts.call(this, rawCase);
+    CaseExternal.prototype.initContacts.call(this, rawCase, {
+      applicationContext,
+    });
   }
 }
 
@@ -72,7 +74,7 @@ const wizardStep4 = atWizardStep(4, {
 });
 
 const schema = {
-  wizardStep: joi.string().required(),
+  wizardStep: joi.string().valid('1', '2', '3', '4').required(),
   ...wizardStep1,
   ...wizardStep2,
   ...wizardStep3,

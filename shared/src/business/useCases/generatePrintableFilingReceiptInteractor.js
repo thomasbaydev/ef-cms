@@ -7,20 +7,20 @@ const { getCaseCaptionMeta } = require('../utilities/getCaseCaptionMeta');
  *
  * @param {object} providers the providers object
  * @param {object} providers.applicationContext the application context
- * @param {string} providers.caseId the id of the case the documents were filed in
- * @param {object} providers.documentsFiled object containing the caseId and documents for the filing receipt to be generated
+ * @param {string} providers.docketNumber the docket number of the case the documents were filed in
+ * @param {object} providers.documentsFiled object containing the docketNumber and documents for the filing receipt to be generated
  * @returns {string} url for the generated document on the storage client
  */
 exports.generatePrintableFilingReceiptInteractor = async ({
   applicationContext,
-  caseId,
+  docketNumber,
   documentsFiled,
 }) => {
   const caseSource = await applicationContext
     .getPersistenceGateway()
-    .getCaseByCaseId({
+    .getCaseByDocketNumber({
       applicationContext,
-      caseId,
+      docketNumber,
     });
 
   const caseEntity = new Case(caseSource, { applicationContext }).validate();
@@ -29,7 +29,6 @@ exports.generatePrintableFilingReceiptInteractor = async ({
     const document = new Document(documentData, {
       applicationContext,
     });
-    document.generateFiledBy(caseEntity);
     return {
       attachments: document.attachments,
       certificateOfService: document.certificateOfService,
@@ -46,7 +45,7 @@ exports.generatePrintableFilingReceiptInteractor = async ({
 
   if (documentsFiled.hasSupportingDocuments) {
     filingReceiptDocumentParams.supportingDocuments = documentsFiled.supportingDocuments.map(
-      supportingDocument => getDocumentInfo(supportingDocument),
+      getDocumentInfo,
     );
   }
 
@@ -58,8 +57,7 @@ exports.generatePrintableFilingReceiptInteractor = async ({
 
   if (documentsFiled.hasSecondarySupportingDocuments) {
     filingReceiptDocumentParams.secondarySupportingDocuments = documentsFiled.secondarySupportingDocuments.map(
-      secondarySupportingDocument =>
-        getDocumentInfo(secondarySupportingDocument),
+      getDocumentInfo,
     );
   }
 

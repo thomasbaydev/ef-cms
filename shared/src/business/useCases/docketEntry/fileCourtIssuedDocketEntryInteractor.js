@@ -2,14 +2,16 @@ const {
   isAuthorized,
   ROLE_PERMISSIONS,
 } = require('../../../authorization/authorizationClientService');
-const { capitalize, omit } = require('lodash');
+const {
+  TRANSCRIPT_EVENT_CODE,
+  UNSERVABLE_EVENT_CODES,
+} = require('../../entities/EntityConstants');
 const { Case } = require('../../entities/cases/Case');
-const { createISODateString } = require('../../utilities/DateHandler');
-const { DOCKET_SECTION } = require('../../entities/WorkQueue');
+const { DOCKET_SECTION } = require('../../entities/EntityConstants');
 const { DocketRecord } = require('../../entities/DocketRecord');
 const { Document } = require('../../entities/Document');
-const { Message } = require('../../entities/Message');
 const { NotFoundError, UnauthorizedError } = require('../../../errors/errors');
+const { omit } = require('lodash');
 const { WorkItem } = require('../../entities/WorkItem');
 
 /**
@@ -33,13 +35,13 @@ exports.fileCourtIssuedDocketEntryInteractor = async ({
     throw new UnauthorizedError('Unauthorized');
   }
 
-  const { caseId, documentId } = documentMeta;
+  const { docketNumber, documentId } = documentMeta;
 
   const caseToUpdate = await applicationContext
     .getPersistenceGateway()
-    .getCaseByCaseId({
+    .getCaseByDocketNumber({
       applicationContext,
-      caseId,
+      docketNumber,
     });
 
   let caseEntity = new Case(caseToUpdate, { applicationContext });
@@ -57,13 +59,15 @@ exports.fileCourtIssuedDocketEntryInteractor = async ({
     .getUserById({ applicationContext, userId: authorizedUser.userId });
 
   let secondaryDate;
-  if (documentMeta.eventCode === Document.TRANSCRIPT_EVENT_CODE) {
+  if (documentMeta.eventCode === TRANSCRIPT_EVENT_CODE) {
     secondaryDate = documentMeta.date;
   }
 
   const numberOfPages = await applicationContext
     .getUseCaseHelpers()
     .countPagesInDocument({ applicationContext, documentId });
+
+  const isUnservable = UNSERVABLE_EVENT_CODES.includes(documentMeta.eventCode);
 
   const documentEntity = new Document(
     {
@@ -75,6 +79,7 @@ exports.fileCourtIssuedDocketEntryInteractor = async ({
       eventCode: documentMeta.eventCode,
       filedBy: undefined,
       freeText: documentMeta.freeText,
+      isDraft: false,
       isFileAttached: true,
       judge: documentMeta.judge,
       numberOfPages,
@@ -91,7 +96,6 @@ exports.fileCourtIssuedDocketEntryInteractor = async ({
       assigneeId: null,
       assigneeName: null,
       associatedJudge: caseToUpdate.associatedJudge,
-      caseId: caseId,
       caseIsInProgress: caseEntity.inProgress,
       caseStatus: caseToUpdate.status,
       caseTitle: Case.getCaseTitle(Case.getCaseCaption(caseEntity)),
@@ -103,7 +107,6 @@ exports.fileCourtIssuedDocketEntryInteractor = async ({
       },
       hideFromPendingMessages: true,
       inProgress: true,
-      isQC: true,
       section: DOCKET_SECTION,
       sentBy: user.name,
       sentByUserId: user.userId,
@@ -111,19 +114,11 @@ exports.fileCourtIssuedDocketEntryInteractor = async ({
     { applicationContext },
   );
 
-  const message = new Message(
-    {
-      from: user.name,
-      fromUserId: user.userId,
-      message: `${documentEntity.documentType} filed by ${capitalize(
-        user.role,
-      )} is ready for review.`,
-    },
-    { applicationContext },
-  );
+  if (isUnservable) {
+    workItem.setAsCompleted({ message: 'completed', user });
+  }
 
-  workItem.addMessage(message);
-  documentEntity.addWorkItem(workItem);
+  documentEntity.setWorkItem(workItem);
   caseEntity.updateDocument(documentEntity);
 
   workItem.assignToUser({
@@ -142,7 +137,7 @@ exports.fileCourtIssuedDocketEntryInteractor = async ({
         documentId: documentEntity.documentId,
         editState: JSON.stringify(documentMeta),
         eventCode: documentEntity.eventCode,
-        filingDate: documentEntity.filingDate || createISODateString(),
+        filingDate: documentEntity.filingDate,
         numberOfPages,
       },
       { applicationContext },
@@ -157,19 +152,33 @@ exports.fileCourtIssuedDocketEntryInteractor = async ({
     });
 
   const saveItems = [
-    applicationContext.getPersistenceGateway().createUserInboxRecord({
-      applicationContext,
-      workItem: workItem.validate().toRawObject(),
-    }),
-    applicationContext.getPersistenceGateway().createSectionInboxRecord({
-      applicationContext,
-      workItem: workItem.validate().toRawObject(),
-    }),
     applicationContext.getPersistenceGateway().updateCase({
       applicationContext,
       caseToUpdate: caseEntity.validate().toRawObject(),
     }),
   ];
+
+  if (isUnservable) {
+    saveItems.push(
+      applicationContext.getPersistenceGateway().putWorkItemInUsersOutbox({
+        applicationContext,
+        section: user.section,
+        userId: user.userId,
+        workItem: workItem.validate().toRawObject(),
+      }),
+    );
+  } else {
+    saveItems.push(
+      applicationContext.getPersistenceGateway().createUserInboxRecord({
+        applicationContext,
+        workItem: workItem.validate().toRawObject(),
+      }),
+      applicationContext.getPersistenceGateway().createSectionInboxRecord({
+        applicationContext,
+        workItem: workItem.validate().toRawObject(),
+      }),
+    );
+  }
 
   await Promise.all(saveItems);
 

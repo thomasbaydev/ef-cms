@@ -17,10 +17,14 @@ export const uploadExternalDocumentsAction = async ({
   path,
   store,
 }) => {
-  const { caseId, docketNumber } = get(state.caseDetail);
+  const { docketNumber } = get(state.caseDetail);
   const form = get(state.form);
 
-  const documentMetadata = { ...form, caseId, docketNumber };
+  const documentMetadata = {
+    ...form,
+    docketNumber,
+    isFileAttached: true,
+  };
 
   const documentFiles = {
     primary: form.primaryDocumentFile,
@@ -28,17 +32,20 @@ export const uploadExternalDocumentsAction = async ({
 
   if (form.secondaryDocumentFile) {
     documentFiles.secondary = form.secondaryDocumentFile;
+    documentFiles.isFileAttached = true;
   }
 
   if (form.hasSupportingDocuments) {
     form.supportingDocuments.forEach((item, idx) => {
       documentFiles[`primarySupporting${idx}`] = item.supportingDocumentFile;
+      item.isFileAttached = !!item.supportingDocumentFile;
     });
   }
 
   if (form.hasSecondarySupportingDocuments) {
     form.secondarySupportingDocuments.forEach((item, idx) => {
       documentFiles[`secondarySupporting${idx}`] = item.supportingDocumentFile;
+      item.isFileAttached = !!item.supportingDocumentFile;
     });
   }
 
@@ -67,7 +74,7 @@ export const uploadExternalDocumentsAction = async ({
   const addCoversheet = document => {
     return applicationContext.getUseCases().addCoversheetInteractor({
       applicationContext,
-      caseId: caseDetail.caseId,
+      docketNumber: caseDetail.docketNumber,
       documentId: document.documentId,
     });
   };
@@ -78,7 +85,7 @@ export const uploadExternalDocumentsAction = async ({
 
   return path.success({
     caseDetail,
-    caseId: docketNumber,
+    docketNumber,
     documentsFiled: documentMetadata,
   });
 };
