@@ -50,6 +50,9 @@ const {
   deleteWorkItemFromInbox,
 } = require('../../persistence/dynamo/workitems/deleteWorkItemFromInbox');
 const {
+  documentUrlTranslator,
+} = require('../../../src/business/utilities/documentUrlTranslator');
+const {
   formatAttachments,
 } = require('../../../src/business/utilities/formatAttachments');
 const {
@@ -122,7 +125,7 @@ const {
 } = require('../../persistence/dynamo/cases/verifyCaseForUser');
 const { createCase } = require('../../persistence/dynamo/cases/createCase');
 const { createMockDocumentClient } = require('./createMockDocumentClient');
-const { fakeData, getFakeFile } = require('./getFakeFile');
+const { fakeData, getFakeFile, testPdfDoc } = require('./getFakeFile');
 const { filterEmptyStrings } = require('../utilities/filterEmptyStrings');
 const { formatDollars } = require('../utilities/formatDollars');
 const { getConstants } = require('../../../../web-client/src/getConstants');
@@ -387,11 +390,14 @@ const createTestApplicationContext = ({ user } = {}) => {
       .fn()
       .mockImplementation(() => new Uint8Array([])),
     docketNumberGenerator: mockCreateDocketNumberGenerator,
+    documentUrlTranslator: jest.fn().mockImplementation(documentUrlTranslator),
     environment: {
+      appEndpoint: 'localhost:1234',
       stage: 'local',
       tempDocumentsBucketName: 'MockDocumentBucketName',
     },
     filterCaseMetadata: jest.fn(),
+    getAppEndpoint: () => 'localhost:1234',
     getBaseUrl: () => 'http://localhost',
     getCaseTitle: jest.fn().mockImplementation(Case.getCaseTitle),
     getChiefJudgeNameForSigning: jest.fn(),
@@ -490,4 +496,5 @@ module.exports = {
   createTestApplicationContext,
   fakeData,
   getFakeFile,
+  testPdfDoc,
 };
