@@ -18,7 +18,7 @@ export const DocumentSearchResults = connect(
     showMoreResultsSequence,
   }) {
     return (
-      <>
+      <div aria-live="polite">
         {advancedDocumentSearchHelper.showSearchResults && (
           <>
             <h1 className="margin-top-4">
@@ -65,8 +65,8 @@ export const DocumentSearchResults = connect(
                           link
                           onClick={() => {
                             openCaseDocumentDownloadUrlSequence({
+                              docketEntryId: result.docketEntryId,
                               docketNumber: result.docketNumber,
-                              documentId: result.documentId,
                               isPublic: advancedDocumentSearchHelper.isPublic,
                             });
                           }}
@@ -102,7 +102,7 @@ export const DocumentSearchResults = connect(
             <p>Check your search terms and try again.</p>
           </div>
         )}
-      </>
+      </div>
     );
   },
 );

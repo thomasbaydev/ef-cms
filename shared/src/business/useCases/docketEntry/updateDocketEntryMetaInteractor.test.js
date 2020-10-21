@@ -8,29 +8,34 @@ const { ROLES } = require('../../entities/EntityConstants');
 const { UnauthorizedError } = require('../../../errors/errors');
 
 describe('updateDocketEntryMetaInteractor', () => {
-  let docketRecord;
-  let documents;
+  let docketEntries;
 
   const mockUserId = applicationContext.getUniqueId();
 
   beforeEach(() => {
-    documents = [
+    docketEntries = [
       {
-        documentId: '000ba5a9-b37b-479d-9201-067ec6e33000',
+        docketEntryId: '000ba5a9-b37b-479d-9201-067ec6e33000',
+        documentTitle: 'Test Entry 0',
         documentType: 'Petition',
         eventCode: 'P',
         filedBy: 'Test Petitioner',
         filingDate: '2019-01-01T00:01:00.000Z',
         freeText: 'some free text',
+        index: 1,
+        partyPrimary: true,
         servedAt: '2019-01-01T00:01:00.000Z',
         servedParties: [{ name: 'Some Party' }],
         userId: mockUserId,
       },
       {
-        documentId: '111ba5a9-b37b-479d-9201-067ec6e33111',
+        docketEntryId: '111ba5a9-b37b-479d-9201-067ec6e33111',
+        documentTitle: 'Test Entry 1',
         documentType: 'Order',
         eventCode: 'O',
         filingDate: '2019-01-01T00:01:00.000Z',
+        index: 2,
+        partyPrimary: true,
         servedAt: '2019-01-02T00:01:00.000Z',
         servedParties: [{ name: 'Some Other Party' }],
         signedAt: '2019-03-01T21:40:46.415Z',
@@ -38,42 +43,26 @@ describe('updateDocketEntryMetaInteractor', () => {
         signedJudgeName: 'Dredd',
         userId: mockUserId,
       },
-    ];
-
-    docketRecord = [
       {
-        description: 'Test Entry 0',
-        docketRecordId: '000ba5a9-b37b-479d-9201-067ec6e33000',
-        documentId: '000ba5a9-b37b-479d-9201-067ec6e33000',
-        eventCode: 'P',
-        filedBy: 'Test User',
+        docketEntryId: 'd5b97867-f25d-4e26-828c-f536419c96b7',
+        documentTitle: 'Test Entry 2',
+        documentType: 'Request for Place of Trial',
+        eventCode: 'RQT',
         filingDate: '2019-01-01T00:01:00.000Z',
-        index: 1,
-      },
-      {
-        description: 'Test Entry 1',
-        docketRecordId: '111ba5a9-b37b-479d-9201-067ec6e33111',
-        documentId: '111ba5a9-b37b-479d-9201-067ec6e33111',
-        eventCode: 'O',
-        filedBy: 'Test User',
-        filingDate: '2019-01-02T00:01:00.000Z',
-        index: 2,
-      },
-      {
-        description: 'Test Entry 2',
-        eventCode: 'O',
-        filedBy: 'Test User',
-        filingDate: '2019-01-02T00:01:00.000Z',
         index: 3,
+        isMinuteEntry: true,
+        partyPrimary: true,
+        servedAt: '2019-01-02T00:01:00.000Z',
+        servedParties: [{ name: 'Some Other Party' }],
+        userId: mockUserId,
       },
     ];
 
     const caseByDocketNumber = {
       '101-20': {
         ...MOCK_CASE,
+        docketEntries,
         docketNumber: '101-20',
-        docketRecord,
-        documents,
       },
     };
 
@@ -113,11 +102,9 @@ describe('updateDocketEntryMetaInteractor', () => {
     await updateDocketEntryMetaInteractor({
       applicationContext,
       docketEntryMeta: {
-        ...docketRecord[0],
-        ...documents[0],
+        ...docketEntries[0],
       },
       docketNumber: '101-20',
-      docketRecordIndex: 0,
     });
 
     expect(
@@ -129,14 +116,13 @@ describe('updateDocketEntryMetaInteractor', () => {
     const result = await updateDocketEntryMetaInteractor({
       applicationContext,
       docketEntryMeta: {
-        ...docketRecord[0],
-        ...documents[0],
+        ...docketEntries[0],
         action: 'Updated Action',
       },
       docketNumber: '101-20',
     });
 
-    const updatedDocketEntry = result.docketRecord.find(
+    const updatedDocketEntry = result.docketEntries.find(
       record => record.index === 1,
     );
     expect(updatedDocketEntry.action).toEqual('Updated Action');
@@ -146,35 +132,33 @@ describe('updateDocketEntryMetaInteractor', () => {
     const result = await updateDocketEntryMetaInteractor({
       applicationContext,
       docketEntryMeta: {
-        ...docketRecord[0],
-        ...documents[0],
-        description: 'Updated Description',
+        ...docketEntries[0],
+        documentTitle: 'Updated Description',
       },
       docketNumber: '101-20',
     });
 
-    const updatedDocketEntry = result.docketRecord.find(
+    const updatedDocketEntry = result.docketEntries.find(
       record => record.index === 1,
     );
-    expect(updatedDocketEntry.description).toEqual('Updated Description');
+    expect(updatedDocketEntry.documentTitle).toEqual('Updated Description');
   });
 
   it('should update the docket record and document filedBy', async () => {
     const result = await updateDocketEntryMetaInteractor({
       applicationContext,
       docketEntryMeta: {
-        ...docketRecord[0],
-        ...documents[0],
+        ...docketEntries[0],
         partyPrimary: true,
       },
       docketNumber: '101-20',
     });
 
-    const updatedDocketEntry = result.docketRecord.find(
+    const updatedDocketEntry = result.docketEntries.find(
       record => record.index === 1,
     );
-    const updatedDocument = result.documents.find(
-      document => document.documentId === updatedDocketEntry.documentId,
+    const updatedDocument = result.docketEntries.find(
+      document => document.docketEntryId === updatedDocketEntry.docketEntryId,
     );
     expect(updatedDocketEntry.filedBy).toEqual('Petr. Test Petitioner');
     expect(updatedDocument.filedBy).toEqual('Petr. Test Petitioner');
@@ -184,14 +168,13 @@ describe('updateDocketEntryMetaInteractor', () => {
     const result = await updateDocketEntryMetaInteractor({
       applicationContext,
       docketEntryMeta: {
-        ...docketRecord[0],
-        ...documents[0],
+        ...docketEntries[0],
         filingDate: '2020-01-01T00:01:00.000Z',
       },
       docketNumber: '101-20',
     });
 
-    const updatedDocketEntry = result.docketRecord.find(
+    const updatedDocketEntry = result.docketEntries.find(
       record => record.index === 1,
     );
     expect(updatedDocketEntry.filingDate).toEqual('2020-01-01T00:01:00.000Z');
@@ -201,18 +184,17 @@ describe('updateDocketEntryMetaInteractor', () => {
     const result = await updateDocketEntryMetaInteractor({
       applicationContext,
       docketEntryMeta: {
-        ...docketRecord[0],
-        ...documents[0],
+        ...docketEntries[0],
         servedAt: '2020-01-01T00:01:00.000Z',
       },
       docketNumber: '101-20',
     });
 
-    const updatedDocketEntry = result.docketRecord.find(
+    const updatedDocketEntry = result.docketEntries.find(
       record => record.index === 1,
     );
-    const updatedDocument = result.documents.find(
-      document => document.documentId === updatedDocketEntry.documentId,
+    const updatedDocument = result.docketEntries.find(
+      document => document.docketEntryId === updatedDocketEntry.docketEntryId,
     );
     expect(updatedDocument.servedAt).toEqual('2020-01-01T00:01:00.000Z');
   });
@@ -221,19 +203,18 @@ describe('updateDocketEntryMetaInteractor', () => {
     const result = await updateDocketEntryMetaInteractor({
       applicationContext,
       docketEntryMeta: {
-        ...docketRecord[0],
-        ...documents[0],
+        ...docketEntries[0],
         hasOtherFilingParty: true,
         otherFilingParty: 'Brianna Noble',
       },
       docketNumber: '101-20',
     });
 
-    const updatedDocketEntry = result.docketRecord.find(
+    const updatedDocketEntry = result.docketEntries.find(
       record => record.index === 1,
     );
-    const updatedDocument = result.documents.find(
-      document => document.documentId === updatedDocketEntry.documentId,
+    const updatedDocument = result.docketEntries.find(
+      document => document.docketEntryId === updatedDocketEntry.docketEntryId,
     );
     expect(updatedDocument.hasOtherFilingParty).toBe(true);
     expect(updatedDocument.otherFilingParty).toBe('Brianna Noble');
@@ -243,18 +224,17 @@ describe('updateDocketEntryMetaInteractor', () => {
     const result = await updateDocketEntryMetaInteractor({
       applicationContext,
       docketEntryMeta: {
-        ...docketRecord[0],
-        ...documents[0],
+        ...docketEntries[0],
         freeText: undefined,
       },
       docketNumber: '101-20',
     });
 
-    const updatedDocketEntry = result.docketRecord.find(
+    const updatedDocketEntry = result.docketEntries.find(
       record => record.index === 1,
     );
-    const updatedDocument = result.documents.find(
-      document => document.documentId === updatedDocketEntry.documentId,
+    const updatedDocument = result.docketEntries.find(
+      document => document.docketEntryId === updatedDocketEntry.docketEntryId,
     );
     expect(updatedDocument.freeText).toBeUndefined();
   });
@@ -263,8 +243,7 @@ describe('updateDocketEntryMetaInteractor', () => {
     await updateDocketEntryMetaInteractor({
       applicationContext,
       docketEntryMeta: {
-        ...docketRecord[0],
-        ...documents[0],
+        ...docketEntries[0],
         servedAt: '2020-01-01T00:01:00.000Z',
       },
       docketNumber: '101-20',
@@ -275,12 +254,48 @@ describe('updateDocketEntryMetaInteractor', () => {
     ).toHaveBeenCalled();
   });
 
-  it('should generate a new coversheet for the document if the filingDate field is changed', async () => {
+  it('should not generate a new coversheet for a court-issued docket entry if the servedAt field is changed', async () => {
     await updateDocketEntryMetaInteractor({
       applicationContext,
       docketEntryMeta: {
-        ...docketRecord[0],
-        ...documents[0],
+        ...docketEntries[1],
+        filingDate: '2019-01-02T00:01:00.000Z',
+      },
+      docketNumber: '101-20',
+    });
+
+    expect(
+      applicationContext.getUseCases().addCoversheetInteractor,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('should make a call to update the docketEntryEntity before adding a coversheet when the filingDate field is changed', async () => {
+    await updateDocketEntryMetaInteractor({
+      applicationContext,
+      docketEntryMeta: {
+        ...docketEntries[0],
+        filingDate: '2020-08-01T00:01:00.000Z',
+      },
+      docketNumber: '101-20',
+    });
+
+    expect(
+      applicationContext.getPersistenceGateway().updateDocketEntry,
+    ).toHaveBeenCalled();
+    expect(
+      applicationContext.getPersistenceGateway().updateDocketEntry.mock
+        .calls[0][0],
+    ).toMatchObject({
+      docketNumber: '101-20',
+      document: { filingDate: '2020-08-01T00:01:00.000Z' },
+    });
+  });
+
+  it('should add a new coversheet when filingDate field is changed', async () => {
+    await updateDocketEntryMetaInteractor({
+      applicationContext,
+      docketEntryMeta: {
+        ...docketEntries[0],
         filingDate: '2020-01-01T00:01:00.000Z',
       },
       docketNumber: '101-20',
@@ -289,16 +304,36 @@ describe('updateDocketEntryMetaInteractor', () => {
     expect(
       applicationContext.getUseCases().addCoversheetInteractor,
     ).toHaveBeenCalled();
+    expect(
+      applicationContext.getUseCases().addCoversheetInteractor.mock.calls[0][0],
+    ).toMatchObject({
+      docketNumber: '101-20',
+      filingDateUpdated: true,
+    });
   });
 
   it('should NOT generate a new coversheet for the document if the servedAt and filingDate fields are NOT changed', async () => {
     await updateDocketEntryMetaInteractor({
       applicationContext,
       docketEntryMeta: {
-        ...docketRecord[0],
-        ...documents[0],
+        ...docketEntries[0],
         filingDate: '2019-01-01T00:01:00.000Z', // unchanged from current filingDate
         servedAt: '2019-01-01T00:01:00.000Z', // unchanged from current servedAt
+      },
+      docketNumber: '101-20',
+    });
+
+    expect(
+      applicationContext.getUseCases().addCoversheetInteractor,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('should not call addCoversheetInteractor if filingDate field is changed and the docket entry is a minute entry', async () => {
+    await updateDocketEntryMetaInteractor({
+      applicationContext,
+      docketEntryMeta: {
+        ...docketEntries[2], // minute entry
+        filingDate: '2020-01-01T00:01:00.000Z',
       },
       docketNumber: '101-20',
     });
@@ -312,9 +347,8 @@ describe('updateDocketEntryMetaInteractor', () => {
     await updateDocketEntryMetaInteractor({
       applicationContext,
       docketEntryMeta: {
-        ...docketRecord[0],
-        ...documents[0],
-        description: 'Updated Description',
+        ...docketEntries[0],
+        documentTitle: 'Updated Description',
       },
       docketNumber: '101-20',
     });
@@ -329,11 +363,10 @@ describe('updateDocketEntryMetaInteractor', () => {
       updateDocketEntryMetaInteractor({
         applicationContext,
         docketEntryMeta: {
-          ...docketRecord[0],
-          ...documents[0],
+          ...docketEntries[0],
           action: 'asdf',
           certificateOfServiceDate: null,
-          description: 'Request for Place of Trial at Houston, Texas',
+          documentTitle: 'Request for Place of Trial at Houston, Texas',
           eventCode: 'RQT',
           filingDate: '2020-02-03T08:06:07.539Z',
         },

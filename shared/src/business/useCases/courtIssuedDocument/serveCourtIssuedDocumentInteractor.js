@@ -18,7 +18,7 @@ const {
 } = require('../../useCaseHelper/saveFileAndGenerateUrl');
 const { addServedStampToDocument } = require('./addServedStampToDocument');
 const { Case } = require('../../entities/cases/Case');
-const { DocketRecord } = require('../../entities/DocketRecord');
+const { DocketEntry } = require('../../entities/DocketEntry');
 const { NotFoundError, UnauthorizedError } = require('../../../errors/errors');
 const { TrialSession } = require('../../entities/trialSessions/TrialSession');
 
@@ -29,7 +29,7 @@ const completeWorkItem = async ({
   workItemToUpdate,
 }) => {
   Object.assign(workItemToUpdate, {
-    document: {
+    docketEntry: {
       ...courtIssuedDocument.validate().toRawObject(),
     },
   });
@@ -53,13 +53,13 @@ const completeWorkItem = async ({
  * @param {object} providers the providers object
  * @param {object} providers.applicationContext the application context
  * @param {string} providers.docketNumber the docket number of the case containing the document to serve
- * @param {string} providers.documentId the document id of the signed stipulated decision document
+ * @param {string} providers.docketEntryId the id of the docket entry to serve
  * @returns {object} the updated case after the document was served
  */
 exports.serveCourtIssuedDocumentInteractor = async ({
   applicationContext,
+  docketEntryId,
   docketNumber,
-  documentId,
 }) => {
   const user = applicationContext.getCurrentUser();
 
@@ -82,22 +82,24 @@ exports.serveCourtIssuedDocumentInteractor = async ({
 
   const caseEntity = new Case(caseToUpdate, { applicationContext });
 
-  const courtIssuedDocument = caseEntity.getDocumentById({
-    documentId,
+  const courtIssuedDocument = caseEntity.getDocketEntryById({
+    docketEntryId,
   });
 
   if (!courtIssuedDocument) {
-    throw new NotFoundError(`Document ${documentId} was not found.`);
+    throw new NotFoundError(`Docket entry ${docketEntryId} was not found.`);
   }
 
   courtIssuedDocument.numberOfPages = await applicationContext
     .getUseCaseHelpers()
     .countPagesInDocument({
       applicationContext,
-      documentId,
+      docketEntryId,
     });
 
-  const docketEntry = caseEntity.getDocketRecordByDocumentId(documentId);
+  const docketEntry = caseEntity.getDocketEntryById({
+    docketEntryId,
+  });
 
   // Serve on all parties
   const servedParties = aggregatePartiesForService(caseEntity);
@@ -108,7 +110,7 @@ exports.serveCourtIssuedDocumentInteractor = async ({
     .getStorageClient()
     .getObject({
       Bucket: applicationContext.environment.documentsBucketName,
-      Key: documentId,
+      Key: docketEntryId,
     })
     .promise();
 
@@ -136,7 +138,7 @@ exports.serveCourtIssuedDocumentInteractor = async ({
   await applicationContext.getPersistenceGateway().saveDocumentFromLambda({
     applicationContext,
     document: newPdfData,
-    documentId,
+    key: docketEntryId,
   });
 
   const workItemToUpdate = courtIssuedDocument.workItem;
@@ -147,16 +149,18 @@ exports.serveCourtIssuedDocumentInteractor = async ({
     workItemToUpdate,
   });
 
-  const updatedDocketRecordEntity = new DocketRecord(
+  const updatedDocketEntryEntity = new DocketEntry(
     {
       ...docketEntry,
       filingDate: createISODateString(),
+      isOnDocketRecord: true,
     },
     { applicationContext },
   );
-  updatedDocketRecordEntity.validate();
 
-  caseEntity.updateDocketRecordEntry(updatedDocketRecordEntity);
+  updatedDocketEntryEntity.validate();
+
+  caseEntity.updateDocketEntry(updatedDocketEntryEntity);
 
   if (ENTERED_AND_SERVED_EVENT_CODES.includes(courtIssuedDocument.eventCode)) {
     caseEntity.closeCase();
@@ -206,7 +210,7 @@ exports.serveCourtIssuedDocumentInteractor = async ({
   await applicationContext.getUseCaseHelpers().sendServedPartiesEmails({
     applicationContext,
     caseEntity,
-    documentEntity: courtIssuedDocument,
+    docketEntryEntity: courtIssuedDocument,
     servedParties,
   });
 

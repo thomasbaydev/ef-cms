@@ -9,7 +9,7 @@ const {
 } = require('../../test/mockCase');
 const { applicationContext } = require('../test/createTestApplicationContext');
 const { getCaseInteractor } = require('./getCaseInteractor');
-const { documents } = MOCK_CASE;
+const { docketEntries } = MOCK_CASE;
 const { cloneDeep } = require('lodash');
 
 const petitionsclerkId = '23c4d382-1136-492f-b1f4-45e893c34771';
@@ -20,18 +20,18 @@ const practitionerId = '295c3640-7ff9-40bb-b2f1-8117bba084ea';
 const practitioner2Id = '42614976-4228-49aa-a4c3-597dae1c7220';
 
 describe('Get case', () => {
-  it('successfully retrieves a case with documents that have documentContents', async () => {
+  it('successfully retrieves a case with docketEntries that have documentContents', async () => {
     const mockCaseWithDocumentContents = {
       ...MOCK_CASE,
-      documents: [
+      docketEntries: [
         {
           createdAt: '2018-11-21T20:49:28.192Z',
+          docketEntryId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
           docketNumber: '101-18',
           documentContentsId: '0098d177-78ef-4210-88aa-4bbb45c4f048',
-          documentId: 'c6b81f4d-1e47-423a-8caf-6d2fdc3d3859',
           documentTitle: 'Petition',
           documentType: 'Petition',
-          draftState: {},
+          draftOrderState: {},
           eventCode: 'P',
           filedBy: 'Test Petitioner',
           processingStatus: 'pending',
@@ -64,13 +64,13 @@ describe('Get case', () => {
       applicationContext.getPersistenceGateway().getDocument,
     ).toHaveBeenCalledWith({
       applicationContext,
-      documentId: '0098d177-78ef-4210-88aa-4bbb45c4f048',
+      key: '0098d177-78ef-4210-88aa-4bbb45c4f048',
       protocol: 'S3',
       useTempBucket: false,
     });
-    expect(caseRecord.documents[0]).toMatchObject({
+    expect(caseRecord.docketEntries[0]).toMatchObject({
       documentContents: 'the contents!',
-      draftState: {
+      draftOrderState: {
         documentContents: 'the contents!',
         richText: '<b>the contents!</b>',
       },
@@ -134,17 +134,15 @@ describe('Get case', () => {
     applicationContext
       .getPersistenceGateway()
       .getCaseByDocketNumber.mockReturnValue(
-        Promise.resolve([
-          {
-            caseType: CASE_TYPES_MAP.other,
-            createdAt: new Date().toISOString(),
-            docketNumber: '101-00',
-            documents,
-            petitioners: [{ name: 'Test Petitioner' }],
-            preferredTrialCity: 'Washington, District of Columbia',
-            procedureType: 'Regular',
-          },
-        ]),
+        Promise.resolve({
+          caseType: CASE_TYPES_MAP.other,
+          contactPrimary: {},
+          createdAt: new Date().toISOString(),
+          docketEntries,
+          docketNumber: '101-00',
+          preferredTrialCity: 'Washington, District of Columbia',
+          procedureType: 'Regular',
+        }),
       );
 
     await expect(
@@ -153,6 +151,63 @@ describe('Get case', () => {
         docketNumber: '00101-00',
       }),
     ).rejects.toThrow('Unauthorized');
+  });
+
+  it('should successfully return a case with userId not matching the current user but contactPrimary.contactId matching the current user', async () => {
+    applicationContext.getCurrentUser.mockReturnValue({
+      userId: 'dc56e26e-f9fd-4165-8997-97676cc0523e',
+    });
+    applicationContext
+      .getPersistenceGateway()
+      .getCaseByDocketNumber.mockReturnValue(
+        Promise.resolve({
+          ...MOCK_CASE,
+          contactPrimary: {
+            ...MOCK_CASE.contactPrimary,
+            contactId: 'dc56e26e-f9fd-4165-8997-97676cc0523e',
+          },
+          docketNumber: '101-00',
+          userId: '320fce0e-b050-4e04-8720-db25da3ca598',
+        }),
+      );
+
+    const result = await getCaseInteractor({
+      applicationContext,
+      docketNumber: '00101-00',
+    });
+
+    expect(result.docketNumber).toEqual('101-00');
+  });
+
+  it('should successfully return a case with userId not matching the current user but contactSecondary.contactId matching the current user', async () => {
+    applicationContext.getCurrentUser.mockReturnValue({
+      userId: '754a3191-884f-42f0-ad2c-e6c706685299',
+    });
+    applicationContext
+      .getPersistenceGateway()
+      .getCaseByDocketNumber.mockReturnValue(
+        Promise.resolve({
+          ...MOCK_CASE,
+          contactPrimary: {
+            ...MOCK_CASE.contactPrimary,
+            contactId: '0898d5c3-2948-4924-b28b-d5c1451c80de',
+          },
+          contactSecondary: {
+            ...MOCK_CASE.contactPrimary,
+            contactId: '754a3191-884f-42f0-ad2c-e6c706685299',
+          },
+          docketNumber: '101-00',
+          partyType: PARTY_TYPES.petitionerSpouse,
+          userId: '320fce0e-b050-4e04-8720-db25da3ca598',
+        }),
+      );
+
+    const result = await getCaseInteractor({
+      applicationContext,
+      docketNumber: '00101-00',
+    });
+
+    expect(result.docketNumber).toEqual('101-00');
   });
 
   describe('access to contact information which is sealed', () => {
@@ -231,8 +286,8 @@ describe('Get case', () => {
             caseCaption: 'a case caption',
             caseType: CASE_TYPES_MAP.other,
             createdAt: new Date().toISOString(),
+            docketEntries,
             docketNumber: '101-18',
-            documents,
             irsPractitioners: [
               {
                 barNumber: 'BN1234',
@@ -241,7 +296,6 @@ describe('Get case', () => {
                 userId: irsPractitionerId,
               },
             ],
-            petitioners: [{ name: 'Test Petitioner' }],
             preferredTrialCity: 'Washington, District of Columbia',
             privatePractitioners: [
               {
@@ -319,7 +373,6 @@ describe('Get case', () => {
         caseType: CASE_TYPES_MAP.other,
         createdAt: new Date().toISOString(),
         partyType: PARTY_TYPES.petitioner,
-        petitioners: [{ name: 'Test Petitioner' }],
         preferredTrialCity: 'Washington, District of Columbia',
         procedureType: 'Regular',
       });

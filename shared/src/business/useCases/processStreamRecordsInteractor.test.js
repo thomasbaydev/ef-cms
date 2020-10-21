@@ -4,8 +4,11 @@ const {
 const { applicationContext } = require('../test/createTestApplicationContext');
 
 describe('processStreamRecordsInteractor', () => {
+  const mockJobId = 'a5e664f1-2d8c-4e53-b3db-c24f30273dd9';
+
   beforeAll(() => {
     applicationContext.getSearchClient().bulk.mockReturnValue({ body: {} });
+    applicationContext.getUniqueId.mockReturnValue(mockJobId);
   });
 
   it('does not call bulk function if recordsToProcess is an empty array', async () => {
@@ -34,7 +37,7 @@ describe('processStreamRecordsInteractor', () => {
     expect(applicationContext.getSearchClient().bulk).not.toHaveBeenCalled();
   });
 
-  it('calls bulk function with correct params only for records with eventName "INSERT" or "MODIFY" and filters out items that are not cases, documents, or users', async () => {
+  it('calls bulk function with correct params only for records with eventName "INSERT" or "MODIFY" and filters out items that are not cases, docketEntries, or users', async () => {
     await processStreamRecordsInteractor({
       applicationContext,
       recordsToProcess: [
@@ -110,12 +113,12 @@ describe('processStreamRecordsInteractor', () => {
           dynamodb: {
             Keys: { pk: { S: '6' } },
             NewImage: {
-              documentId: { S: '6' },
+              docketEntryId: { S: '6' },
               pk: { S: '6' },
               sk: { S: '6' },
               workItem: {
                 blah: true,
-                documents: [{ documentId: '6' }],
+                docketEntries: [{ docketEntryId: '6' }],
               },
             },
           },
@@ -365,8 +368,8 @@ describe('processStreamRecordsInteractor', () => {
     applicationContext
       .getPersistenceGateway()
       .getCaseByDocketNumber.mockImplementation(({ docketNumber }) => ({
+        docketEntries: [{ docketEntryId: '1' }],
         docketNumber,
-        documents: [{ documentId: '1' }],
         entityName: 'Case',
         pk: `case|${docketNumber}`,
         sk: `case|${docketNumber}`,
@@ -377,12 +380,12 @@ describe('processStreamRecordsInteractor', () => {
       recordsToProcess: [
         {
           dynamodb: {
-            Keys: { pk: { S: 'case|1' }, sk: { S: 'document|1' } },
+            Keys: { pk: { S: 'case|1' }, sk: { S: 'docket-entry|1' } },
             NewImage: {
               docketNumber: { S: '1' },
-              entityName: { S: 'Document' },
+              entityName: { S: 'DocketEntry' },
               pk: { S: 'case|1' },
-              sk: { S: 'document|1' },
+              sk: { S: 'docket-entry|1' },
             },
           },
           eventName: 'INSERT',
@@ -416,12 +419,12 @@ describe('processStreamRecordsInteractor', () => {
     expect(
       applicationContext.getSearchClient().bulk.mock.calls[0][0].body,
     ).toEqual([
-      { index: { _id: 'case|1_document|1', _index: 'efcms-document' } },
+      { index: { _id: 'case|1_docket-entry|1', _index: 'efcms-docket-entry' } },
       {
         docketNumber: { S: '1' },
-        entityName: { S: 'Document' },
+        entityName: { S: 'DocketEntry' },
         pk: { S: 'case|1' },
-        sk: { S: 'document|1' },
+        sk: { S: 'docket-entry|1' },
       },
       { index: { _id: 'case|4_case|4', _index: 'efcms-case' } },
       {
@@ -432,46 +435,44 @@ describe('processStreamRecordsInteractor', () => {
       },
       { index: { _id: 'case|1_case|1', _index: 'efcms-case' } },
       {
+        docketEntries: { L: [{ M: { docketEntryId: { S: '1' } } }] },
         docketNumber: { S: '1' },
-        documents: { L: [{ M: { documentId: { S: '1' } } }] },
         entityName: { S: 'Case' },
         pk: { S: 'case|1' },
         sk: { S: 'case|1' },
       },
       // calls documents again because they are indexed again after the case
-      { index: { _id: 'case|1_document|1', _index: 'efcms-document' } },
+      { index: { _id: 'case|1_docket-entry|1', _index: 'efcms-docket-entry' } },
       {
+        docketEntries: undefined,
+        docketEntryId: { S: '1' },
         docketNumber: { S: '1' },
-        docketRecord: undefined,
-        documentId: { S: '1' },
-        documents: undefined,
-        entityName: { S: 'Document' },
+        entityName: { S: 'DocketEntry' },
         irsPractitioners: undefined,
         pk: { S: 'case|1' },
         privatePractitioners: undefined,
-        sk: { S: 'document|1' },
+        sk: { S: 'docket-entry|1' },
       },
       {
         index: { _id: 'case|4_case|4', _index: 'efcms-case' },
       },
       {
+        docketEntries: { L: [{ M: { docketEntryId: { S: '1' } } }] },
         docketNumber: { S: '4' },
-        documents: { L: [{ M: { documentId: { S: '1' } } }] },
         entityName: { S: 'Case' },
         pk: { S: 'case|4' },
         sk: { S: 'case|4' },
       },
-      { index: { _id: 'case|4_document|1', _index: 'efcms-document' } },
+      { index: { _id: 'case|4_docket-entry|1', _index: 'efcms-docket-entry' } },
       {
+        docketEntries: undefined,
+        docketEntryId: { S: '1' },
         docketNumber: { S: '4' },
-        docketRecord: undefined,
-        documentId: { S: '1' },
-        documents: undefined,
-        entityName: { S: 'Document' },
+        entityName: { S: 'DocketEntry' },
         irsPractitioners: undefined,
         pk: { S: 'case|4' },
         privatePractitioners: undefined,
-        sk: { S: 'document|1' },
+        sk: { S: 'docket-entry|1' },
       },
     ]);
   });
@@ -480,8 +481,8 @@ describe('processStreamRecordsInteractor', () => {
     applicationContext
       .getPersistenceGateway()
       .getCaseByDocketNumber.mockImplementation(({ docketNumber }) => ({
+        docketEntries: [{ docketEntryId: '1', documentContentsId: '5' }],
         docketNumber,
-        documents: [{ documentContentsId: '5', documentId: '1' }],
         entityName: 'Case',
         pk: `case|${docketNumber}`,
         sk: `case|${docketNumber}`,
@@ -499,13 +500,13 @@ describe('processStreamRecordsInteractor', () => {
       recordsToProcess: [
         {
           dynamodb: {
-            Keys: { pk: { S: 'case|1' }, sk: { S: 'document|1' } },
+            Keys: { pk: { S: 'case|1' }, sk: { S: 'docket-entry|1' } },
             NewImage: {
               docketNumber: { S: '1' },
               documentContentsId: { S: '5' },
-              entityName: { S: 'Document' },
+              entityName: { S: 'DocketEntry' },
               pk: { S: 'case|1' },
-              sk: { S: 'document|1' },
+              sk: { S: 'docket-entry|1' },
             },
           },
           eventName: 'INSERT',
@@ -519,42 +520,43 @@ describe('processStreamRecordsInteractor', () => {
     expect(
       applicationContext.getSearchClient().bulk.mock.calls[0][0].body,
     ).toEqual([
-      { index: { _id: 'case|1_document|1', _index: 'efcms-document' } },
+      { index: { _id: 'case|1_docket-entry|1', _index: 'efcms-docket-entry' } },
       {
         docketNumber: { S: '1' },
         documentContentsId: { S: '5' },
-        entityName: { S: 'Document' },
+        entityName: { S: 'DocketEntry' },
         pk: { S: 'case|1' },
-        sk: { S: 'document|1' },
+        sk: { S: 'docket-entry|1' },
       },
       { index: { _id: 'case|1_case|1', _index: 'efcms-case' } },
       {
-        docketNumber: { S: '1' },
-        documents: {
+        docketEntries: {
           L: [
-            { M: { documentContentsId: { S: '5' }, documentId: { S: '1' } } },
+            {
+              M: { docketEntryId: { S: '1' }, documentContentsId: { S: '5' } },
+            },
           ],
         },
+        docketNumber: { S: '1' },
         entityName: { S: 'Case' },
         pk: { S: 'case|1' },
         sk: { S: 'case|1' },
       },
       // calls documents again because they are indexed again after the case
-      { index: { _id: 'case|1_document|1', _index: 'efcms-document' } },
+      { index: { _id: 'case|1_docket-entry|1', _index: 'efcms-docket-entry' } },
       {
+        docketEntries: undefined,
+        docketEntryId: { S: '1' },
         docketNumber: { S: '1' },
-        docketRecord: undefined,
         documentContents: {
           S: 'I am some document contents',
         },
         documentContentsId: { S: '5' },
-        documentId: { S: '1' },
-        documents: undefined,
-        entityName: { S: 'Document' },
+        entityName: { S: 'DocketEntry' },
         irsPractitioners: undefined,
         pk: { S: 'case|1' },
         privatePractitioners: undefined,
-        sk: { S: 'document|1' },
+        sk: { S: 'docket-entry|1' },
       },
     ]);
   });
@@ -562,19 +564,19 @@ describe('processStreamRecordsInteractor', () => {
   it('does not attempt to index a case record if getCaseByDocketNumber does not return a case', async () => {
     applicationContext
       .getPersistenceGateway()
-      .getCaseByDocketNumber.mockReturnValue({ documents: [] });
+      .getCaseByDocketNumber.mockReturnValue({ docketEntries: [] });
 
     await processStreamRecordsInteractor({
       applicationContext,
       recordsToProcess: [
         {
           dynamodb: {
-            Keys: { pk: { S: 'case|1' }, sk: { S: 'document|1' } },
+            Keys: { pk: { S: 'case|1' }, sk: { S: 'docket-entry|1' } },
             NewImage: {
               docketNumber: { S: '1' },
-              entityName: { S: 'Document' },
+              entityName: { S: 'DocketEntry' },
               pk: { S: 'case|1' },
-              sk: { S: 'document|1' },
+              sk: { S: 'docket-entry|1' },
             },
           },
           eventName: 'MODIFY',
@@ -589,12 +591,12 @@ describe('processStreamRecordsInteractor', () => {
     expect(
       applicationContext.getSearchClient().bulk.mock.calls[0][0].body,
     ).toEqual([
-      { index: { _id: 'case|1_document|1', _index: 'efcms-document' } },
+      { index: { _id: 'case|1_docket-entry|1', _index: 'efcms-docket-entry' } },
       {
         docketNumber: { S: '1' },
-        entityName: { S: 'Document' },
+        entityName: { S: 'DocketEntry' },
         pk: { S: 'case|1' },
-        sk: { S: 'document|1' },
+        sk: { S: 'docket-entry|1' },
       },
     ]);
   });
@@ -739,13 +741,24 @@ describe('processStreamRecordsInteractor', () => {
       ],
     });
 
+    expect(applicationContext.logger.info).toBeCalledTimes(2);
+    expect(applicationContext.logger.error).toBeCalledTimes(1);
+    expect(applicationContext.logger.info.mock.calls[0][0]).toBe(
+      `processStreamRecordsInteractor job ${mockJobId} started at time:`,
+    );
+    expect(applicationContext.logger.error.mock.calls[0][0]).toBe(
+      `processStreamRecordsInteractor job ${mockJobId} bulkDeleteRecords error:`,
+    );
+    expect(applicationContext.logger.info.mock.calls[1][0]).toBe(
+      `processStreamRecordsInteractor job ${mockJobId} completed at time:`,
+    );
     expect(applicationContext.notifyHoneybadger).toBeCalledTimes(1);
     expect(applicationContext.notifyHoneybadger.mock.calls[0][0]).toEqual(
       error,
     );
   });
 
-  it('logs error if deleteRecord throws an error', async () => {
+  it('logs error thrown when trying to delete a record', async () => {
     applicationContext.getSearchClient().bulk.mockResolvedValue({
       errors: [{ badError: true }],
       items: [
@@ -791,7 +804,17 @@ describe('processStreamRecordsInteractor', () => {
         },
       ],
     });
-
+    expect(applicationContext.logger.info).toBeCalledTimes(2);
+    expect(applicationContext.logger.error).toBeCalledTimes(1);
+    expect(applicationContext.logger.info.mock.calls[0][0]).toBe(
+      `processStreamRecordsInteractor job ${mockJobId} started at time:`,
+    );
+    expect(applicationContext.logger.error.mock.calls[0][0]).toBe(
+      `processStreamRecordsInteractor job ${mockJobId} deleteRecord error for record 2_2:`,
+    );
+    expect(applicationContext.logger.info.mock.calls[1][0]).toBe(
+      `processStreamRecordsInteractor job ${mockJobId} completed at time:`,
+    );
     expect(applicationContext.notifyHoneybadger).toBeCalledTimes(1);
     expect(applicationContext.notifyHoneybadger.mock.calls[0][0]).toEqual(
       error,

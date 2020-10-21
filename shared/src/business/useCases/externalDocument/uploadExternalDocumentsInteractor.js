@@ -29,16 +29,14 @@ exports.uploadExternalDocumentsInteractor = async ({
     throw new UnauthorizedError('Unauthorized');
   }
 
-  const uploadedDocumentPromises = [];
-
   /**
    * uploads a document and then immediately processes it to scan for viruses and validate the document
    *
    * @param {string} documentLabel the string identifying which documentFile and progressFunction
-   * @returns {Promise<string>} the documentId returned from a successful upload
+   * @returns {Promise<string>} the key returned from a successful upload
    */
   const uploadDocumentAndMakeSafeInteractor = async documentLabel => {
-    const documentId = await applicationContext
+    const key = await applicationContext
       .getPersistenceGateway()
       .uploadDocumentFromClient({
         applicationContext,
@@ -48,28 +46,31 @@ exports.uploadExternalDocumentsInteractor = async ({
 
     await applicationContext.getUseCases().virusScanPdfInteractor({
       applicationContext,
-      documentId,
+      key,
     });
     await applicationContext.getUseCases().validatePdfInteractor({
       applicationContext,
-      documentId,
+      key,
     });
 
-    return documentId;
+    return key;
   };
-
-  uploadedDocumentPromises.push(uploadDocumentAndMakeSafeInteractor('primary'));
+  documentMetadata.primaryDocumentId = await uploadDocumentAndMakeSafeInteractor(
+    'primary',
+  );
 
   if (documentFiles.secondary) {
-    uploadedDocumentPromises.push(
-      uploadDocumentAndMakeSafeInteractor('secondary'),
+    documentMetadata.secondaryDocument.docketEntryId = await uploadDocumentAndMakeSafeInteractor(
+      'secondary',
     );
   }
 
   if (documentMetadata.hasSupportingDocuments) {
     for (let i = 0; i < documentMetadata.supportingDocuments.length; i++) {
-      uploadedDocumentPromises.push(
-        uploadDocumentAndMakeSafeInteractor(`primarySupporting${i}`),
+      documentMetadata.supportingDocuments[
+        i
+      ].docketEntryId = await uploadDocumentAndMakeSafeInteractor(
+        `primarySupporting${i}`,
       );
     }
   }
@@ -80,13 +81,13 @@ exports.uploadExternalDocumentsInteractor = async ({
       i < documentMetadata.secondarySupportingDocuments.length;
       i++
     ) {
-      uploadedDocumentPromises.push(
-        uploadDocumentAndMakeSafeInteractor(`secondarySupporting${i}`),
+      documentMetadata.secondarySupportingDocuments[
+        i
+      ].docketEntryId = await uploadDocumentAndMakeSafeInteractor(
+        `secondarySupporting${i}`,
       );
     }
   }
-
-  const documentIds = await Promise.all(uploadedDocumentPromises);
 
   if (leadDocketNumber) {
     return await applicationContext
@@ -94,7 +95,6 @@ exports.uploadExternalDocumentsInteractor = async ({
       .fileExternalDocumentForConsolidatedInteractor({
         applicationContext,
         docketNumbersForFiling,
-        documentIds,
         documentMetadata,
         leadDocketNumber,
       });
@@ -103,7 +103,6 @@ exports.uploadExternalDocumentsInteractor = async ({
       .getUseCases()
       .fileExternalDocumentInteractor({
         applicationContext,
-        documentIds,
         documentMetadata,
       });
   }

@@ -1,5 +1,9 @@
 const joi = require('joi');
-const { joiValidationDecorator } = require('./JoiValidationDecorator');
+const {
+  joiValidationDecorator,
+  validEntityDecorator,
+} = require('./JoiValidationDecorator');
+const { JoiValidationConstants } = require('./JoiValidationConstants');
 
 /**
  * fake entity constructor
@@ -9,6 +13,8 @@ const { joiValidationDecorator } = require('./JoiValidationDecorator');
 function MockEntity1(raw) {
   Object.assign(this, raw);
 }
+
+MockEntity1.prototype.init = function init() {};
 
 MockEntity1.validationName = 'MockEntity1';
 
@@ -22,7 +28,7 @@ joiValidationDecorator(
   joi.object().keys({
     favoriteNumber: joi.number().required(),
     hasNickname: joi.boolean().required(),
-    name: joi.string().required(),
+    name: JoiValidationConstants.STRING.required(),
   }),
   MockEntity1.errorToMessageMap,
 );
@@ -31,21 +37,28 @@ const MockEntity2 = function (raw) {
   Object.assign(this, raw);
 };
 
+MockEntity2.prototype.init = function init() {};
+
 const MockEntity2Schema = joi.object().keys({
   arry1: joi
     .array()
-    .items(joi.object().keys({ foo: joi.string().required() }))
+    .items(joi.object().keys({ foo: JoiValidationConstants.STRING.required() }))
     .required(),
-  arry2: joi.array().items(joi.string()).optional(),
+  arry2: joi.array().items(JoiValidationConstants.STRING).optional(),
   favoriteNumber: joi.number().required(),
   hasNickname: joi.boolean().required(),
-  name: joi.string().required(),
-  obj1: joi.object().keys({ foo: joi.string().required() }).required(),
+  name: JoiValidationConstants.STRING.required(),
+  obj1: joi
+    .object()
+    .keys({ foo: JoiValidationConstants.STRING.required() })
+    .required(),
   reallyMessyNestedThing: joi
     .alternatives()
     .try(
-      joi.object().keys({ never: joi.string().required() }),
-      joi.object().keys({ happening: joi.string().required() }),
+      joi.object().keys({ never: JoiValidationConstants.STRING.required() }),
+      joi
+        .object()
+        .keys({ happening: JoiValidationConstants.STRING.required() }),
     )
     .optional(),
 });
@@ -60,8 +73,10 @@ const MockEntity3 = function (raw) {
   this.mockEntity2 = new MockEntity2(raw.mockEntity2);
 };
 
+MockEntity3.prototype.init = function init() {};
+
 const MockEntity3Schema = joi.object().keys({
-  anotherItem: joi.string().required(),
+  anotherItem: JoiValidationConstants.STRING.required(),
 });
 
 joiValidationDecorator(MockEntity3, MockEntity3Schema, {});
@@ -72,10 +87,12 @@ const MockCase = function (raw) {
   this.title = raw.title;
 };
 
+MockCase.prototype.init = function init() {};
+
 const MockCaseSchema = joi.object().keys({
-  docketNumber: joi.string().required(),
-  somethingId: joi.string().required(),
-  title: joi.string().required(),
+  docketNumber: JoiValidationConstants.STRING.required(),
+  somethingId: JoiValidationConstants.STRING.required(),
+  title: JoiValidationConstants.STRING.required(),
 });
 
 joiValidationDecorator(MockCase, MockCaseSchema, {
@@ -233,5 +250,36 @@ describe('Joi Validation Decorator', () => {
 
   it('should return an empty array when calling validateRawCollection with an empty collection', () => {
     expect(MockEntity1.validateRawCollection([], {})).toEqual([]);
+  });
+});
+
+describe('validEntityConstructor', () => {
+  it('successfully creates a new factory function which invokes the original\'s "init" function and trims all string assignments', () => {
+    /**
+     * A factory function
+     */
+    function HelloFactory(rawHello) {
+      this.hello = true;
+      this.helloMessage = rawHello.helloMessage;
+      this.audience = '   The whole world   ';
+    }
+    /**
+     * all assignments upon construction should be done within 'init'
+     */
+    HelloFactory.prototype.init = function init(rawHello) {
+      this.helloMessage = rawHello.helloMessage;
+      this.yeehaws = rawHello.yeehaws;
+    };
+    const ValidHello = validEntityDecorator(HelloFactory);
+    const sayHello = new ValidHello({
+      helloMessage: "  What's up, dawg?   ",
+      yeehaws: 4,
+    });
+    sayHello.title = '    Sir    ';
+    expect(sayHello.hello).toBe(true);
+    expect(sayHello.title).toBe('Sir');
+    expect(sayHello.yeehaws).toBe(4);
+    expect(sayHello.audience).toBe('   The whole world   '); // not set in `init` and not subject to string trimming proxy
+    expect(sayHello.helloMessage).toBe("What's up, dawg?");
   });
 });

@@ -16,7 +16,12 @@
               type: "string"
               flags: 
                 presence: "required"
+                description: "ID of the document attached; can be either a docketEntryId or correspondenceId depending on the type of document."
               rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
                 - 
                   name: "guid"
                   args: 
@@ -29,6 +34,10 @@
                 presence: "optional"
               rules: 
                 - 
+                  name: "min"
+                  args: 
+                    limit: 1
+                - 
                   name: "max"
                   args: 
                     limit: 500
@@ -38,6 +47,11 @@
         only: true
         presence: "required"
         description: "The status of the associated case."
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "Assigned - Case"
         - "Assigned - Motion"
@@ -56,12 +70,21 @@
       flags: 
         presence: "required"
         description: "The case title for the associated cases."
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
     completedMessage: 
       type: "string"
       flags: 
         presence: "optional"
         description: "The message entered when completing the message thread."
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "max"
           args: 
@@ -82,6 +105,10 @@
         presence: "required"
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "pattern"
           args: 
             regex: "/^([1-9]\\d{2,4}-\\d{2})$/"
@@ -92,6 +119,10 @@
         description: "The docket number and suffix for the associated case."
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "max"
           args: 
             limit: 20
@@ -100,6 +131,11 @@
       flags: 
         only: true
         presence: "required"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "Message"
     from: 
@@ -108,6 +144,10 @@
         presence: "required"
         description: "The name of the user who sent the message."
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "max"
           args: 
@@ -118,6 +158,11 @@
         only: true
         presence: "required"
         description: "The section of the user who sent the message."
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "adc"
         - "admissions"
@@ -126,7 +171,6 @@
         - "docket"
         - "petitions"
         - "trialClerks"
-        - "armensChambers"
         - "ashfordsChambers"
         - "buchsChambers"
         - "carluzzosChambers"
@@ -135,17 +179,17 @@
         - "copelandsChambers"
         - "foleysChambers"
         - "galesChambers"
-        - "gerbersChambers"
         - "goekesChambers"
+        - "greavesChambers"
         - "gustafsonsChambers"
         - "guysChambers"
         - "halpernsChambers"
         - "holmesChambers"
-        - "jacobsChambers"
         - "jonesChambers"
         - "kerrigansChambers"
         - "laubersChambers"
         - "leydensChambers"
+        - "marshallsChambers"
         - "marvelsChambers"
         - "morrisonsChambers"
         - "negasChambers"
@@ -157,6 +201,7 @@
         - "torosChambers"
         - "urdasChambers"
         - "vasquezsChambers"
+        - "weilersChambers"
         - "wellsChambers"
     fromUserId: 
       type: "string"
@@ -164,6 +209,10 @@
         presence: "required"
         description: "The ID of the user who sent the message."
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "guid"
           args: 
@@ -212,6 +261,10 @@
         description: "The name of the user who completed the message thread"
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "max"
           args: 
             limit: 500
@@ -244,6 +297,11 @@
       flags: 
         only: true
         description: "The section of the user who completed the message thread"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "adc"
         - "admissions"
@@ -252,7 +310,6 @@
         - "docket"
         - "petitions"
         - "trialClerks"
-        - "armensChambers"
         - "ashfordsChambers"
         - "buchsChambers"
         - "carluzzosChambers"
@@ -261,17 +318,17 @@
         - "copelandsChambers"
         - "foleysChambers"
         - "galesChambers"
-        - "gerbersChambers"
         - "goekesChambers"
+        - "greavesChambers"
         - "gustafsonsChambers"
         - "guysChambers"
         - "halpernsChambers"
         - "holmesChambers"
-        - "jacobsChambers"
         - "jonesChambers"
         - "kerrigansChambers"
         - "laubersChambers"
         - "leydensChambers"
+        - "marshallsChambers"
         - "marvelsChambers"
         - "morrisonsChambers"
         - "negasChambers"
@@ -283,6 +340,7 @@
         - "torosChambers"
         - "urdasChambers"
         - "vasquezsChambers"
+        - "weilersChambers"
         - "wellsChambers"
       whens: 
         - 
@@ -314,6 +372,10 @@
         description: "The ID of the user who completed the message thread"
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "guid"
           args: 
             options: 
@@ -343,6 +405,10 @@
               presence: "optional"
             allow: 
               - null
+    isRead: 
+      type: "boolean"
+      flags: 
+        presence: "required"
     isRepliedTo: 
       type: "boolean"
       flags: 
@@ -355,6 +421,10 @@
         description: "The message text."
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "max"
           args: 
             limit: 500
@@ -364,6 +434,10 @@
         presence: "required"
         description: "A unique ID generated by the system to represent the message."
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "guid"
           args: 
@@ -377,6 +451,10 @@
         description: "The ID of the initial message in the thread."
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "guid"
           args: 
             options: 
@@ -389,6 +467,10 @@
         description: "The subject line of the message."
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "max"
           args: 
             limit: 250
@@ -398,6 +480,10 @@
         presence: "required"
         description: "The name of the user who is the recipient of the message."
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "max"
           args: 
@@ -410,6 +496,11 @@
         only: true
         presence: "required"
         description: "The section of the user who is the recipient of the message."
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "adc"
         - "admissions"
@@ -418,7 +509,6 @@
         - "docket"
         - "petitions"
         - "trialClerks"
-        - "armensChambers"
         - "ashfordsChambers"
         - "buchsChambers"
         - "carluzzosChambers"
@@ -427,17 +517,17 @@
         - "copelandsChambers"
         - "foleysChambers"
         - "galesChambers"
-        - "gerbersChambers"
         - "goekesChambers"
+        - "greavesChambers"
         - "gustafsonsChambers"
         - "guysChambers"
         - "halpernsChambers"
         - "holmesChambers"
-        - "jacobsChambers"
         - "jonesChambers"
         - "kerrigansChambers"
         - "laubersChambers"
         - "leydensChambers"
+        - "marshallsChambers"
         - "marvelsChambers"
         - "morrisonsChambers"
         - "negasChambers"
@@ -449,6 +539,7 @@
         - "torosChambers"
         - "urdasChambers"
         - "vasquezsChambers"
+        - "weilersChambers"
         - "wellsChambers"
     toUserId: 
       type: "string"
@@ -456,6 +547,10 @@
         presence: "required"
         description: "The ID of the user who is the recipient of the message."
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "guid"
           args: 

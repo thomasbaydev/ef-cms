@@ -37,7 +37,7 @@ export const PetitionService = ({
 
       <div id="case-information">
         <div>Case Information:</div>
-        <div>Docket Number: {caseDetail.docketNumber}</div>
+        <div>Docket Number: {caseDetail.docketNumberWithSuffix}</div>
         <div>Case Title: {caseDetail.caseTitle}</div>
         <div>Requested Place of Trial: {caseDetail.trialLocation}</div>
       </div>
@@ -84,7 +84,7 @@ export const PetitionService = ({
                 <RenderContactAddress contact={practitioner} />
                 <div>{practitioner.phoneNumber}</div>
                 <div>{practitioner.email}</div>
-                <div>Representing: {practitioner.representing}</div>
+                <div>Representing: {practitioner.representingFormatted}</div>
                 <br />
               </div>
             );
@@ -103,7 +103,7 @@ export const PetitionService = ({
         <div>---- COMPUTER-READABLE DATA ----</div>
         <div>docketNumber: {caseDetail.docketNumber}</div>
         <div>docketEntryNo: {docketEntryNumber}</div>
-        <div>documentId: {documentDetail.documentId}</div>
+        <div>docketEntryId: {documentDetail.docketEntryId}</div>
         <div>eventCode: {documentDetail.eventCode}</div>
       </div>
 

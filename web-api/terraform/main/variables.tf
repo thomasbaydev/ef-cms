@@ -18,7 +18,7 @@ variable "cognito_suffix" {
   type = string
 }
 
-variable "ses_dmarc_rua" {
+variable "email_dmarc_policy" {
   type = string
 }
 
@@ -33,5 +33,30 @@ variable "honeybadger_key" {
 }
 
 variable "irs_superuser_email" {
+  type = string
+}
+
+variable "deploying_color" {
+  type    = string
+  default = "green"
+}
+
+variable "blue_table_name" {
+  type = string
+}
+
+variable "green_table_name" {
+  type = string
+}
+
+variable "blue_elasticsearch_domain" {
+  type = string
+}
+
+variable "green_elasticsearch_domain" {
+  type = string
+}
+
+variable "destination_table" {
   type = string
 }

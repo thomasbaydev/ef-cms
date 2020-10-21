@@ -46,17 +46,18 @@ const PetitionerInformation = connect(
             <div className="content-wrapper">
               <h3 className="underlined" id="primary-label">
                 Petitioner Contact Info
-                {caseDetailHelper.showEditContacts && (
-                  <Button
-                    link
-                    aria-label="Edit petitioner contact information"
-                    className="push-right margin-right-0 margin-top-neg-1 ustc-button--mobile-inline margin-left-2"
-                    href={`/case-detail/${formattedCaseDetail.docketNumber}/contacts/primary/edit`}
-                    icon="edit"
-                  >
-                    Edit
-                  </Button>
-                )}
+                {caseDetailHelper.showEditContacts &&
+                  !formattedCaseDetail.contactPrimary.isAddressSealed && (
+                    <Button
+                      link
+                      aria-label="Edit petitioner contact information"
+                      className="push-right margin-right-0 margin-top-neg-1 ustc-button--mobile-inline margin-left-2"
+                      href={`/case-detail/${formattedCaseDetail.docketNumber}/contacts/primary/edit`}
+                      icon="edit"
+                    >
+                      Edit
+                    </Button>
+                  )}
                 {caseDetailHelper.showEditPetitionerInformation && (
                   <Button
                     link
@@ -71,10 +72,10 @@ const PetitionerInformation = connect(
               {formattedCaseDetail.contactPrimary && (
                 <div className="grid-row">
                   <div className="grid-col-6">
-                    <p className="label margin-top-0">Party type</p>
-                    <p className="irs-notice-date">
-                      {formattedCaseDetail.partyType}
+                    <p className="semi-bold margin-top-0 margin-bottom-0">
+                      Party type
                     </p>
+                    {formattedCaseDetail.partyType}
                   </div>
 
                   <div className="grid-col-6">
@@ -87,6 +88,15 @@ const PetitionerInformation = connect(
                         }
                       />
                     </address>
+                    {caseDetailHelper.showEditContacts &&
+                      formattedCaseDetail.contactPrimary.isAddressSealed && (
+                        <div>
+                          <p className="text-italic">
+                            Call the Tax Court at (202) 521-0700 if you need to
+                            update your contact information
+                          </p>
+                        </div>
+                      )}
                     {formattedCaseDetail.contactPrimary.serviceIndicator && (
                       <div className="margin-top-4">
                         <p className="semi-bold margin-bottom-0">
@@ -109,17 +119,18 @@ const PetitionerInformation = connect(
                 <div className="content-wrapper">
                   <h3 className="underlined" id="secondary-label">
                     Spouse Contact Info
-                    {caseDetailHelper.showEditContacts && (
-                      <Button
-                        link
-                        aria-label="Edit spouse contact information"
-                        className="push-right margin-right-0 margin-top-neg-1 ustc-button--mobile-inline margin-left-2"
-                        href={`/case-detail/${formattedCaseDetail.docketNumber}/contacts/secondary/edit`}
-                        icon="edit"
-                      >
-                        Edit
-                      </Button>
-                    )}
+                    {caseDetailHelper.showEditContacts &&
+                      !formattedCaseDetail.contactSecondary.isAddressSealed && (
+                        <Button
+                          link
+                          aria-label="Edit spouse contact information"
+                          className="push-right margin-right-0 margin-top-neg-1 ustc-button--mobile-inline margin-left-2"
+                          href={`/case-detail/${formattedCaseDetail.docketNumber}/contacts/secondary/edit`}
+                          icon="edit"
+                        >
+                          Edit
+                        </Button>
+                      )}
                   </h3>
                   <div>
                     <address aria-labelledby="secondary-label">
@@ -132,6 +143,15 @@ const PetitionerInformation = connect(
                         />
                       )}
                     </address>
+                    {caseDetailHelper.showEditContacts &&
+                      formattedCaseDetail.contactSecondary.isAddressSealed && (
+                        <div className="max-width-50">
+                          <p className="text-italic">
+                            Call the Tax Court at (202) 521-0700 if you need to
+                            update your contact information
+                          </p>
+                        </div>
+                      )}
                     {formattedCaseDetail.contactSecondary.serviceIndicator && (
                       <div className="margin-top-4">
                         <p className="semi-bold margin-bottom-0">
@@ -231,6 +251,7 @@ const PetitionerInformation = connect(
                   <address aria-labelledby="practitioner-label">
                     {practitioner.name && (
                       <AddressDisplay
+                        showEmail
                         contact={{
                           ...practitioner,
                           ...practitioner.contact,
@@ -287,7 +308,7 @@ const PetitionerInformation = connect(
                       </p>
                     )}
 
-                  {practitioner.representingNames.map((item, index) => (
+                  {practitioner.representingFormatted.map((item, index) => (
                     <p key={index}>
                       <span>{item.name}</span>
                       {item.secondaryName && (
@@ -404,7 +425,14 @@ const PetitionerInformation = connect(
                   </div>
                   {caseInformationHelper.showAddCounsel && practitionerSearch()}
                 </div>
-                {practitionerPartyInformation()}
+                {caseDetailHelper.hasPrivatePractitioners &&
+                  practitionerPartyInformation()}
+
+                {!caseDetailHelper.hasPrivatePractitioners && (
+                  <span>
+                    There is no petitioner counsel associated with this case.
+                  </span>
+                )}
               </div>
             </div>
           </div>

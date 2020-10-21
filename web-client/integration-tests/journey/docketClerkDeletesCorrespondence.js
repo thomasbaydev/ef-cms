@@ -1,7 +1,7 @@
 export const docketClerkDeletesCorrespondence = (test, correspondenceTitle) =>
   it('docketclerk deletes correspondence', async () => {
     await test.runSequence('openConfirmDeleteCorrespondenceModalSequence', {
-      documentId: test.correspondenceDocument.documentId,
+      correspondenceId: test.correspondenceDocument.correspondenceId,
       documentTitle: correspondenceTitle,
     });
 
@@ -11,5 +11,11 @@ export const docketClerkDeletesCorrespondence = (test, correspondenceTitle) =>
 
     await test.runSequence('deleteCorrespondenceDocumentSequence');
 
-    expect(test.getState('caseDetail.correspondence')).toEqual([]);
+    const deletedCorrespondence = test
+      .getState('caseDetail.correspondence')
+      .find(
+        c =>
+          c.correspondenceId === test.correspondenceDocument.correspondenceId,
+      );
+    expect(deletedCorrespondence).toBeUndefined();
   });

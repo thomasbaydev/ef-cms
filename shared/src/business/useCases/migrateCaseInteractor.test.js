@@ -1,4 +1,5 @@
 const {
+  CASE_STATUS_TYPES,
   CASE_TYPES_MAP,
   COUNTRY_TYPES,
   PARTY_TYPES,
@@ -13,6 +14,8 @@ const { User } = require('../entities/User');
 const DATE = '2018-11-21T20:49:28.192Z';
 
 let adminUser;
+let petitionerUser;
+let petitioner2User;
 let createdCases;
 let caseMetadata;
 
@@ -24,6 +27,18 @@ describe('migrateCaseInteractor', () => {
       name: 'Joe Exotic',
       role: ROLES.admin,
       userId: 'c54ba5a9-b37b-479d-9201-067ec6e335bb',
+    });
+    petitionerUser = new User({
+      email: 'petitioner1@example.com',
+      name: 'Diana Prince',
+      role: ROLES.petitioner,
+      userId: '94f6336d-3632-4d43-8729-1e3b1cf648bf',
+    });
+    petitioner2User = new User({
+      email: 'petitioner2@example.com',
+      name: 'Diana Prince',
+      role: ROLES.petitioner,
+      userId: 'f05947aa-5983-43a9-a795-a8c7de471d94',
     });
 
     createdCases = [];
@@ -61,13 +76,12 @@ describe('migrateCaseInteractor', () => {
         countryType: COUNTRY_TYPES.DOMESTIC,
         email: 'petitioner1@example.com',
         name: 'Diana Prince',
-        phone: '+1 (215) 128-6587',
+        phone: '128-6587',
         postalCode: '69580',
-        state: 'AR',
+        state: 'WI',
       },
+      docketEntries: MOCK_CASE.docketEntries,
       docketNumber: '00101-00',
-      docketRecord: MOCK_CASE.docketRecord,
-      documents: MOCK_CASE.documents,
       filingType: 'Myself',
       hasIrsNotice: true,
       partyType: PARTY_TYPES.petitioner,
@@ -157,18 +171,6 @@ describe('migrateCaseInteractor', () => {
       ).rejects.toThrow('The Case entity was invalid');
     });
 
-    it('should fail to migrate a case when the docket record is invalid', async () => {
-      await expect(
-        migrateCaseInteractor({
-          applicationContext,
-          caseMetadata: {
-            ...caseMetadata,
-            docketRecord: [{}],
-          },
-        }),
-      ).rejects.toThrow('The Case entity was invalid');
-    });
-
     it('should provide developer-friendly feedback when the case is invalid', async () => {
       let error, results;
       try {
@@ -176,8 +178,10 @@ describe('migrateCaseInteractor', () => {
           applicationContext,
           caseMetadata: {
             ...MOCK_CASE,
+            docketEntries: [
+              { ...MOCK_CASE.docketEntries[0], docketEntryId: 'invalid' },
+            ],
             docketNumber: 'ABC',
-            documents: [{ ...MOCK_CASE.documents[0], documentId: 'invalid' }],
           },
         });
       } catch (e) {
@@ -189,7 +193,7 @@ describe('migrateCaseInteractor', () => {
         "'docketNumber' with value 'ABC' fails to match the required pattern",
       );
       expect(error.message).toContain(
-        "'documents[0].documentId' must be a valid GUID",
+        "'docketEntries[0].docketEntryId' must be a valid GUID",
       );
     });
   });
@@ -207,6 +211,7 @@ describe('migrateCaseInteractor', () => {
         postalCode: '17860',
         state: 'LA',
       },
+      email: 'practitioner1@example.com',
       name: 'Keelie Bruce',
       role: 'privatePractitioner',
       userId: '26e21f82-d029-4603-a954-544d8123ea04',
@@ -225,6 +230,7 @@ describe('migrateCaseInteractor', () => {
             {
               barNumber: 'PT1234',
               contact: { address1: '123 Main St' },
+              email: 'practitioner2@example.com',
               name: 'Saul Goodman',
               representingPrimary: true,
               role: 'privatePractitioner',
@@ -394,7 +400,7 @@ describe('migrateCaseInteractor', () => {
       ).toBeCalled();
       expect(
         applicationContext.getPersistenceGateway().deleteDocumentFromS3,
-      ).toBeCalledTimes(4); // MOCK_CASE has 4 documents
+      ).toBeCalledTimes(0); // MOCK_CASE has 4 documents
       expect(result).toBeDefined();
       expect(
         applicationContext.getPersistenceGateway().createCase,
@@ -431,5 +437,369 @@ describe('migrateCaseInteractor', () => {
     expect(
       applicationContext.getPersistenceGateway().updateTrialSession,
     ).toHaveBeenCalled();
+  });
+
+  it('should throw an exception when contacts are invalid', async () => {
+    await expect(
+      migrateCaseInteractor({
+        applicationContext,
+        caseMetadata: {
+          ...caseMetadata,
+          contactPrimary: {
+            address1: '64731 Moss Ridge Suite 997',
+            address2: null,
+            address3: null,
+            city: 'Landrychester',
+            contactId: '4C9A4C0E-7267-4A61-A089-2D063E5AB875',
+            country: 'U.S.A.',
+            countryType: COUNTRY_TYPES.DOMESTIC,
+            name: 'Griffith, Moore and Freeman (f.k.a Herring-Benitez)',
+            postalCode: '73301',
+            state: 'TX',
+          },
+          contactSecondary: undefined,
+          partyType:
+            'Partnership (as a partner other than Tax Matters Partner)',
+        },
+      }),
+    ).rejects.toThrow('The Case entity was invalid');
+  });
+
+  it('should update all correspondence items on the case', async () => {
+    await migrateCaseInteractor({
+      applicationContext,
+      caseMetadata: {
+        ...caseMetadata,
+        correspondence: [
+          {
+            correspondenceId: 'c19A4C0E-7267-4A61-A089-2D063E5AB875',
+            documentTitle: 'Correspondence One',
+            userId: '4C9A4C0E-7267-4A61-A089-2D063E5AB875',
+          },
+          {
+            correspondenceId: 'c29A4C0E-7267-4A61-A089-2D063E5AB875',
+            documentTitle: 'Correspondence Two',
+            userId: '4C9A4C0E-7267-4A61-A089-2D063E5AB875',
+          },
+          {
+            correspondenceId: 'c39A4C0E-7267-4A61-A089-2D063E5AB875',
+            documentTitle: 'Correspondence Three',
+            userId: '4C9A4C0E-7267-4A61-A089-2D063E5AB875',
+          },
+        ],
+      },
+    });
+
+    expect(
+      applicationContext.getPersistenceGateway().updateCaseCorrespondence,
+    ).toHaveBeenCalledTimes(3);
+  });
+
+  it('should call updateCase if the case has a leadDocketNumber', async () => {
+    await migrateCaseInteractor({
+      applicationContext,
+      caseMetadata: {
+        ...caseMetadata,
+        leadDocketNumber: '123-45',
+      },
+    });
+
+    expect(
+      applicationContext.getPersistenceGateway().updateCase,
+    ).toHaveBeenCalled();
+  });
+
+  it('should not call updateCase if the case has no leadDocketNumber', async () => {
+    await migrateCaseInteractor({
+      applicationContext,
+      caseMetadata: {
+        ...caseMetadata,
+      },
+    });
+
+    expect(
+      applicationContext.getPersistenceGateway().updateCase,
+    ).not.toHaveBeenCalled();
+  });
+
+  describe('contactPrimary account creation', () => {
+    it('should call createUserAccount but not create a user if contactPrimary has e-access and the case status is not closed', async () => {
+      applicationContext
+        .getPersistenceGateway()
+        .getUserByEmail.mockReturnValue(petitionerUser);
+
+      await migrateCaseInteractor({
+        applicationContext,
+        caseMetadata: {
+          ...caseMetadata,
+          contactPrimary: {
+            ...caseMetadata.contactPrimary,
+            hasEAccess: true,
+          },
+          status: CASE_STATUS_TYPES.new,
+        },
+      });
+
+      expect(
+        applicationContext.getPersistenceGateway().getUserByEmail.mock
+          .calls[0][0],
+      ).toMatchObject({
+        email: petitionerUser.email,
+      });
+      expect(
+        applicationContext.getPersistenceGateway().createMigratedPetitionerUser,
+      ).not.toHaveBeenCalled();
+      expect(
+        applicationContext.getPersistenceGateway().associateUserWithCase.mock
+          .calls[0][0],
+      ).toMatchObject({
+        docketNumber: '101-00',
+        userCase: {
+          docketNumber: '101-00',
+        },
+        userId: petitionerUser.userId,
+      });
+    });
+
+    it('should call createUserAccount and create a user if contactPrimary has e-access and the case status is not closed', async () => {
+      applicationContext
+        .getPersistenceGateway()
+        .getUserByEmail.mockReturnValue(undefined);
+      applicationContext
+        .getPersistenceGateway()
+        .createMigratedPetitionerUser.mockReturnValue(petitionerUser);
+
+      await migrateCaseInteractor({
+        applicationContext,
+        caseMetadata: {
+          ...caseMetadata,
+          contactPrimary: {
+            ...caseMetadata.contactPrimary,
+            hasEAccess: true,
+          },
+          status: CASE_STATUS_TYPES.new,
+        },
+      });
+
+      expect(
+        applicationContext.getPersistenceGateway().getUserByEmail.mock
+          .calls[0][0],
+      ).toMatchObject({
+        email: petitionerUser.email,
+      });
+      expect(
+        applicationContext.getPersistenceGateway().createMigratedPetitionerUser
+          .mock.calls[0][0],
+      ).toMatchObject({
+        user: {
+          email: caseMetadata.contactPrimary.email,
+          name: caseMetadata.contactPrimary.name,
+          role: ROLES.petitioner,
+          userId: expect.anything(),
+        },
+      });
+      expect(
+        applicationContext.getPersistenceGateway().associateUserWithCase.mock
+          .calls[0][0],
+      ).toMatchObject({
+        docketNumber: '101-00',
+        userCase: {
+          docketNumber: '101-00',
+        },
+        userId: petitionerUser.userId,
+      });
+    });
+
+    it('should not call createUserAccount if contactPrimary does not have e-access', async () => {
+      await migrateCaseInteractor({
+        applicationContext,
+        caseMetadata: {
+          ...caseMetadata,
+          contactPrimary: {
+            ...caseMetadata.contactPrimary,
+            hasEAccess: false,
+          },
+          status: CASE_STATUS_TYPES.new,
+        },
+      });
+
+      expect(
+        applicationContext.getPersistenceGateway().getUserByEmail,
+      ).not.toHaveBeenCalled();
+      expect(
+        applicationContext.getPersistenceGateway().associateUserWithCase,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should not call createUserAccount and should override hasEAccess to false if contactPrimary has e-access and the case status is closed', async () => {
+      await migrateCaseInteractor({
+        applicationContext,
+        caseMetadata: {
+          ...caseMetadata,
+          closedDate: '2019-08-25T05:00:00.000Z',
+          contactPrimary: {
+            ...caseMetadata.contactPrimary,
+            hasEAccess: true,
+          },
+          status: CASE_STATUS_TYPES.closed,
+        },
+      });
+
+      expect(
+        applicationContext.getPersistenceGateway().getUserByEmail,
+      ).not.toHaveBeenCalled();
+      expect(
+        applicationContext.getPersistenceGateway().associateUserWithCase,
+      ).not.toHaveBeenCalled();
+      expect(
+        applicationContext.getPersistenceGateway().createCase.mock.calls[0][0]
+          .caseToCreate.contactPrimary.hasEAccess,
+      ).toEqual(false);
+    });
+  });
+
+  describe('contactSecondary account creation', () => {
+    let caseMetadataWithSecondary;
+
+    beforeEach(() => {
+      caseMetadataWithSecondary = {
+        ...caseMetadata,
+        contactSecondary: {
+          ...caseMetadata.contactPrimary,
+          email: 'petitioner2@example.com',
+        },
+        partyType: PARTY_TYPES.petitionerSpouse,
+      };
+    });
+
+    it('should call createUserAccount but not create a user if contactSecondary has e-access and the case status is not closed', async () => {
+      applicationContext
+        .getPersistenceGateway()
+        .getUserByEmail.mockReturnValue(petitioner2User);
+
+      await migrateCaseInteractor({
+        applicationContext,
+        caseMetadata: {
+          ...caseMetadataWithSecondary,
+          contactSecondary: {
+            ...caseMetadataWithSecondary.contactSecondary,
+            hasEAccess: true,
+          },
+          status: CASE_STATUS_TYPES.new,
+        },
+      });
+
+      expect(
+        applicationContext.getPersistenceGateway().getUserByEmail.mock
+          .calls[0][0],
+      ).toMatchObject({
+        email: petitioner2User.email,
+      });
+      expect(
+        applicationContext.getPersistenceGateway().createMigratedPetitionerUser,
+      ).not.toHaveBeenCalled();
+      expect(
+        applicationContext.getPersistenceGateway().associateUserWithCase.mock
+          .calls[0][0],
+      ).toMatchObject({
+        docketNumber: '101-00',
+        userCase: {
+          docketNumber: '101-00',
+        },
+        userId: petitioner2User.userId,
+      });
+    });
+
+    it('should call createUserAccount and create a user if contactSecondary has e-access and the case status is not closed', async () => {
+      applicationContext
+        .getPersistenceGateway()
+        .getUserByEmail.mockReturnValue(undefined);
+      applicationContext
+        .getPersistenceGateway()
+        .createMigratedPetitionerUser.mockReturnValue(petitioner2User);
+
+      await migrateCaseInteractor({
+        applicationContext,
+        caseMetadata: {
+          ...caseMetadataWithSecondary,
+          contactSecondary: {
+            ...caseMetadataWithSecondary.contactSecondary,
+            hasEAccess: true,
+          },
+          status: CASE_STATUS_TYPES.new,
+        },
+      });
+
+      expect(
+        applicationContext.getPersistenceGateway().getUserByEmail.mock
+          .calls[0][0],
+      ).toMatchObject({
+        email: petitioner2User.email,
+      });
+      expect(
+        applicationContext.getPersistenceGateway().createMigratedPetitionerUser
+          .mock.calls[0][0],
+      ).toMatchObject({
+        user: {
+          email: caseMetadataWithSecondary.contactSecondary.email,
+          name: caseMetadataWithSecondary.contactSecondary.name,
+          role: ROLES.petitioner,
+          userId: expect.anything(),
+        },
+      });
+      expect(
+        applicationContext.getPersistenceGateway().associateUserWithCase.mock
+          .calls[0][0],
+      ).toMatchObject({
+        docketNumber: '101-00',
+        userCase: {
+          docketNumber: '101-00',
+        },
+        userId: petitioner2User.userId,
+      });
+    });
+
+    it('should not call createUserAccount if contactSecondary does not have e-access', async () => {
+      await migrateCaseInteractor({
+        applicationContext,
+        caseMetadata: {
+          ...caseMetadataWithSecondary,
+          contactSecondary: {
+            ...caseMetadataWithSecondary.contactSecondary,
+            hasEAccess: false,
+          },
+          status: CASE_STATUS_TYPES.new,
+        },
+      });
+
+      expect(
+        applicationContext.getPersistenceGateway().getUserByEmail,
+      ).not.toHaveBeenCalled();
+      expect(
+        applicationContext.getPersistenceGateway().associateUserWithCase,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should not call createUserAccount if contactSecondary has e-access and the case status is closed', async () => {
+      await migrateCaseInteractor({
+        applicationContext,
+        caseMetadata: {
+          ...caseMetadataWithSecondary,
+          closedDate: '2019-08-25T05:00:00.000Z',
+          contactSecondary: {
+            ...caseMetadataWithSecondary.contactSecondary,
+            hasEAccess: true,
+          },
+          status: CASE_STATUS_TYPES.closed,
+        },
+      });
+
+      expect(
+        applicationContext.getPersistenceGateway().getUserByEmail,
+      ).not.toHaveBeenCalled();
+      expect(
+        applicationContext.getPersistenceGateway().associateUserWithCase,
+      ).not.toHaveBeenCalled();
+    });
   });
 });

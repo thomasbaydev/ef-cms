@@ -24,7 +24,7 @@ describe('Petitions Clerk Create Notice Journey', () => {
   loginAs(test, 'petitionsclerk@example.com');
   petitionsClerkViewsCaseDetail(test);
   petitionsClerkAddsNoticeToCase(test);
-  petitionsClerkViewsCaseDetailAfterAddingNotice(test);
+  petitionsClerkViewsCaseDetailAfterAddingNotice(test, 4);
   petitionsClerkViewsDraftDocumentsForNotice(test, 1);
   petitionsClerkAddsDocketEntryFromOrder(test);
 });

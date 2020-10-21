@@ -29,6 +29,7 @@ module.exports = {
       rules: {
         'jest/expect-expect': 'off',
         'jest/valid-expect': 'off',
+        'jest/valid-expect-in-promise': 'off',
         'promise/always-return': 'off',
         'promise/catch-or-return': 'off',
       },
@@ -72,9 +73,9 @@ module.exports = {
     'import/no-default-export': 'error',
     'import/no-named-as-default': 'off',
     'jest/expect-expect': 'warn',
+    'jest/no-conditional-expect': 'off',
     'jest/no-export': 'off',
     'jest/no-identical-title': 'off', // todo: warn
-    'jest/no-test-callback': 'warn',
     'jsdoc/check-alignment': 'off', // todo: warn
     'jsdoc/check-param-names': 'off', // todo: warn
     'jsdoc/check-tag-names': 'off', // todo: warn
@@ -350,6 +351,7 @@ module.exports = {
           'unprioritize',
           'unprocessable',
           'unsanitized',
+          'unservable',
           'unset',
           'unsets',
           'unsetting',

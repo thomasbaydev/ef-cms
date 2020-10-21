@@ -6,44 +6,40 @@ const { Case } = require('../../entities/cases/Case');
 exports.sendIrsSuperuserPetitionEmail = async ({
   applicationContext,
   caseEntity,
-  documentEntity,
+  docketEntryEntity,
 }) => {
   const {
     caseCaption,
     contactPrimary,
     contactSecondary,
     docketNumber,
-    docketNumberSuffix,
+    docketNumberWithSuffix,
     mailingDate,
     preferredTrialCity,
     privatePractitioners,
   } = applicationContext.getUtilities().setServiceIndicatorsForCase(caseEntity);
 
   const {
-    documentId,
+    docketEntryId,
     documentType,
     eventCode,
     filingDate,
     servedAt,
-  } = documentEntity;
-
-  const docketEntry = caseEntity.docketRecord.find(
-    entry => entry.documentId === documentId,
-  );
+  } = docketEntryEntity;
 
   privatePractitioners.forEach(practitioner => {
-    const representing = [];
+    const representingFormatted = [];
     const { representingPrimary, representingSecondary } = practitioner;
 
     if (representingPrimary) {
-      representing.push(contactPrimary.name);
+      representingFormatted.push(contactPrimary.name);
     }
 
     if (representingSecondary && contactSecondary) {
-      representing.push(contactSecondary.name);
+      representingFormatted.push(contactSecondary.name);
     }
 
-    practitioner.representing = representing.join(', ');
+    practitioner.representingFormatted = representingFormatted.join(', ');
   });
 
   const currentDate = applicationContext
@@ -54,7 +50,6 @@ exports.sendIrsSuperuserPetitionEmail = async ({
     .getUtilities()
     .formatDateString(filingDate, 'MM/DD/YY');
 
-  const docketNumberWithSuffix = `${docketNumber}${docketNumberSuffix || ''}`;
   const formattedMailingDate =
     mailingDate || `Electronically Filed ${filingDateFormatted}`;
 
@@ -63,15 +58,16 @@ exports.sendIrsSuperuserPetitionEmail = async ({
     data: {
       caseDetail: {
         caseTitle: Case.getCaseTitle(caseCaption),
-        docketNumber: docketNumberWithSuffix,
+        docketNumber: docketNumber,
+        docketNumberWithSuffix: docketNumberWithSuffix,
         trialLocation: preferredTrialCity || 'No requested place of trial',
       },
       contactPrimary,
       contactSecondary,
       currentDate,
-      docketEntryNumber: docketEntry && docketEntry.index,
+      docketEntryNumber: docketEntryEntity.index,
       documentDetail: {
-        documentId,
+        docketEntryId,
         documentTitle: documentType,
         eventCode,
         filingDate: filingDateFormatted,

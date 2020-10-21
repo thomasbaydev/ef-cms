@@ -1,15 +1,19 @@
 const {
+  CASE_STATUS_TYPES,
+  MINUTE_ENTRIES_MAP,
+  PAYMENT_STATUS,
+} = require('../entities/EntityConstants');
+const {
   updatePetitionDetailsInteractor,
 } = require('./updatePetitionDetailsInteractor');
 const { applicationContext } = require('../test/createTestApplicationContext');
 const { cloneDeep } = require('lodash');
 const { MOCK_CASE } = require('../../test/mockCase');
-const { PAYMENT_STATUS } = require('../entities/EntityConstants');
 const { ROLES } = require('../entities/EntityConstants');
 const { UnauthorizedError } = require('../../errors/errors');
 
 describe('updatePetitionDetailsInteractor', () => {
-  let mockCase;
+  let mockCase, generalDocketReadyForTrialCase;
 
   beforeAll(() => {
     applicationContext.getUniqueId.mockReturnValue(
@@ -19,10 +23,14 @@ describe('updatePetitionDetailsInteractor', () => {
 
   beforeEach(() => {
     mockCase = cloneDeep(MOCK_CASE);
+    generalDocketReadyForTrialCase = cloneDeep({
+      ...MOCK_CASE,
+      status: CASE_STATUS_TYPES.generalDocketReadyForTrial,
+    });
 
     applicationContext.getCurrentUser.mockReturnValue({
       role: ROLES.docketClerk,
-      userId: 'docketClerk',
+      userId: '20354d7a-e4fe-47af-8ff6-187bca92f3f9',
     });
 
     applicationContext
@@ -93,6 +101,30 @@ describe('updatePetitionDetailsInteractor', () => {
     expect(result.petitionPaymentStatus).toEqual(PAYMENT_STATUS.PAID);
   });
 
+  it('should call updateCaseTrialSortMappingRecords if the updated case is ready for trial and preferred trial city has been changed', async () => {
+    applicationContext
+      .getPersistenceGateway()
+      .getCaseByDocketNumber.mockReturnValue(generalDocketReadyForTrialCase);
+
+    const result = await updatePetitionDetailsInteractor({
+      applicationContext,
+      docketNumber: generalDocketReadyForTrialCase.docketNumber,
+      petitionDetails: {
+        ...generalDocketReadyForTrialCase,
+        preferredTrialCity: 'Cheyenne, Wyoming',
+      },
+    });
+
+    expect(
+      applicationContext.getPersistenceGateway()
+        .updateCaseTrialSortMappingRecords,
+    ).toHaveBeenCalled();
+    expect(
+      applicationContext.getPersistenceGateway().updateCase,
+    ).toHaveBeenCalled();
+    expect(result.preferredTrialCity).toBe('Cheyenne, Wyoming');
+  });
+
   it('should call updateCase with the updated case payment information (when waived) and return the updated case', async () => {
     const result = await updatePetitionDetailsInteractor({
       applicationContext,
@@ -133,8 +165,9 @@ describe('updatePetitionDetailsInteractor', () => {
       },
     });
 
-    const waivedDocument = result.docketRecord.find(
-      entry => entry.description === 'Filing Fee Waived',
+    const waivedDocument = result.docketEntries.find(
+      entry =>
+        entry.documentType === MINUTE_ENTRIES_MAP.filingFeeWaived.documentType,
     );
 
     expect(waivedDocument).toBeTruthy();
@@ -159,8 +192,9 @@ describe('updatePetitionDetailsInteractor', () => {
       },
     });
 
-    const wavedDocument = result.docketRecord.find(
-      entry => entry.description === 'Filing Fee Paid',
+    const wavedDocument = result.docketEntries.find(
+      entry =>
+        entry.documentType === MINUTE_ENTRIES_MAP.filingFeePaid.documentType,
     );
 
     expect(wavedDocument).toBeTruthy();

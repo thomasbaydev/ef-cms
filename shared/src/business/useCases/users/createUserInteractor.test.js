@@ -24,6 +24,7 @@ describe('create user', () => {
       .createUser.mockReturnValue(mockUser);
 
     const userToCreate = {
+      barNumber: '',
       name: 'Jesse Pinkman',
       role: ROLES.petitionsClerk,
       userId: 'petitionsclerk1@example.com',
@@ -161,5 +162,43 @@ describe('create user', () => {
       barNumber: 'CS20001',
       role: ROLES.inactivePractitioner,
     });
+  });
+
+  it('creates a legacyJudge user', async () => {
+    const mockUser = {
+      name: 'Test Legacy Judge',
+      role: ROLES.legacyJudge,
+      userId: 'legacyJudge1@example.com',
+    };
+    applicationContext.getCurrentUser.mockReturnValue({
+      name: 'Admin',
+      role: ROLES.admin,
+      userId: 'admin',
+    });
+
+    applicationContext
+      .getPersistenceGateway()
+      .createUser.mockReturnValue(mockUser);
+
+    const userToCreate = {
+      barNumber: '',
+      name: 'Jesse Pinkman',
+      role: ROLES.legacyJudge,
+      userId: 'legacyJudge1@example.com',
+    };
+
+    const user = await createUserInteractor({
+      applicationContext,
+      user: userToCreate,
+    });
+
+    expect(user).not.toBeUndefined();
+    expect(
+      applicationContext.getPersistenceGateway().createUser,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        disableCognitoUser: true,
+      }),
+    );
   });
 });

@@ -17,18 +17,18 @@ export const docketClerkAddsDocketEntryFromOrder = (test, draftOrderIndex) => {
       },
     );
 
-    const { documentId } = test.draftOrders[draftOrderIndex];
-    test.documentId = documentId;
+    const { docketEntryId } = test.draftOrders[draftOrderIndex];
+    test.docketEntryId = docketEntryId;
 
     const draftOrderDocument = caseDetailFormatted.draftDocuments.find(
-      doc => doc.documentId === documentId,
+      doc => doc.docketEntryId === docketEntryId,
     );
 
     expect(draftOrderDocument).toBeTruthy();
 
     await test.runSequence('gotoAddCourtIssuedDocketEntrySequence', {
+      docketEntryId: draftOrderDocument.docketEntryId,
       docketNumber: test.docketNumber,
-      documentId: draftOrderDocument.documentId,
     });
 
     // default
@@ -64,7 +64,7 @@ export const docketClerkAddsDocketEntryFromOrder = (test, draftOrderIndex) => {
       addCourtIssuedDocketEntryHelperComputed.showServiceStamp,
     ).toBeTruthy();
     expect(nonstandardHelperComputed.showFreeText).toBeTruthy();
-    expect(test.getState('form.freeText')).toBeFalsy();
+    expect(test.getState('form.freeText')).toEqual('Order');
     expect(test.getState('form.serviceStamp')).toBeFalsy();
 
     // eventCode: OCA
@@ -207,8 +207,8 @@ export const docketClerkAddsDocketEntryFromOrder = (test, draftOrderIndex) => {
       },
     );
 
-    const newDocketEntry = caseDetailFormatted.docketRecord.find(
-      entry => entry.documentId === documentId,
+    const newDocketEntry = caseDetailFormatted.formattedDocketEntries.find(
+      entry => entry.docketEntryId === docketEntryId && entry.isOnDocketRecord,
     );
 
     expect(newDocketEntry).toBeTruthy();

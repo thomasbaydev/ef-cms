@@ -20,7 +20,7 @@ export const DocumentService = ({
       <p>A document has been served on your Tax Court case:</p>
 
       <div id="case-information">
-        <div>Docket Number: {caseDetail.docketNumber}</div>
+        <div>Docket Number: {caseDetail.docketNumberWithSuffix}</div>
         <div>Case Title: {caseDetail.caseTitle}</div>
       </div>
       <br />
@@ -43,7 +43,7 @@ export const DocumentService = ({
         <div>---- COMPUTER-READABLE DATA ----</div>
         <div>docketNumber: {caseDetail.docketNumber}</div>
         <div>docketEntryNo: {docketEntryNumber}</div>
-        <div>documentId: {documentDetail.documentId}</div>
+        <div>docketEntryId: {documentDetail.docketEntryId}</div>
         <div>eventCode: {documentDetail.eventCode}</div>
       </div>
 

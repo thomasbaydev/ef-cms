@@ -1,19 +1,11 @@
-const joi = require('joi');
-const {
-  CHAMBERS_SECTIONS,
-  IRS_SYSTEM_SECTION,
-  SECTIONS,
-} = require('./EntityConstants');
-const {
-  JoiValidationConstants,
-} = require('../../utilities/JoiValidationConstants');
 const {
   joiValidationDecorator,
+  validEntityDecorator,
 } = require('../../utilities/JoiValidationDecorator');
-const { CASE_STATUS_TYPES } = require('./EntityConstants');
-const { CHIEF_JUDGE, ROLES } = require('./EntityConstants');
+const { CASE_STATUS_TYPES, CHIEF_JUDGE } = require('./EntityConstants');
 const { createISODateString } = require('../utilities/DateHandler');
 const { omit } = require('lodash');
+const { WORK_ITEM_VALIDATION_RULES } = require('./EntityValidationConstants');
 
 /**
  * constructor
@@ -21,7 +13,11 @@ const { omit } = require('lodash');
  * @param {object} rawWorkItem the raw work item data
  * @constructor
  */
-function WorkItem(rawWorkItem, { applicationContext }) {
+function WorkItem() {
+  this.entityName = 'WorkItem';
+}
+
+WorkItem.prototype.init = function init(rawWorkItem, { applicationContext }) {
   if (!applicationContext) {
     throw new TypeError('applicationContext must be defined');
   }
@@ -36,12 +32,13 @@ function WorkItem(rawWorkItem, { applicationContext }) {
   this.completedByUserId = rawWorkItem.completedByUserId;
   this.completedMessage = rawWorkItem.completedMessage;
   this.createdAt = rawWorkItem.createdAt || createISODateString();
+  this.docketEntry = omit(rawWorkItem.docketEntry, 'workItem');
   this.docketNumber = rawWorkItem.docketNumber;
   this.docketNumberWithSuffix = rawWorkItem.docketNumberWithSuffix;
-  this.document = omit(rawWorkItem.document, 'workItem');
-  this.entityName = 'WorkItem';
   this.hideFromPendingMessages = rawWorkItem.hideFromPendingMessages;
-  this.highPriority = rawWorkItem.highPriority;
+  this.highPriority =
+    rawWorkItem.highPriority ||
+    rawWorkItem.caseStatus === CASE_STATUS_TYPES.calendared;
   this.inProgress = rawWorkItem.inProgress;
   this.isInitializeCase = rawWorkItem.isInitializeCase;
   this.isRead = rawWorkItem.isRead;
@@ -52,64 +49,11 @@ function WorkItem(rawWorkItem, { applicationContext }) {
   this.trialDate = rawWorkItem.trialDate;
   this.updatedAt = rawWorkItem.updatedAt || createISODateString();
   this.workItemId = rawWorkItem.workItemId || applicationContext.getUniqueId();
-}
+};
 
 WorkItem.validationName = 'WorkItem';
 
-WorkItem.VALIDATION_RULES = joi.object().keys({
-  assigneeId: JoiValidationConstants.UUID.allow(null).optional(),
-  assigneeName: joi.string().max(100).allow(null).optional(), // should be a Message entity at some point
-  associatedJudge: joi.string().max(100).required(),
-  caseIsInProgress: joi.boolean().optional(),
-  caseStatus: joi
-    .string()
-    .valid(...Object.values(CASE_STATUS_TYPES))
-    .optional(),
-  caseTitle: joi.string().max(500).optional(),
-  completedAt: JoiValidationConstants.ISO_DATE.optional(),
-  completedBy: joi.string().max(100).optional().allow(null),
-  completedByUserId: JoiValidationConstants.UUID.optional().allow(null),
-  completedMessage: joi.string().max(100).optional().allow(null),
-  createdAt: JoiValidationConstants.ISO_DATE.optional(),
-  docketNumber: JoiValidationConstants.DOCKET_NUMBER.required().description(
-    'Unique case identifier in XXXXX-YY format.',
-  ),
-  docketNumberWithSuffix: joi
-    .string()
-    .optional()
-    .description('Auto-generated from docket number and the suffix.'),
-  document: joi.object().required(),
-  entityName: joi.string().valid('WorkItem').required(),
-  hideFromPendingMessages: joi.boolean().optional(),
-  highPriority: joi.boolean().optional(),
-  inProgress: joi.boolean().optional(),
-  isInitializeCase: joi.boolean().optional(),
-  isRead: joi.boolean().optional(),
-  section: joi
-    .string()
-    .valid(
-      ...SECTIONS,
-      ...CHAMBERS_SECTIONS,
-      ...Object.values(ROLES),
-      IRS_SYSTEM_SECTION,
-    )
-    .required(),
-  sentBy: joi
-    .string()
-    .max(100)
-    .required()
-    .description('The name of the user that sent the WorkItem'),
-  sentBySection: joi
-    .string()
-    .valid(...SECTIONS, ...CHAMBERS_SECTIONS, ...Object.values(ROLES))
-    .optional(),
-  sentByUserId: JoiValidationConstants.UUID.optional(),
-  trialDate: JoiValidationConstants.ISO_DATE.optional().allow(null),
-  updatedAt: JoiValidationConstants.ISO_DATE.required(),
-  workItemId: JoiValidationConstants.UUID.required(),
-});
-
-joiValidationDecorator(WorkItem, WorkItem.VALIDATION_RULES);
+joiValidationDecorator(WorkItem, WORK_ITEM_VALIDATION_RULES);
 
 /**
  * Assign to a user
@@ -162,4 +106,4 @@ WorkItem.prototype.setAsCompleted = function ({ message, user }) {
   return this;
 };
 
-module.exports = { WorkItem };
+exports.WorkItem = validEntityDecorator(WorkItem);

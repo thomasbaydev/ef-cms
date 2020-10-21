@@ -45,20 +45,16 @@ export const IndividualWorkQueueOutbox = connect(
                 </td>
                 <td className="message-queue-row message-queue-document">
                   <div className="message-document-title">
-                    <a
-                      className="case-link"
-                      href={item.editLink}
-                      onClick={e => {
-                        e.stopPropagation();
-                      }}
-                    >
-                      {item.document.documentTitle ||
-                        item.document.documentType}
+                    <a className="case-link" href={item.editLink}>
+                      {item.docketEntry.documentTitle ||
+                        item.docketEntry.documentType}
                     </a>
                   </div>
                 </td>
                 {!workQueueHelper.hideFiledByColumn && (
-                  <td className="message-queue-row">{item.document.filedBy}</td>
+                  <td className="message-queue-row">
+                    {item.docketEntry.filedBy}
+                  </td>
                 )}
                 {!workQueueHelper.hideCaseStatusColumn && (
                   <td className="message-queue-row">{item.caseStatus}</td>

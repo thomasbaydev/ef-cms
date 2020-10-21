@@ -22,6 +22,7 @@ const { Case } = require('../../../business/entities/cases/Case');
 const { differenceWith, isEqual } = require('lodash');
 const { getCaseByDocketNumber } = require('../cases/getCaseByDocketNumber');
 const { omit } = require('lodash');
+const { updateMessage } = require('../messages/updateMessage');
 
 /**
  * updateCase
@@ -39,34 +40,15 @@ exports.updateCase = async ({ applicationContext, caseToUpdate }) => {
 
   const requests = [];
 
-  const updatedDocketRecord = differenceWith(
-    caseToUpdate.docketRecord,
-    oldCase.docketRecord,
-    isEqual,
-  );
-
-  updatedDocketRecord.forEach(docketEntry => {
-    requests.push(
-      client.put({
-        Item: {
-          pk: `case|${caseToUpdate.docketNumber}`,
-          sk: `docket-record|${docketEntry.docketRecordId}`,
-          ...docketEntry,
-        },
-        applicationContext,
-      }),
-    );
-  });
-
   const updatedDocuments = differenceWith(
-    caseToUpdate.documents,
-    oldCase.documents,
+    caseToUpdate.docketEntries,
+    oldCase.docketEntries,
     isEqual,
   );
 
-  const updatedArchivedDocuments = differenceWith(
-    caseToUpdate.archivedDocuments,
-    oldCase.archivedDocuments,
+  const updatedArchivedDocketEntries = differenceWith(
+    caseToUpdate.archivedDocketEntries,
+    oldCase.archivedDocketEntries,
     isEqual,
   );
 
@@ -82,7 +64,9 @@ exports.updateCase = async ({ applicationContext, caseToUpdate }) => {
     isEqual,
   );
 
-  const allUpdatedDocuments = updatedDocuments.concat(updatedArchivedDocuments);
+  const allUpdatedDocuments = updatedDocuments.concat(
+    updatedArchivedDocketEntries,
+  );
   const allUpdatedCorrespondences = updatedCorrespondence.concat(
     updatedArchivedCorrespondences,
   );
@@ -92,7 +76,7 @@ exports.updateCase = async ({ applicationContext, caseToUpdate }) => {
       client.put({
         Item: {
           pk: `case|${caseToUpdate.docketNumber}`,
-          sk: `document|${document.documentId}`,
+          sk: `docket-entry|${document.docketEntryId}`,
           ...document,
         },
         applicationContext,
@@ -105,7 +89,7 @@ exports.updateCase = async ({ applicationContext, caseToUpdate }) => {
       client.put({
         Item: {
           pk: `case|${caseToUpdate.docketNumber}`,
-          sk: `correspondence|${correspondence.documentId}`,
+          sk: `correspondence|${correspondence.correspondenceId}`,
           ...correspondence,
         },
         applicationContext,
@@ -270,6 +254,41 @@ exports.updateCase = async ({ applicationContext, caseToUpdate }) => {
     }
   }
 
+  if (
+    oldCase.status !== caseToUpdate.status ||
+    oldCase.caseCaption !== caseToUpdate.caseCaption ||
+    oldCase.docketNumberSuffix !== caseToUpdate.docketNumberSuffix
+  ) {
+    const messageMappings = await client.query({
+      ExpressionAttributeNames: {
+        '#pk': 'pk',
+        '#sk': 'sk',
+      },
+      ExpressionAttributeValues: {
+        ':pk': `case|${caseToUpdate.docketNumber}`,
+        ':prefix': 'message',
+      },
+      KeyConditionExpression: '#pk = :pk and begins_with(#sk, :prefix)',
+      applicationContext,
+    });
+
+    for (let message of messageMappings) {
+      if (oldCase.status !== caseToUpdate.status) {
+        message.caseStatus = caseToUpdate.status;
+      }
+      if (oldCase.caseCaption !== caseToUpdate.caseCaption) {
+        message.caseTitle = Case.getCaseTitle(caseToUpdate.caseCaption);
+      }
+      if (oldCase.docketNumberSuffix !== caseToUpdate.docketNumberSuffix) {
+        message.docketNumberSuffix = caseToUpdate.docketNumberSuffix;
+      }
+      updateMessage({
+        applicationContext,
+        message,
+      });
+    }
+  }
+
   // update user-case mappings
   if (
     oldCase.status !== caseToUpdate.status ||
@@ -321,7 +340,6 @@ exports.updateCase = async ({ applicationContext, caseToUpdate }) => {
           'documents',
           'irsPractitioners',
           'privatePractitioners',
-          'docketRecord',
         ]),
       },
       applicationContext,

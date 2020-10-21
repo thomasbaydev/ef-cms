@@ -40,12 +40,12 @@ const seedData = {
     serviceIndicator: SERVICE_INDICATOR_TYPES.SI_PAPER,
   },
   contactSecondary: {},
+  docketEntryId: '1f1aa3f7-e2e3-43e6-885d-4ce341588c76',
   docketNumber: '104-20',
   docketNumberSuffix:
     DOCKET_NUMBER_SUFFIXES.DECLARATORY_JUDGEMENTS_FOR_RETIREMENT_PLAN_REVOCATION,
   documentContents:
     'Déjà vu, this is a seed order filed on Apr 13 at 11:01pm ET',
-  documentId: '1f1aa3f7-e2e3-43e6-885d-4ce341588c76',
   documentTitle: 'Order of Dismissal and Decision Entered, Judge Buch',
   filingDate: '2020-04-14T03:01:15.215Z',
   signedJudgeName: 'Maurice B. Foley',
@@ -111,6 +111,12 @@ describe('docket clerk order advanced search', () => {
       await refreshElasticsearchIndex();
 
       await test.runSequence('gotoAdvancedSearchSequence');
+
+      const judges = test.getState('legacyAndCurrentJudges');
+      expect(judges.length).toBeGreaterThan(0);
+
+      const legacyJudge = judges.find(judge => judge.role === 'legacyJudge');
+      expect(legacyJudge).toBeTruthy();
 
       await test.runSequence('submitOrderAdvancedSearchSequence');
 
@@ -248,7 +254,7 @@ describe('docket clerk order advanced search', () => {
       expect(test.getState('searchResults')).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            documentId: test.draftOrders[2].documentId,
+            docketEntryId: test.draftOrders[2].docketEntryId,
             isSealed: true,
           }),
         ]),
@@ -256,7 +262,7 @@ describe('docket clerk order advanced search', () => {
       expect(test.getState('searchResults')).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            documentId: test.draftOrders[1].documentId,
+            docketEntryId: test.draftOrders[1].docketEntryId,
           }),
         ]),
       );
@@ -276,14 +282,14 @@ describe('docket clerk order advanced search', () => {
       expect(test.getState('searchResults')).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            documentId: test.draftOrders[2].documentId,
+            docketEntryId: test.draftOrders[2].docketEntryId,
           }),
         ]),
       );
       expect(test.getState('searchResults')).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            documentId: test.draftOrders[1].documentId,
+            docketEntryId: test.draftOrders[1].docketEntryId,
           }),
         ]),
       );
@@ -303,14 +309,14 @@ describe('docket clerk order advanced search', () => {
       expect(test.getState('searchResults')).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            documentId: test.draftOrders[2].documentId,
+            docketEntryId: test.draftOrders[2].docketEntryId,
           }),
         ]),
       );
       expect(test.getState('searchResults')).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            documentId: test.draftOrders[1].documentId,
+            docketEntryId: test.draftOrders[1].docketEntryId,
           }),
         ]),
       );
@@ -362,14 +368,14 @@ describe('docket clerk order advanced search', () => {
       expect(test.getState('searchResults')).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            documentId: test.draftOrders[2].documentId,
+            docketEntryId: test.draftOrders[2].docketEntryId,
           }),
         ]),
       );
       expect(test.getState('searchResults')).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            documentId: test.draftOrders[1].documentId,
+            docketEntryId: test.draftOrders[1].docketEntryId,
           }),
         ]),
       );
@@ -388,13 +394,13 @@ describe('docket clerk order advanced search', () => {
 
       expect(test.getState('searchResults')).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ documentId: seedData.documentId }),
+          expect.objectContaining({ docketEntryId: seedData.docketEntryId }),
         ]),
       );
       expect(test.getState('searchResults')).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            documentId: test.draftOrders[1].documentId,
+            docketEntryId: test.draftOrders[1].docketEntryId,
           }),
         ]),
       );

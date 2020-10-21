@@ -6,6 +6,8 @@ const { MOCK_CASE } = require('../../test/mockCase');
 const { MOCK_USERS } = require('../../test/mockUsers');
 
 describe('generatePrintableFilingReceiptInteractor', () => {
+  const mockPrimaryDocketEntryId = MOCK_CASE.docketEntries[0].docketEntryId;
+
   beforeAll(() => {
     applicationContext.getCurrentUser.mockReturnValue(
       MOCK_USERS['a7d90c05-f6cd-442c-a168-202db587f16f'],
@@ -20,12 +22,12 @@ describe('generatePrintableFilingReceiptInteractor', () => {
       });
   });
 
-  it('Calls the Receipt of Filing document generator', async () => {
+  it('should call the Receipt of Filing document generator', async () => {
     await generatePrintableFilingReceiptInteractor({
       applicationContext,
       docketNumber: MOCK_CASE.docketNumber,
       documentsFiled: {
-        primaryDocumentFile: {},
+        primaryDocumentId: mockPrimaryDocketEntryId,
       },
     });
 
@@ -40,6 +42,29 @@ describe('generatePrintableFilingReceiptInteractor', () => {
     ).toHaveBeenCalled();
   });
 
+  it('should populate filedBy on the receipt of filing', async () => {
+    await generatePrintableFilingReceiptInteractor({
+      applicationContext,
+      docketNumber: MOCK_CASE.docketNumber,
+      documentsFiled: {
+        hasSecondarySupportingDocuments: true,
+        hasSupportingDocuments: true,
+        primaryDocumentId: mockPrimaryDocketEntryId,
+        secondaryDocument: { docketEntryId: 4 },
+        secondaryDocumentFile: { fakeDocument: true },
+        secondarySupportingDocuments: [
+          { docketEntryId: '3' },
+          { docketEntryId: '7' },
+        ],
+        supportingDocuments: [{ docketEntryId: '1' }, { docketEntryId: '2' }],
+      },
+    });
+
+    const receiptMockCall = applicationContext.getDocumentGenerators()
+      .receiptOfFiling.mock.calls[0][0].data; // 'data' property of first arg (an object) of first call
+    expect(receiptMockCall.filedBy).toBe(MOCK_CASE.contactPrimary.name);
+  });
+
   it('acquires document information', async () => {
     await generatePrintableFilingReceiptInteractor({
       applicationContext,
@@ -47,14 +72,14 @@ describe('generatePrintableFilingReceiptInteractor', () => {
       documentsFiled: {
         hasSecondarySupportingDocuments: true,
         hasSupportingDocuments: true,
-        primaryDocumentFile: {},
-        secondaryDocument: { documentId: 4 },
+        primaryDocumentId: mockPrimaryDocketEntryId,
+        secondaryDocument: { docketEntryId: 4 },
         secondaryDocumentFile: { fakeDocument: true },
         secondarySupportingDocuments: [
-          { documentId: '3' },
-          { documentId: '7' },
+          { docketEntryId: '3' },
+          { docketEntryId: '7' },
         ],
-        supportingDocuments: [{ documentId: '1' }, { documentId: '2' }],
+        supportingDocuments: [{ docketEntryId: '1' }, { docketEntryId: '2' }],
       },
     });
 

@@ -1,4 +1,3 @@
-import { cloneDeep } from 'lodash';
 import { state } from 'cerebral';
 
 /**
@@ -8,40 +7,25 @@ import { state } from 'cerebral';
  * @param {Function} providers.get the cerebral get method
  * @returns {object} object containing viewerDocumentToDisplay
  */
-export const getDefaultDocketViewerDocumentToDisplayAction = ({
-  applicationContext,
-  get,
-}) => {
-  const documentId = get(state.documentId);
-  let viewerDocumentToDisplay = null;
-
-  if (!documentId) {
-    viewerDocumentToDisplay = get(state.viewerDocumentToDisplay);
-  }
-
-  if (viewerDocumentToDisplay) return { viewerDocumentToDisplay };
-
-  const { docketRecord, documents } = get(state.caseDetail);
-
-  const formattedDocketRecordWithDocument = applicationContext
-    .getUtilities()
-    .formatDocketRecordWithDocument(
-      applicationContext,
-      cloneDeep(docketRecord),
-      cloneDeep(documents),
-    );
-
-  const entriesWithDocument = formattedDocketRecordWithDocument.filter(
-    entry => !!entry.document,
+export const getDefaultDocketViewerDocumentToDisplayAction = ({ get }) => {
+  const { docketEntries } = get(state.caseDetail);
+  const docketEntryId = get(state.docketEntryId);
+  const entriesWithDocument = docketEntries.filter(
+    entry => !entry.isMinuteEntry && entry.isFileAttached,
   );
+  const viewerDocumentToDisplayInState = get(state.viewerDocumentToDisplay);
+
+  let viewerDocumentToDisplay;
 
   if (entriesWithDocument && entriesWithDocument.length) {
-    if (documentId) {
-      viewerDocumentToDisplay = entriesWithDocument.find(
-        d => d.document.documentId === documentId,
-      ).document;
-    } else {
-      viewerDocumentToDisplay = entriesWithDocument[0].document;
+    viewerDocumentToDisplay = entriesWithDocument[0];
+    const foundDocketEnry = entriesWithDocument.find(
+      d => d.docketEntryId === docketEntryId,
+    );
+    if (!docketEntryId && viewerDocumentToDisplayInState) {
+      viewerDocumentToDisplay = viewerDocumentToDisplayInState;
+    } else if (docketEntryId && foundDocketEnry) {
+      viewerDocumentToDisplay = foundDocketEnry;
     }
   }
 

@@ -3,10 +3,7 @@ import { formattedCaseDetail } from '../../src/presenter/computeds/formattedCase
 import { runCompute } from 'cerebral/test';
 import { withAppContextDecorator } from '../../src/withAppContext';
 
-const {
-  DOCKET_NUMBER_SUFFIXES,
-  INITIAL_DOCUMENT_TYPES,
-} = applicationContext.getConstants();
+const { DOCKET_NUMBER_SUFFIXES } = applicationContext.getConstants();
 
 export const petitionerViewsCaseDetail = (test, overrides = {}) => {
   return it('petitioner views case detail', async () => {
@@ -31,20 +28,15 @@ export const petitionerViewsCaseDetail = (test, overrides = {}) => {
     expect(caseDetailFormatted.docketNumberWithSuffix).toEqual(
       `${test.docketNumber}${docketNumberSuffix}`,
     );
-    expect(caseDetail.documents.length).toEqual(documentCount);
+    expect(caseDetail.docketEntries.length).toEqual(documentCount);
 
     //verify that event codes were added to initial documents/docket entries
-    expect(caseDetailFormatted.documents).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ eventCode: 'P' }),
-        expect.objectContaining({
-          eventCode: INITIAL_DOCUMENT_TYPES.stin.eventCode,
-        }),
-      ]),
+    expect(caseDetailFormatted.formattedDocketEntries).toEqual(
+      expect.arrayContaining([expect.objectContaining({ eventCode: 'P' })]),
     );
 
-    const rqtDocument = caseDetailFormatted.docketRecordWithDocument.find(
-      entry => entry.record.eventCode === 'RQT',
+    const rqtDocument = caseDetailFormatted.formattedDocketEntries.find(
+      entry => entry.eventCode === 'RQT',
     );
     expect(rqtDocument).toBeTruthy();
 

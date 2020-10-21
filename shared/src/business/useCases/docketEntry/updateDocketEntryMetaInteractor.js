@@ -3,8 +3,7 @@ const {
   ROLE_PERMISSIONS,
 } = require('../../../authorization/authorizationClientService');
 const { Case } = require('../../entities/cases/Case');
-const { DocketRecord } = require('../../entities/DocketRecord');
-const { Document } = require('../../entities/Document');
+const { DocketEntry } = require('../../entities/DocketEntry');
 const { NotFoundError } = require('../../../errors/errors');
 const { UnauthorizedError } = require('../../../errors/errors');
 
@@ -40,11 +39,8 @@ exports.updateDocketEntryMetaInteractor = async ({
 
   const caseEntity = new Case(caseToUpdate, { applicationContext });
 
-  const originalDocketEntry = caseEntity.docketRecord.find(
-    record => record.docketRecordId === docketEntryMeta.docketRecordId,
-  );
-  const originalDocument = caseEntity.getDocumentById({
-    documentId: originalDocketEntry.documentId,
+  const originalDocketEntry = caseEntity.getDocketEntryById({
+    docketEntryId: docketEntryMeta.docketEntryId,
   });
 
   const editableFields = {
@@ -56,7 +52,6 @@ exports.updateDocketEntryMetaInteractor = async ({
     certificateOfService: docketEntryMeta.certificateOfService,
     certificateOfServiceDate: docketEntryMeta.certificateOfServiceDate,
     date: docketEntryMeta.date,
-    description: docketEntryMeta.description,
     docketNumbers: docketEntryMeta.docketNumbers,
     documentTitle: docketEntryMeta.documentTitle,
     documentType: docketEntryMeta.documentType,
@@ -80,60 +75,47 @@ exports.updateDocketEntryMetaInteractor = async ({
     trialLocation: docketEntryMeta.trialLocation,
   };
 
-  const documentEntityForFiledBy = new Document(
-    {
-      ...docketEntryMeta,
-      filedBy: undefined, // allow constructor to re-generate
-      ...caseEntity.getCaseContacts({
-        contactPrimary: true,
-        contactSecondary: true,
-      }),
-    },
-    { applicationContext },
-  );
-  const newFiledBy = documentEntityForFiledBy.filedBy;
-
-  const docketRecordEntity = new DocketRecord(
-    {
-      ...originalDocketEntry,
-      ...editableFields,
-      description:
-        editableFields.documentTitle ||
-        editableFields.description ||
-        originalDocketEntry.description,
-      filedBy: newFiledBy || originalDocketEntry.filedBy,
-    },
-    { applicationContext },
-  );
-
-  caseEntity.updateDocketRecordEntry(docketRecordEntity);
-
-  if (originalDocument) {
+  if (originalDocketEntry) {
     const servedAtUpdated =
       editableFields.servedAt &&
-      editableFields.servedAt !== originalDocument.servedAt;
+      editableFields.servedAt !== originalDocketEntry.servedAt;
     const filingDateUpdated =
       editableFields.filingDate &&
-      editableFields.filingDate !== originalDocument.filingDate;
-    const shouldGenerateCoversheet = servedAtUpdated || filingDateUpdated;
+      editableFields.filingDate !== originalDocketEntry.filingDate;
+    const shouldGenerateCoversheet =
+      (servedAtUpdated || filingDateUpdated) &&
+      !originalDocketEntry.isCourtIssued() &&
+      !originalDocketEntry.isMinuteEntry;
 
-    const documentEntity = new Document(
+    const docketEntryEntity = new DocketEntry(
       {
-        ...originalDocument,
+        ...originalDocketEntry,
         ...editableFields,
-        filedBy: newFiledBy || originalDocketEntry.filedBy,
+        filedBy: undefined, // allow constructor to re-generate
+        ...caseEntity.getCaseContacts({
+          contactPrimary: true,
+          contactSecondary: true,
+        }),
       },
       { applicationContext },
     );
 
-    caseEntity.updateDocument(documentEntity);
+    caseEntity.updateDocketEntry(docketEntryEntity);
 
     if (shouldGenerateCoversheet) {
+      await applicationContext.getPersistenceGateway().updateDocketEntry({
+        applicationContext,
+        docketEntryId: docketEntryEntity.docketEntryId,
+        docketNumber,
+        document: docketEntryEntity.validate(),
+      });
+
       // servedAt or filingDate has changed, generate a new coversheet
       await applicationContext.getUseCases().addCoversheetInteractor({
         applicationContext,
+        docketEntryId: originalDocketEntry.docketEntryId,
         docketNumber: caseEntity.docketNumber,
-        documentId: originalDocument.documentId,
+        filingDateUpdated,
       });
     }
   }

@@ -220,9 +220,13 @@ export const MessageDetail = connect(
                       <Button
                         className={classNames(
                           'usa-button--unstyled attachment-viewer-button',
-                          viewerDocumentToDisplay === attachment && 'active',
+                          viewerDocumentToDisplay.documentId ===
+                            attachment.documentId && 'active',
                         )}
-                        isActive={viewerDocumentToDisplay === attachment}
+                        isActive={
+                          viewerDocumentToDisplay.documentId ===
+                          attachment.documentId
+                        }
                         key={idx}
                         onClick={() => {
                           setMessageDetailViewerDocumentToDisplaySequence({
@@ -230,7 +234,7 @@ export const MessageDetail = connect(
                           });
                         }}
                       >
-                        <div className="grid-row margin-left-205">
+                        <div className="grid-row margin-left-205 line-height-standard">
                           <div
                             className={classNames(
                               'grid-col-8',

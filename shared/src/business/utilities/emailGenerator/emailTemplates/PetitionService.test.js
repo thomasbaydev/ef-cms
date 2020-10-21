@@ -9,6 +9,7 @@ describe('PetitionService', () => {
   const caseDetail = {
     caseTitle: 'Test Case Title',
     docketNumber: '123-45',
+    docketNumberWithSuffix: '123-45S',
     trialLocation: 'Birmingham, AL',
   };
 
@@ -36,7 +37,7 @@ describe('PetitionService', () => {
   const docketEntryNumber = 1;
 
   const documentDetail = {
-    documentId: '1234',
+    docketEntryId: '1234',
     documentTitle: 'Petition',
     eventCode: 'P',
     filingDate: '02/05/20',
@@ -53,7 +54,7 @@ describe('PetitionService', () => {
       name: 'Practitioner One',
       phoneNumber: '123-123-1234',
       postalCode: '12345',
-      representing: 'Test Petitioner',
+      representingFormatted: 'Test Petitioner',
       state: 'AL',
     },
     {
@@ -64,7 +65,7 @@ describe('PetitionService', () => {
       name: 'Practitioner Two',
       phoneNumber: '123-123-4321',
       postalCode: '12345',
-      representing: 'Secondary Petitioner',
+      representingFormatted: 'Secondary Petitioner',
       state: 'AL',
     },
   ];
@@ -182,7 +183,7 @@ describe('PetitionService', () => {
     expect(practitionerInfo.text()).toContain(practitioners[0].phoneNumber);
     expect(practitionerInfo.text()).toContain(practitioners[0].email);
     expect(practitionerInfo.text()).toContain(
-      `Representing: ${practitioners[0].representing}`,
+      `Representing: ${practitioners[0].representingFormatted}`,
     );
 
     expect(practitionerInfo.text()).toContain(practitioners[1].name);
@@ -193,7 +194,7 @@ describe('PetitionService', () => {
     expect(practitionerInfo.text()).toContain(practitioners[1].phoneNumber);
     expect(practitionerInfo.text()).toContain(practitioners[1].email);
     expect(practitionerInfo.text()).toContain(
-      `Representing: ${practitioners[1].representing}`,
+      `Representing: ${practitioners[1].representingFormatted}`,
     );
   });
 
@@ -229,8 +230,9 @@ describe('PetitionService', () => {
     const irs = wrapper.find('#computer-readable');
 
     expect(irs.text()).toContain(caseDetail.docketNumber);
+    expect(irs.text()).not.toContain(caseDetail.docketNumberWithSuffix);
     expect(irs.text()).toContain(docketEntryNumber);
-    expect(irs.text()).toContain(documentDetail.documentId);
+    expect(irs.text()).toContain(documentDetail.docketEntryId);
     expect(irs.text()).toContain(documentDetail.eventCode);
   });
 });

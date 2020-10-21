@@ -9,6 +9,10 @@
         presence: "optional"
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "guid"
           args: 
             options: 
@@ -22,6 +26,10 @@
         presence: "optional"
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "max"
           args: 
             limit: 100
@@ -32,6 +40,10 @@
       flags: 
         presence: "required"
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "max"
           args: 
@@ -45,6 +57,11 @@
       flags: 
         only: true
         presence: "optional"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "Assigned - Case"
         - "Assigned - Motion"
@@ -64,6 +81,10 @@
         presence: "optional"
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "max"
           args: 
             limit: 500
@@ -80,6 +101,10 @@
         presence: "optional"
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "max"
           args: 
             limit: 100
@@ -90,6 +115,10 @@
       flags: 
         presence: "optional"
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "guid"
           args: 
@@ -104,6 +133,10 @@
         presence: "optional"
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "max"
           args: 
             limit: 100
@@ -116,12 +149,20 @@
           - "YYYY-MM-DDTHH:mm:ss.SSSZ"
           - "YYYY-MM-DD"
         presence: "optional"
+    docketEntry: 
+      type: "object"
+      flags: 
+        presence: "required"
     docketNumber: 
       type: "string"
       flags: 
         presence: "required"
         description: "Unique case identifier in XXXXX-YY format."
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "pattern"
           args: 
@@ -131,15 +172,21 @@
       flags: 
         presence: "optional"
         description: "Auto-generated from docket number and the suffix."
-    document: 
-      type: "object"
-      flags: 
-        presence: "required"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
     entityName: 
       type: "string"
       flags: 
         only: true
         presence: "required"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "WorkItem"
     hideFromPendingMessages: 
@@ -167,6 +214,11 @@
       flags: 
         only: true
         presence: "required"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "adc"
         - "admissions"
@@ -175,7 +227,6 @@
         - "docket"
         - "petitions"
         - "trialClerks"
-        - "armensChambers"
         - "ashfordsChambers"
         - "buchsChambers"
         - "carluzzosChambers"
@@ -184,17 +235,17 @@
         - "copelandsChambers"
         - "foleysChambers"
         - "galesChambers"
-        - "gerbersChambers"
         - "goekesChambers"
+        - "greavesChambers"
         - "gustafsonsChambers"
         - "guysChambers"
         - "halpernsChambers"
         - "holmesChambers"
-        - "jacobsChambers"
         - "jonesChambers"
         - "kerrigansChambers"
         - "laubersChambers"
         - "leydensChambers"
+        - "marshallsChambers"
         - "marvelsChambers"
         - "morrisonsChambers"
         - "negasChambers"
@@ -206,6 +257,7 @@
         - "torosChambers"
         - "urdasChambers"
         - "vasquezsChambers"
+        - "weilersChambers"
         - "wellsChambers"
         - "admin"
         - "admissionsclerk"
@@ -215,6 +267,7 @@
         - "irsPractitioner"
         - "irsSuperuser"
         - "judge"
+        - "legacyJudge"
         - "petitioner"
         - "petitionsclerk"
         - "privatePractitioner"
@@ -227,6 +280,10 @@
         description: "The name of the user that sent the WorkItem"
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "max"
           args: 
             limit: 100
@@ -235,6 +292,11 @@
       flags: 
         only: true
         presence: "optional"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "adc"
         - "admissions"
@@ -243,7 +305,6 @@
         - "docket"
         - "petitions"
         - "trialClerks"
-        - "armensChambers"
         - "ashfordsChambers"
         - "buchsChambers"
         - "carluzzosChambers"
@@ -252,17 +313,17 @@
         - "copelandsChambers"
         - "foleysChambers"
         - "galesChambers"
-        - "gerbersChambers"
         - "goekesChambers"
+        - "greavesChambers"
         - "gustafsonsChambers"
         - "guysChambers"
         - "halpernsChambers"
         - "holmesChambers"
-        - "jacobsChambers"
         - "jonesChambers"
         - "kerrigansChambers"
         - "laubersChambers"
         - "leydensChambers"
+        - "marshallsChambers"
         - "marvelsChambers"
         - "morrisonsChambers"
         - "negasChambers"
@@ -274,6 +335,7 @@
         - "torosChambers"
         - "urdasChambers"
         - "vasquezsChambers"
+        - "weilersChambers"
         - "wellsChambers"
         - "admin"
         - "admissionsclerk"
@@ -283,6 +345,7 @@
         - "irsPractitioner"
         - "irsSuperuser"
         - "judge"
+        - "legacyJudge"
         - "petitioner"
         - "petitionsclerk"
         - "privatePractitioner"
@@ -292,6 +355,10 @@
       flags: 
         presence: "optional"
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "guid"
           args: 
@@ -319,6 +386,10 @@
       flags: 
         presence: "required"
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "guid"
           args: 

@@ -1,7 +1,6 @@
 import { addCourtIssuedDocketEntryHelper } from './computeds/addCourtIssuedDocketEntryHelper';
 import { addCourtIssuedDocketEntryNonstandardHelper } from './computeds/addCourtIssuedDocketEntryNonstandardHelper';
 import { addDocketEntryHelper } from './computeds/addDocketEntryHelper';
-import { addEditUserCaseNoteModalHelper } from './computeds/addEditUserCaseNoteModalHelper';
 import { addToTrialSessionModalHelper } from './computeds/addToTrialSessionModalHelper';
 import { advancedDocumentSearchHelper } from './computeds/AdvancedSearch/advancedDocumentSearchHelper';
 import { advancedSearchHelper } from './computeds/AdvancedSearch/advancedSearchHelper';
@@ -24,6 +23,7 @@ import { confirmInitiateServiceModalHelper } from './computeds/confirmInitiateSe
 import { contactEditHelper } from './computeds/contactEditHelper';
 import { contactsHelper } from './computeds/contactsHelper';
 import { correspondenceViewerHelper } from './computeds/correspondenceViewerHelper';
+import { createMessageModalHelper } from './computeds/createMessageModalHelper';
 import { createOrderHelper } from './computeds/createOrderHelper';
 import { createPractitionerUserHelper } from './computeds/createPractitionerUserHelper';
 import { dashboardExternalHelper } from './computeds/dashboardExternalHelper';
@@ -97,7 +97,6 @@ const helpers = {
   addCourtIssuedDocketEntryHelper,
   addCourtIssuedDocketEntryNonstandardHelper,
   addDocketEntryHelper,
-  addEditUserCaseNoteModalHelper,
   addToTrialSessionModalHelper,
   advancedDocumentSearchHelper,
   advancedSearchHelper,
@@ -120,6 +119,7 @@ const helpers = {
   contactEditHelper,
   contactsHelper,
   correspondenceViewerHelper,
+  createMessageModalHelper,
   createOrderHelper,
   createPractitionerUserHelper,
   dashboardExternalHelper,
@@ -190,10 +190,11 @@ const helpers = {
 
 export const baseState = {
   advancedSearchForm: {}, // form for advanced search screen, TODO: replace with state.form
+  allJudges: [],
   archiveDraftDocument: {
+    docketEntryId: null,
     // used by the delete draft document modal
     docketNumber: null,
-    documentId: null,
     documentTitle: null,
   },
   assigneeId: null, // used for assigning workItems in assignSelectedWorkItemsAction
@@ -203,6 +204,7 @@ export const baseState = {
   cognitoLoginUrl: null,
   completeForm: {},
   // TODO: replace with state.form
+  currentJudges: [],
   currentPage: 'Interstitial',
   currentViewMetadata: {
     caseDetail: {
@@ -230,9 +232,10 @@ export const baseState = {
       tab: null,
     },
   },
-  docketRecordIndex: 0,
   // needs its own object because it's present when other forms are on screen
-  documentId: null,
+  docketEntryId: null,
+  docketRecordIndex: 0,
+  draftDocumentViewerDocketEntryId: null,
   fileUploadProgress: {
     // used for the progress bar shown in modal when uploading files
     isUploading: false,
@@ -247,6 +250,12 @@ export const baseState = {
     showMobileMenu: false,
     showUsaBannerDetails: false,
   },
+  individualInProgressCount: 0,
+  individualInboxCount: 0,
+  judges: [],
+  legacyAndCurrentJudges: [],
+  messagesInboxCount: 0,
+  messagesSectionCount: 0,
   modal: {
     pdfPreviewModal: undefined,
     showModal: undefined, // the name of the modal to display
@@ -255,7 +264,7 @@ export const baseState = {
   notifications: {},
   openCases: [],
   pdfForSigning: {
-    documentId: null,
+    docketEntryId: null,
     nameForSigning: '',
     pageNumber: 1,
     pdfjsObj: null,
@@ -280,6 +289,7 @@ export const baseState = {
     selectedBatchIndex: 0,
   },
   screenMetadata: {},
+  sectionInProgressCount: 0,
   sectionInboxCount: 0,
   sectionUsers: [],
   selectedWorkItems: [],

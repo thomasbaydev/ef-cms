@@ -3,21 +3,21 @@ const {
   ROLE_PERMISSIONS,
 } = require('../../../authorization/authorizationClientService');
 const { Case } = require('../../entities/cases/Case');
-const { DocketRecord } = require('../../entities/DocketRecord');
 const { NotFoundError, UnauthorizedError } = require('../../../errors/errors');
 
 /**
- * strikes a given docket record on a case
+ * strikes a given docket entry on a case
  *
  * @param {object} providers the providers object
  * @param {object} providers.applicationContext the application context
- * @param {object} providers.documentMeta document details to go on the record
- * @returns {object} the updated case after the documents are added
+ * @param {string} providers.docketEntryId the docket entry id to strike
+ * @param {string} providers.docketNumber the docket number of the case
+ * @returns {object} the updated case after the docket entry is stricken
  */
 exports.strikeDocketEntryInteractor = async ({
   applicationContext,
+  docketEntryId,
   docketNumber,
-  docketRecordId,
 }) => {
   const authorizedUser = applicationContext.getCurrentUser();
 
@@ -39,32 +39,27 @@ exports.strikeDocketEntryInteractor = async ({
 
   const caseEntity = new Case(caseToUpdate, { applicationContext });
 
-  const docketRecord = caseEntity.getDocketRecord(docketRecordId);
-
-  if (!docketRecord) {
-    throw new NotFoundError('Docket Record not found');
-  }
-
-  const docketRecordEntity = new DocketRecord(docketRecord, {
-    applicationContext,
+  const docketEntryEntity = caseEntity.getDocketEntryById({
+    docketEntryId,
   });
+
+  if (!docketEntryEntity) {
+    throw new NotFoundError('Docket entry not found');
+  }
 
   const user = await applicationContext
     .getPersistenceGateway()
     .getUserById({ applicationContext, userId: authorizedUser.userId });
 
-  docketRecordEntity.strikeEntry({ name: user.name, userId: user.userId });
+  docketEntryEntity.strikeEntry({ name: user.name, userId: user.userId });
 
-  caseEntity.updateDocketRecordEntry(
-    docketRecordEntity,
-    docketRecordEntity.index,
-  );
+  caseEntity.updateDocketEntry(docketEntryEntity);
 
-  await applicationContext.getPersistenceGateway().updateDocketRecord({
+  await applicationContext.getPersistenceGateway().updateDocketEntry({
     applicationContext,
+    docketEntryId,
     docketNumber,
-    docketRecord: docketRecordEntity.validate().toRawObject(),
-    docketRecordId: docketRecordId,
+    document: docketEntryEntity.validate().toRawObject(),
   });
 
   return caseEntity.toRawObject();

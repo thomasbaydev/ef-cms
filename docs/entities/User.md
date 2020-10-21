@@ -9,6 +9,10 @@
         presence: "required"
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "max"
           args: 
             limit: 100
@@ -17,6 +21,11 @@
       flags: 
         only: true
         presence: "required"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "adc"
         - "admin"
@@ -29,6 +38,7 @@
         - "irsPractitioner"
         - "irsSuperuser"
         - "judge"
+        - "legacyJudge"
         - "petitioner"
         - "petitionsclerk"
         - "privatePractitioner"
@@ -36,6 +46,10 @@
     judgeFullName: 
       type: "string"
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "max"
           args: 
@@ -67,6 +81,10 @@
     judgeTitle: 
       type: "string"
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "max"
           args: 
@@ -106,6 +124,10 @@
             presence: "required"
           rules: 
             - 
+              name: "min"
+              args: 
+                limit: 1
+            - 
               name: "max"
               args: 
                 limit: 100
@@ -114,6 +136,10 @@
           flags: 
             presence: "optional"
           rules: 
+            - 
+              name: "min"
+              args: 
+                limit: 1
             - 
               name: "max"
               args: 
@@ -126,6 +152,10 @@
             presence: "optional"
           rules: 
             - 
+              name: "min"
+              args: 
+                limit: 1
+            - 
               name: "max"
               args: 
                 limit: 100
@@ -137,6 +167,10 @@
             presence: "required"
           rules: 
             - 
+              name: "min"
+              args: 
+                limit: 1
+            - 
               name: "max"
               args: 
                 limit: 100
@@ -145,11 +179,21 @@
           flags: 
             only: true
             presence: "required"
+          rules: 
+            - 
+              name: "min"
+              args: 
+                limit: 1
           allow: 
             - "domestic"
             - "international"
         country: 
           type: "string"
+          rules: 
+            - 
+              name: "min"
+              args: 
+                limit: 1
           whens: 
             - 
               ref: 
@@ -180,6 +224,10 @@
             presence: "required"
           rules: 
             - 
+              name: "min"
+              args: 
+                limit: 1
+            - 
               name: "max"
               args: 
                 limit: 100
@@ -205,6 +253,10 @@
                   presence: "required"
                 rules: 
                   - 
+                    name: "min"
+                    args: 
+                      limit: 1
+                  - 
                     name: "max"
                     args: 
                       limit: 100
@@ -214,6 +266,10 @@
                   presence: "required"
                 rules: 
                   - 
+                    name: "min"
+                    args: 
+                      limit: 1
+                  - 
                     name: "pattern"
                     args: 
                       regex: "/^(\\d{5}|\\d{5}-\\d{4})$/"
@@ -221,6 +277,11 @@
           type: "string"
           flags: 
             only: true
+          rules: 
+            - 
+              name: "min"
+              args: 
+                limit: 1
           allow: 
             - "AK"
             - "AL"
@@ -315,6 +376,10 @@
         presence: "optional"
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "email"
           args: 
             options: 
@@ -328,13 +393,28 @@
       flags: 
         only: true
         presence: "required"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "User"
+    isUpdatingInformation: 
+      type: "boolean"
+      flags: 
+        presence: "optional"
+        description: "Whether the contact information for the user is being updated."
     section: 
       type: "string"
       flags: 
         only: true
         presence: "optional"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "adc"
         - "admissions"
@@ -343,7 +423,6 @@
         - "docket"
         - "petitions"
         - "trialClerks"
-        - "armensChambers"
         - "ashfordsChambers"
         - "buchsChambers"
         - "carluzzosChambers"
@@ -352,17 +431,18 @@
         - "copelandsChambers"
         - "foleysChambers"
         - "galesChambers"
-        - "gerbersChambers"
         - "goekesChambers"
+        - "greavesChambers"
         - "gustafsonsChambers"
         - "guysChambers"
         - "halpernsChambers"
         - "holmesChambers"
-        - "jacobsChambers"
         - "jonesChambers"
         - "kerrigansChambers"
         - "laubersChambers"
+        - "legacyJudgesChambers"
         - "leydensChambers"
+        - "marshallsChambers"
         - "marvelsChambers"
         - "morrisonsChambers"
         - "negasChambers"
@@ -374,6 +454,7 @@
         - "torosChambers"
         - "urdasChambers"
         - "vasquezsChambers"
+        - "weilersChambers"
         - "wellsChambers"
         - "admin"
         - "admissionsclerk"
@@ -383,6 +464,7 @@
         - "irsPractitioner"
         - "irsSuperuser"
         - "judge"
+        - "legacyJudge"
         - "petitioner"
         - "petitionsclerk"
         - "privatePractitioner"
@@ -391,11 +473,20 @@
       type: "string"
       flags: 
         presence: "optional"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
     userId: 
       type: "string"
       flags: 
         presence: "required"
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "guid"
           args: 

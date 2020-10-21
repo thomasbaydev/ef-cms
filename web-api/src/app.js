@@ -125,14 +125,14 @@ const {
   generateTrialCalendarPdfLambda,
 } = require('./trialSessions/generateTrialCalendarPdfLambda');
 const {
-  getAllCaseDeadlinesLambda,
-} = require('./caseDeadline/getAllCaseDeadlinesLambda');
-const {
   getCalendaredCasesForTrialSessionLambda,
 } = require('./trialSessions/getCalendaredCasesForTrialSessionLambda');
 const {
   getCaseDeadlinesForCaseLambda,
 } = require('./caseDeadline/getCaseDeadlinesForCaseLambda');
+const {
+  getCaseDeadlinesLambda,
+} = require('./caseDeadline/getCaseDeadlinesLambda');
 const {
   getCaseInventoryReportLambda,
 } = require('./reports/getCaseInventoryReportLambda');
@@ -148,6 +148,9 @@ const {
 const {
   getDocumentDownloadUrlLambda,
 } = require('./documents/getDocumentDownloadUrlLambda');
+const {
+  getDocumentDownloadUrlLambda: v1GetDocumentDownloadUrlLambda,
+} = require('./v1/getDocumentDownloadUrlLambda');
 const {
   getDocumentQCInboxForSectionLambda,
 } = require('./workitems/getDocumentQCInboxForSectionLambda');
@@ -232,6 +235,9 @@ const {
 const {
   removeConsolidatedCasesLambda,
 } = require('./cases/removeConsolidatedCasesLambda');
+const {
+  removePdfFromDocketEntryLambda,
+} = require('./documents/removePdfFromDocketEntryLambda');
 const {
   removeSignatureFromDocumentLambda,
 } = require('./documents/removeSignatureFromDocumentLambda');
@@ -344,7 +350,7 @@ const { deleteCaseNoteLambda } = require('./caseNote/deleteCaseNoteLambda');
 const { forwardMessageLambda } = require('./messages/forwardMessageLambda');
 const { getBlockedCasesLambda } = require('./reports/getBlockedCasesLambda');
 const { getCaseLambda } = require('./cases/getCaseLambda');
-const { getCasesByUserLambda } = require('./cases/getCasesByUserLambda');
+const { getCaseLambda: v1GetCaseLambda } = require('./v1/getCaseLambda');
 const { getClosedCasesLambda } = require('./cases/getClosedCasesLambda');
 const { getInternalUsersLambda } = require('./users/getInternalUsersLambda');
 const { getMessageThreadLambda } = require('./messages/getMessageThreadLambda');
@@ -361,6 +367,7 @@ const { replyToMessageLambda } = require('./messages/replyToMessageLambda');
 const { saveCaseNoteLambda } = require('./caseNote/saveCaseNoteLambda');
 const { sealCaseLambda } = require('./cases/sealCaseLambda');
 const { serveCaseToIrsLambda } = require('./cases/serveCaseToIrsLambda');
+const { setMessageAsReadLambda } = require('./messages/setMessageAsReadLambda');
 const { swaggerJsonLambda } = require('./swagger/swaggerJsonLambda');
 const { swaggerLambda } = require('./swagger/swaggerLambda');
 const { unprioritizeCaseLambda } = require('./cases/unprioritizeCaseLambda');
@@ -419,7 +426,10 @@ const { virusScanPdfLambda } = require('./documents/virusScanPdfLambda');
     '/case-deadlines/:docketNumber',
     lambdaWrapper(getCaseDeadlinesForCaseLambda),
   );
-  app.get('/case-deadlines', lambdaWrapper(getAllCaseDeadlinesLambda));
+  app.get(
+    '/case-deadlines/:startDate/:endDate',
+    lambdaWrapper(getCaseDeadlinesLambda),
+  );
 }
 /**
  * case-documents
@@ -427,11 +437,11 @@ const { virusScanPdfLambda } = require('./documents/virusScanPdfLambda');
 {
   //GET
   app.get(
-    '/case-documents/:docketNumber/:documentId/document-download-url',
+    '/case-documents/:docketNumber/:key/document-download-url',
     lambdaWrapper(getDocumentDownloadUrlLambda),
   );
   app.get(
-    '/case-documents/:docketNumber/:documentId/download-policy-url',
+    '/case-documents/:docketNumber/:key/download-policy-url',
     lambdaWrapper(downloadPolicyUrlLambda),
   );
   app.get(
@@ -444,23 +454,27 @@ const { virusScanPdfLambda } = require('./documents/virusScanPdfLambda');
   );
   // POST
   app.post(
-    '/case-documents/:docketNumber/:documentId/serve-court-issued',
+    '/case-documents/:docketNumber/:docketEntryId/serve-court-issued',
     lambdaWrapper(serveCourtIssuedDocumentLambda),
   );
   app.post(
-    '/case-documents/:docketNumber/:documentId/coversheet',
+    '/case-documents/:docketNumber/:docketEntryId/coversheet',
     lambdaWrapper(addCoversheetLambda),
   );
   app.post(
-    '/case-documents/:docketNumber/:documentId/remove-signature',
+    '/case-documents/:docketNumber/:docketEntryId/remove-signature',
     lambdaWrapper(removeSignatureFromDocumentLambda),
   );
   app.post(
-    '/case-documents/:docketNumber/:documentId/sign',
+    '/case-documents/:docketNumber/:docketEntryId/remove-pdf',
+    lambdaWrapper(removePdfFromDocketEntryLambda),
+  );
+  app.post(
+    '/case-documents/:docketNumber/:docketEntryId/sign',
     lambdaWrapper(saveSignedDocumentLambda),
   );
   app.post(
-    '/case-documents/:docketNumber/:documentId/serve',
+    '/case-documents/:docketNumber/:docketEntryId/serve',
     lambdaWrapper(serveExternallyFiledDocumentLambda),
   );
   app.post(
@@ -490,7 +504,7 @@ const { virusScanPdfLambda } = require('./documents/virusScanPdfLambda');
 
   // PUT
   app.put(
-    '/case-documents/:docketNumber/court-issued-orders/:documentId',
+    '/case-documents/:docketNumber/court-issued-orders/:docketEntryId',
     lambdaWrapper(updateCourtIssuedOrderToCaseLambda),
   );
   app.put(
@@ -510,20 +524,20 @@ const { virusScanPdfLambda } = require('./documents/virusScanPdfLambda');
     lambdaWrapper(updateCourtIssuedDocketEntryLambda),
   );
   app.put(
-    '/case-documents/:docketNumber/correspondence/:documentId',
+    '/case-documents/:docketNumber/correspondence/:correspondenceId',
     lambdaWrapper(updateCorrespondenceDocumentLambda),
   );
   app.put(
-    '/case-documents/:docketNumber/:documentId',
+    '/case-documents/:docketNumber/:docketEntryId',
     lambdaWrapper(archiveDraftDocumentLambda),
   );
   app.put(
-    '/case-documents/:docketNumber/:docketRecordId/strike',
+    '/case-documents/:docketNumber/:docketEntryId/strike',
     lambdaWrapper(strikeDocketEntryLambda),
   );
   // DELETE
   app.delete(
-    '/case-documents/:docketNumber/correspondence/:documentId',
+    '/case-documents/:docketNumber/correspondence/:correspondenceId',
     lambdaWrapper(archiveCorrespondenceDocumentLambda),
   );
 }
@@ -658,7 +672,7 @@ const { virusScanPdfLambda } = require('./documents/virusScanPdfLambda');
   app.post('/cases/paper', lambdaWrapper(createCaseFromPaperLambda));
   app.get('/cases/closed', lambdaWrapper(getClosedCasesLambda));
   app.delete(
-    '/cases/:docketNumber/remove-pending/:documentId',
+    '/cases/:docketNumber/remove-pending/:docketEntryId',
     lambdaWrapper(removeCasePendingItemLambda),
   );
   app.get(
@@ -680,9 +694,9 @@ const { virusScanPdfLambda } = require('./documents/virusScanPdfLambda');
  * documents
  */
 {
-  app.post('/documents/:documentId/validate', lambdaWrapper(validatePdfLambda));
+  app.post('/documents/:key/validate', lambdaWrapper(validatePdfLambda));
   app.get(
-    '/documents/:documentId/upload-policy',
+    '/documents/:key/upload-policy',
     lambdaWrapper(getUploadPolicyLambda),
   );
   app.post(
@@ -692,7 +706,7 @@ const { virusScanPdfLambda } = require('./documents/virusScanPdfLambda');
 }
 
 app.post(
-  '/clamav/documents/:documentId/virus-scan',
+  '/clamav/documents/:key/virus-scan',
   lambdaWrapper(virusScanPdfLambda),
 );
 
@@ -712,6 +726,7 @@ app.post(
     '/messages/:parentMessageId/complete',
     lambdaWrapper(completeMessageLambda),
   );
+  app.post('/messages/:messageId/read', lambdaWrapper(setMessageAsReadLambda));
   app.get('/messages/:parentMessageId', lambdaWrapper(getMessageThreadLambda));
   app.get(
     '/messages/case/:docketNumber',
@@ -743,6 +758,7 @@ app.post(
   );
   app.post('/messages', lambdaWrapper(createMessageLambda));
 }
+
 /**
  * migrate
  */
@@ -796,6 +812,7 @@ app.post('/migrate/trial-session', lambdaWrapper(migrateTrialSessionLambda));
     lambdaWrapper(runTrialSessionPlanningReportLambda),
   );
 }
+
 /**
  * sections
  */
@@ -870,7 +887,6 @@ app.get(
  * users
  */
 app.get('/users/internal', lambdaWrapper(getInternalUsersLambda));
-app.get('/users/:userId/cases', lambdaWrapper(getCasesByUserLambda));
 app.put(
   '/users/:userId/case/:docketNumber',
   lambdaWrapper(privatePractitionerCaseAssociationLambda),
@@ -906,6 +922,15 @@ app.get(
 app.get('/users/:userId', lambdaWrapper(getUserByIdLambda));
 app.get('/users', lambdaWrapper(getUserLambda));
 app.post('/users', lambdaWrapper(createUserLambda));
+
+/**
+ * v1 API
+ */
+app.get('/v1/cases/:docketNumber', lambdaWrapper(v1GetCaseLambda));
+app.get(
+  '/v1/cases/:docketNumber/entries/:key/document-download-url',
+  lambdaWrapper(v1GetDocumentDownloadUrlLambda),
+);
 
 /**
  * work-items

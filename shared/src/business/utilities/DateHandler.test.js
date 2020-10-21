@@ -248,7 +248,7 @@ describe('DateHandler', () => {
       expect(result).toBe('2019-03-01 11:40 pm');
     });
 
-    it('creates a formatted EST time using DateHandler internal format "TIME_TZ" ', () => {
+    it('creates a formatted EST time using DateHandler internal format "TIME_TZ"', () => {
       const dateRetrievedFromStorage = '2019-03-02T01:40:46.415Z';
       const result = DateHandler.formatDateString(
         dateRetrievedFromStorage,
@@ -323,6 +323,53 @@ describe('DateHandler', () => {
       ['01-01-01', '13-1-2001', '01/41/2001', '/1/2001'].forEach(date => {
         expect(DateHandler.isValidDateString(date)).toBeFalsy();
       });
+    });
+  });
+  describe('castToISO', () => {
+    it('returns an iso string when the date string passed in is valid', () => {
+      expect(DateHandler.castToISO('2010-10-10')).toEqual(
+        '2010-10-10T04:00:00.000Z',
+      );
+    });
+
+    it('returns an iso string when the date string of 2009-01-01 passed in is valid', () => {
+      expect(DateHandler.castToISO('2009-01-01')).toEqual(
+        '2009-01-01T05:00:00.000Z',
+      );
+    });
+
+    it('returns an iso string for 01-01-2009 when the date string of 2009 is passed in', () => {
+      expect(DateHandler.castToISO('2009')).toEqual('2009-01-01T05:00:00.000Z');
+    });
+
+    it('returns null when the date string passed in is invalid', () => {
+      expect(DateHandler.castToISO('x-10-10')).toEqual('-1');
+    });
+
+    it('returns null when the date string passed in is an empty string', () => {
+      expect(DateHandler.castToISO('')).toEqual(null);
+    });
+
+    it('returns the same iso string passed in when an iso string is passed in', () => {
+      expect(DateHandler.castToISO('1990-01-01T05:00:00.000Z')).toEqual(
+        '1990-01-01T05:00:00.000Z',
+      );
+    });
+  });
+
+  describe('checkDate', () => {
+    it('should return -1 when the date is invalid', async () => {
+      expect(DateHandler.checkDate('xx-01-01')).toEqual('-1');
+    });
+
+    it('should return null when date does not include letters or numbers', async () => {
+      expect(DateHandler.checkDate('--')).toEqual(null);
+    });
+
+    it('should return the expected date in ISO format', () => {
+      expect(DateHandler.checkDate('2009-09-03')).toEqual(
+        '2009-09-03T04:00:00.000Z',
+      );
     });
   });
 });

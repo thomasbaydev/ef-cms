@@ -24,11 +24,15 @@
               flags: 
                 presence: "optional"
                 description: "A correspondence document that was archived."
-            documentId: 
+            correspondenceId: 
               type: "string"
               flags: 
                 presence: "required"
               rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
                 - 
                   name: "guid"
                   args: 
@@ -41,6 +45,10 @@
                 presence: "required"
               rules: 
                 - 
+                  name: "min"
+                  args: 
+                    limit: 1
+                - 
                   name: "max"
                   args: 
                     limit: 500
@@ -49,6 +57,10 @@
               flags: 
                 presence: "optional"
               rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
                 - 
                   name: "max"
                   args: 
@@ -74,20 +86,40 @@
                 presence: "required"
               rules: 
                 - 
+                  name: "min"
+                  args: 
+                    limit: 1
+                - 
                   name: "guid"
                   args: 
                     options: 
                       version: 
                         - "uuidv4"
-    archivedDocuments: 
+    archivedDocketEntries: 
       type: "array"
       flags: 
         presence: "optional"
-        description: "List of Document Entities that were archived instead of added to the docket record."
+        description: "List of DocketEntry Entities that were archived instead of added to the docket record."
       items: 
         - 
           type: "object"
           keys: 
+            action: 
+              type: "string"
+              flags: 
+                presence: "optional"
+                description: "Action taken in response to this Docket Record item."
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
+                - 
+                  name: "max"
+                  args: 
+                    limit: 100
+              allow: 
+                - null
             addToCoversheet: 
               type: "boolean"
               flags: 
@@ -98,6 +130,10 @@
                 presence: "optional"
               rules: 
                 - 
+                  name: "min"
+                  args: 
+                    limit: 1
+                - 
                   name: "max"
                   args: 
                     limit: 500
@@ -106,6 +142,10 @@
               flags: 
                 presence: "optional"
               rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
                 - 
                   name: "max"
                   args: 
@@ -171,12 +211,32 @@
                 description: "An optional date used when generating a fully concatenated document title."
               allow: 
                 - null
+            docketEntryId: 
+              type: "string"
+              flags: 
+                presence: "required"
+                description: "System-generated unique ID for the docket entry. If the docket entry is associated with a document in S3, this is also the S3 document key."
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
+                - 
+                  name: "guid"
+                  args: 
+                    options: 
+                      version: 
+                        - "uuidv4"
             docketNumber: 
               type: "string"
               flags: 
                 presence: "optional"
                 description: "Docket Number of the associated Case in XXXXX-YY format."
               rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
                 - 
                   name: "pattern"
                   args: 
@@ -188,6 +248,10 @@
                 description: "Optional Docket Number text used when generating a fully concatenated document title."
               rules: 
                 - 
+                  name: "min"
+                  args: 
+                    limit: 1
+                - 
                   name: "max"
                   args: 
                     limit: 500
@@ -198,17 +262,9 @@
                 description: "The S3 ID containing the text contents of the document."
               rules: 
                 - 
-                  name: "guid"
+                  name: "min"
                   args: 
-                    options: 
-                      version: 
-                        - "uuidv4"
-            documentId: 
-              type: "string"
-              flags: 
-                presence: "required"
-                description: "ID of the associated PDF document in the S3 bucket."
-              rules: 
+                    limit: 1
                 - 
                   name: "guid"
                   args: 
@@ -222,6 +278,10 @@
                 description: "The id for the original document that was uploaded."
               rules: 
                 - 
+                  name: "min"
+                  args: 
+                    limit: 1
+                - 
                   name: "guid"
                   args: 
                     options: 
@@ -234,6 +294,10 @@
                 description: "The title of this document."
               rules: 
                 - 
+                  name: "min"
+                  args: 
+                    limit: 1
+                - 
                   name: "max"
                   args: 
                     limit: 3000
@@ -243,6 +307,11 @@
                 only: true
                 presence: "required"
                 description: "The type of this document."
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
               allow: 
                 - "Administrative Record"
                 - "Affidavit in Support"
@@ -271,6 +340,7 @@
                 - "Bond"
                 - "Bounced Electronic Service"
                 - "Brief in Support"
+                - "Caption of case is amended"
                 - "Certificate as to the Genuineness of the Administrative Record"
                 - "Certificate of Service"
                 - "Civil Penalty Approval Form"
@@ -279,13 +349,17 @@
                 - "Decision"
                 - "Declaration in Support"
                 - "Designation of Counsel to Receive Service"
+                - "Docket Number is amended"
                 - "Entry of Appearance"
                 - "Evidence"
                 - "Exhibit(s)"
+                - "Filing Fee Paid"
+                - "Filing Fee Waived"
                 - "Further Trial before"
                 - "Hearing Exhibits"
                 - "Hearing before"
                 - "Letter"
+                - "Limited Entry of Appearance"
                 - "Memorandum"
                 - "Memorandum Opinion"
                 - "Memorandum in Support"
@@ -298,6 +372,7 @@
                 - "Motion for Certification of an Interlocutory Order to Permit Immediate Appeal"
                 - "Motion for Continuance"
                 - "Motion for Default and Dismissal"
+                - "Motion for Document Subpoena Hearing"
                 - "Motion for Entry of Decision"
                 - "Motion for Entry of Order that Undenied Allegations be Deemed Admitted Pursuant to Rule 37(c)"
                 - "Motion for Estate Tax Deduction Developing at or after Trial Pursuant to Rule 156"
@@ -377,7 +452,7 @@
                 - "Motion to Dismiss for Lack of Jurisdiction"
                 - "Motion to Dismiss for Lack of Jurisdiction as to [person, notice, or year]"
                 - "Motion to Dismiss for Lack of Prosecution"
-                - "Motion to Dismiss on Grounds of Mootness"
+                - "Motion to Dismiss on Ground of Mootness"
                 - "Motion to Disqualify Counsel"
                 - "Motion to Enforce Subpoena"
                 - "Motion to Enforce a Refund of Overpayment Pursuant to Rule 260"
@@ -435,6 +510,7 @@
                 - "Notice of Change of Counsel for Non-Party"
                 - "Notice of Change of Telephone Number"
                 - "Notice of Clarification of Tax Matters Partner"
+                - "Notice of Completion"
                 - "Notice of Concession"
                 - "Notice of Consistent Agreement Pursuant to Rule 248(c)(1)"
                 - "Notice of Death of Counsel"
@@ -461,6 +537,7 @@
                 - "Notice of Termination Assessment"
                 - "Notice of Trial"
                 - "Notice of Unavailability"
+                - "Notice of Withdrawal as Counsel"
                 - "Objection"
                 - "Objection [anything]"
                 - "Opposition"
@@ -510,11 +587,12 @@
                 - "Prehearing Memorandum"
                 - "Pretrial Memorandum"
                 - "Proposed Stipulated Decision"
+                - "Proposed Trial Exhibits"
                 - "Ratification"
                 - "Ratification of Petition"
                 - "Record on Appeal"
                 - "Redacted"
-                - "Redacted Petition Filed"
+                - "Redacted Petition"
                 - "Reference List of Redacted Information"
                 - "Reply"
                 - "Report"
@@ -579,24 +657,54 @@
                 - "U.S.C.A"
                 - "Unsworn Declaration under Penalty of Perjury in Support"
                 - "Writ of Habeas Corpus Ad Testificandum"
-            draftState: 
+            draftOrderState: 
               type: "object"
               flags: 
                 presence: "optional"
               allow: 
                 - null
+            editState: 
+              type: "string"
+              flags: 
+                presence: "optional"
+                description: "JSON representation of the in-progress edit of this item."
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
+                - 
+                  name: "max"
+                  args: 
+                    limit: 4000
+              allow: 
+                - null
+              metas: 
+                - 
+                  tags: 
+                    - "Restricted"
             entityName: 
               type: "string"
               flags: 
                 only: true
                 presence: "required"
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
               allow: 
-                - "Document"
+                - "DocketEntry"
             eventCode: 
               type: "string"
               flags: 
                 only: true
                 presence: "required"
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
               allow: 
                 - "A"
                 - "AAAP"
@@ -641,6 +749,7 @@
                 - "FTRL"
                 - "HE"
                 - "HEAR"
+                - "LEA"
                 - "LTR"
                 - "M000"
                 - "M001"
@@ -776,6 +885,7 @@
                 - "M134"
                 - "M135"
                 - "M136"
+                - "M137"
                 - "M218"
                 - "MEMO"
                 - "MINC"
@@ -802,12 +912,14 @@
                 - "NNOB"
                 - "NOA"
                 - "NOB"
+                - "NOC"
                 - "NODC"
                 - "NOEI"
                 - "NOEP"
                 - "NOI"
                 - "NOST"
                 - "NOT"
+                - "NOTW"
                 - "NOU"
                 - "NPB"
                 - "NPJR"
@@ -866,6 +978,7 @@
                 - "PHM"
                 - "PMT"
                 - "PSDE"
+                - "PTE"
                 - "PTFR"
                 - "PTRL"
                 - "RAT"
@@ -911,6 +1024,7 @@
                 - "SPD"
                 - "SPML"
                 - "SPMT"
+                - "SPOS"
                 - "SPTN"
                 - "SPTO"
                 - "SRMB"
@@ -942,6 +1056,10 @@
                 description: "The party who filed the document, either the petitioner or respondent on the case."
               rules: 
                 - 
+                  name: "min"
+                  args: 
+                    limit: 1
+                - 
                   name: "max"
                   args: 
                     limit: 500
@@ -954,6 +1072,11 @@
                     type: "string"
                     flags: 
                       only: true
+                    rules: 
+                      - 
+                        name: "min"
+                        args: 
+                          limit: 1
                     allow: 
                       - "Answer"
                       - "Answer to Amended Petition"
@@ -986,12 +1109,14 @@
                       - "Exhibit(s)"
                       - "Memorandum"
                       - "Partial Administrative Record"
+                      - "Proposed Trial Exhibits"
                       - "Ratification"
                       - "Redacted"
                       - "Report"
                       - "Status Report"
                       - "Motion for Continuance"
                       - "Motion for Extension of Time"
+                      - "Motion for Document Subpoena Hearing"
                       - "Motion to Dismiss for Lack of Jurisdiction"
                       - "Motion to Dismiss for Lack of Prosecution"
                       - "Motion for Summary Judgment"
@@ -1071,7 +1196,7 @@
                       - "Motion to Dismiss for Failure to Properly Prosecute"
                       - "Motion to Dismiss for Failure to State a Claim upon Which Relief Can Be Granted"
                       - "Motion to Dismiss for Lack of Jurisdiction as to [person, notice, or year]"
-                      - "Motion to Dismiss on Grounds of Mootness"
+                      - "Motion to Dismiss on Ground of Mootness"
                       - "Motion to Disqualify Counsel"
                       - "Motion to Enforce a Refund of Overpayment Pursuant to Rule 260"
                       - "Motion to Enforce Subpoena"
@@ -1121,6 +1246,7 @@
                       - "Notice of Change of Address and Telephone Number"
                       - "Notice of Change of Telephone Number"
                       - "Notice of Clarification of Tax Matters Partner"
+                      - "Notice of Completion"
                       - "Notice of Concession"
                       - "Notice of Consistent Agreement Pursuant to Rule 248(c)(1)"
                       - "Notice of Death of Counsel"
@@ -1142,7 +1268,8 @@
                       - "Notice of Telephone Number"
                       - "Notice of Termination Assessment"
                       - "Notice of Unavailability"
-                      - "Redacted Petition Filed"
+                      - "Notice of Withdrawal as Counsel"
+                      - "Redacted Petition"
                       - "Prehearing Memorandum"
                       - "Pretrial Memorandum"
                       - "Reply"
@@ -1175,7 +1302,6 @@
                       - "Simultaneous Sur-Reply Memorandum Brief"
                       - "Ownership Disclosure Statement"
                       - "Statement"
-                      - "Statement of Redacted Information"
                       - "Statement under Rule 212"
                       - "Statement under Rule 50(c)"
                       - "Settlement Stipulation"
@@ -1196,6 +1322,7 @@
                       - "Memorandum in Support"
                       - "Unsworn Declaration under Penalty of Perjury in Support"
                       - "Entry of Appearance"
+                      - "Limited Entry of Appearance"
                       - "Substitution of Counsel"
                       - "Application"
                       - "Application for Examination Pursuant to Rule 73"
@@ -1226,6 +1353,7 @@
                       - "Objection [anything]"
                       - "Opposition [anything]"
                       - "Response [anything]"
+                      - "Statement of Redacted Information"
                       - "Supplement To [anything]"
                       - "Supplemental [anything]"
                   then: 
@@ -1239,6 +1367,11 @@
                           type: "string"
                           flags: 
                             only: true
+                          rules: 
+                            - 
+                              name: "min"
+                              args: 
+                                limit: 1
                           allow: 
                             - "Notice of Change of Address"
                             - "Notice of Change of Address and Telephone Number"
@@ -1272,6 +1405,7 @@
                                   presence: "optional"
                                 allow: 
                                   - ""
+                                  - null
                         otherwise: 
                           type: "any"
                           flags: 
@@ -1282,6 +1416,7 @@
                       presence: "optional"
                     allow: 
                       - ""
+                      - null
             filingDate: 
               type: "date"
               flags: 
@@ -1301,6 +1436,10 @@
                 presence: "optional"
               rules: 
                 - 
+                  name: "min"
+                  args: 
+                    limit: 1
+                - 
                   name: "max"
                   args: 
                     limit: 500
@@ -1309,6 +1448,10 @@
               flags: 
                 presence: "optional"
               rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
                 - 
                   name: "max"
                   args: 
@@ -1322,6 +1465,14 @@
               type: "boolean"
               flags: 
                 presence: "optional"
+            index: 
+              type: "number"
+              flags: 
+                presence: "optional"
+                description: "Index of this item in the Docket Record list."
+              rules: 
+                - 
+                  name: "integer"
             isAutoGenerated: 
               type: "boolean"
               flags: 
@@ -1376,6 +1527,14 @@
               flags: 
                 presence: "optional"
                 description: "Indicates whether or not the legacy document was served prior to being migrated to the new system."
+            isMinuteEntry: 
+              type: "boolean"
+              flags: 
+                presence: "required"
+            isOnDocketRecord: 
+              type: "boolean"
+              flags: 
+                presence: "required"
             isPaper: 
               type: "boolean"
               flags: 
@@ -1409,11 +1568,41 @@
                     type: "any"
                     flags: 
                       presence: "optional"
+            isStricken: 
+              type: "boolean"
+              flags: 
+                description: "Indicates the item has been removed from the docket record."
+              whens: 
+                - 
+                  ref: 
+                    path: 
+                      - "isLegacy"
+                  is: 
+                    type: "any"
+                    flags: 
+                      only: true
+                      presence: "required"
+                    allow: 
+                      - 
+                        override: true
+                      - true
+                  then: 
+                    type: "any"
+                    flags: 
+                      presence: "required"
+                  otherwise: 
+                    type: "any"
+                    flags: 
+                      presence: "optional"
             judge: 
               type: "string"
               flags: 
                 description: "The judge associated with the document."
               rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
                 - 
                   name: "max"
                   args: 
@@ -1429,6 +1618,11 @@
                     type: "string"
                     flags: 
                       only: true
+                    rules: 
+                      - 
+                        name: "min"
+                        args: 
+                          limit: 1
                     allow: 
                       - "Memorandum Opinion"
                       - "Summary Opinion"
@@ -1441,6 +1635,22 @@
                     type: "any"
                     flags: 
                       presence: "optional"
+            judgeUserId: 
+              type: "string"
+              flags: 
+                presence: "optional"
+                description: "Unique ID for the associated judge."
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
+                - 
+                  name: "guid"
+                  args: 
+                    options: 
+                      version: 
+                        - "uuidv4"
             lodged: 
               type: "boolean"
               flags: 
@@ -1451,6 +1661,10 @@
               flags: 
                 presence: "optional"
               rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
                 - 
                   name: "max"
                   args: 
@@ -1466,6 +1680,11 @@
               flags: 
                 only: true
                 presence: "optional"
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
               allow: 
                 - "Yes"
                 - "No"
@@ -1474,11 +1693,20 @@
               type: "string"
               flags: 
                 presence: "optional"
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
             otherFilingParty: 
               type: "string"
               flags: 
                 description: "When someone other than the petitioner or respondent files a document, this is the name of the person who filed that document"
               rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
                 - 
                   name: "max"
                   args: 
@@ -1528,12 +1756,16 @@
               flags: 
                 presence: "optional"
               keys: 
-                documentId: 
+                docketEntryId: 
                   type: "string"
                   flags: 
                     presence: "optional"
                     description: "The ID of the previous document."
                   rules: 
+                    - 
+                      name: "min"
+                      args: 
+                        limit: 1
                     - 
                       name: "guid"
                       args: 
@@ -1547,6 +1779,10 @@
                     description: "The title of the previous document."
                   rules: 
                     - 
+                      name: "min"
+                      args: 
+                        limit: 1
+                    - 
                       name: "max"
                       args: 
                         limit: 3000
@@ -1556,6 +1792,11 @@
                     only: true
                     presence: "optional"
                     description: "The type of the previous document."
+                  rules: 
+                    - 
+                      name: "min"
+                      args: 
+                        limit: 1
                   allow: 
                     - "Administrative Record"
                     - "Affidavit in Support"
@@ -1584,6 +1825,7 @@
                     - "Bond"
                     - "Bounced Electronic Service"
                     - "Brief in Support"
+                    - "Caption of case is amended"
                     - "Certificate as to the Genuineness of the Administrative Record"
                     - "Certificate of Service"
                     - "Civil Penalty Approval Form"
@@ -1592,13 +1834,17 @@
                     - "Decision"
                     - "Declaration in Support"
                     - "Designation of Counsel to Receive Service"
+                    - "Docket Number is amended"
                     - "Entry of Appearance"
                     - "Evidence"
                     - "Exhibit(s)"
+                    - "Filing Fee Paid"
+                    - "Filing Fee Waived"
                     - "Further Trial before"
                     - "Hearing Exhibits"
                     - "Hearing before"
                     - "Letter"
+                    - "Limited Entry of Appearance"
                     - "Memorandum"
                     - "Memorandum Opinion"
                     - "Memorandum in Support"
@@ -1611,6 +1857,7 @@
                     - "Motion for Certification of an Interlocutory Order to Permit Immediate Appeal"
                     - "Motion for Continuance"
                     - "Motion for Default and Dismissal"
+                    - "Motion for Document Subpoena Hearing"
                     - "Motion for Entry of Decision"
                     - "Motion for Entry of Order that Undenied Allegations be Deemed Admitted Pursuant to Rule 37(c)"
                     - "Motion for Estate Tax Deduction Developing at or after Trial Pursuant to Rule 156"
@@ -1690,7 +1937,7 @@
                     - "Motion to Dismiss for Lack of Jurisdiction"
                     - "Motion to Dismiss for Lack of Jurisdiction as to [person, notice, or year]"
                     - "Motion to Dismiss for Lack of Prosecution"
-                    - "Motion to Dismiss on Grounds of Mootness"
+                    - "Motion to Dismiss on Ground of Mootness"
                     - "Motion to Disqualify Counsel"
                     - "Motion to Enforce Subpoena"
                     - "Motion to Enforce a Refund of Overpayment Pursuant to Rule 260"
@@ -1748,6 +1995,7 @@
                     - "Notice of Change of Counsel for Non-Party"
                     - "Notice of Change of Telephone Number"
                     - "Notice of Clarification of Tax Matters Partner"
+                    - "Notice of Completion"
                     - "Notice of Concession"
                     - "Notice of Consistent Agreement Pursuant to Rule 248(c)(1)"
                     - "Notice of Death of Counsel"
@@ -1774,6 +2022,7 @@
                     - "Notice of Termination Assessment"
                     - "Notice of Trial"
                     - "Notice of Unavailability"
+                    - "Notice of Withdrawal as Counsel"
                     - "Objection"
                     - "Objection [anything]"
                     - "Opposition"
@@ -1823,11 +2072,12 @@
                     - "Prehearing Memorandum"
                     - "Pretrial Memorandum"
                     - "Proposed Stipulated Decision"
+                    - "Proposed Trial Exhibits"
                     - "Ratification"
                     - "Ratification of Petition"
                     - "Record on Appeal"
                     - "Redacted"
-                    - "Redacted Petition Filed"
+                    - "Redacted Petition"
                     - "Reference List of Redacted Information"
                     - "Reply"
                     - "Report"
@@ -1907,6 +2157,10 @@
                         presence: "required"
                       rules: 
                         - 
+                          name: "min"
+                          args: 
+                            limit: 1
+                        - 
                           name: "max"
                           args: 
                             limit: 100
@@ -1915,6 +2169,11 @@
               flags: 
                 only: true
                 presence: "optional"
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
               allow: 
                 - "complete"
                 - "pending"
@@ -1930,6 +2189,10 @@
               flags: 
                 presence: "optional"
               rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
                 - 
                   name: "guid"
                   args: 
@@ -1950,6 +2213,11 @@
               flags: 
                 only: true
                 presence: "optional"
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
               allow: 
                 - "primaryDocument"
                 - "primarySupportingDocument"
@@ -1961,6 +2229,11 @@
               flags: 
                 only: true
                 presence: "optional"
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
               allow: 
                 - "Standard"
                 - "Nonstandard A"
@@ -2021,6 +2294,10 @@
                     description: "The title of the secondary document."
                   rules: 
                     - 
+                      name: "min"
+                      args: 
+                        limit: 1
+                    - 
                       name: "max"
                       args: 
                         limit: 500
@@ -2030,6 +2307,11 @@
                     only: true
                     presence: "required"
                     description: "The type of the secondary document."
+                  rules: 
+                    - 
+                      name: "min"
+                      args: 
+                        limit: 1
                   allow: 
                     - "Administrative Record"
                     - "Affidavit in Support"
@@ -2058,6 +2340,7 @@
                     - "Bond"
                     - "Bounced Electronic Service"
                     - "Brief in Support"
+                    - "Caption of case is amended"
                     - "Certificate as to the Genuineness of the Administrative Record"
                     - "Certificate of Service"
                     - "Civil Penalty Approval Form"
@@ -2066,13 +2349,17 @@
                     - "Decision"
                     - "Declaration in Support"
                     - "Designation of Counsel to Receive Service"
+                    - "Docket Number is amended"
                     - "Entry of Appearance"
                     - "Evidence"
                     - "Exhibit(s)"
+                    - "Filing Fee Paid"
+                    - "Filing Fee Waived"
                     - "Further Trial before"
                     - "Hearing Exhibits"
                     - "Hearing before"
                     - "Letter"
+                    - "Limited Entry of Appearance"
                     - "Memorandum"
                     - "Memorandum Opinion"
                     - "Memorandum in Support"
@@ -2085,6 +2372,7 @@
                     - "Motion for Certification of an Interlocutory Order to Permit Immediate Appeal"
                     - "Motion for Continuance"
                     - "Motion for Default and Dismissal"
+                    - "Motion for Document Subpoena Hearing"
                     - "Motion for Entry of Decision"
                     - "Motion for Entry of Order that Undenied Allegations be Deemed Admitted Pursuant to Rule 37(c)"
                     - "Motion for Estate Tax Deduction Developing at or after Trial Pursuant to Rule 156"
@@ -2164,7 +2452,7 @@
                     - "Motion to Dismiss for Lack of Jurisdiction"
                     - "Motion to Dismiss for Lack of Jurisdiction as to [person, notice, or year]"
                     - "Motion to Dismiss for Lack of Prosecution"
-                    - "Motion to Dismiss on Grounds of Mootness"
+                    - "Motion to Dismiss on Ground of Mootness"
                     - "Motion to Disqualify Counsel"
                     - "Motion to Enforce Subpoena"
                     - "Motion to Enforce a Refund of Overpayment Pursuant to Rule 260"
@@ -2222,6 +2510,7 @@
                     - "Notice of Change of Counsel for Non-Party"
                     - "Notice of Change of Telephone Number"
                     - "Notice of Clarification of Tax Matters Partner"
+                    - "Notice of Completion"
                     - "Notice of Concession"
                     - "Notice of Consistent Agreement Pursuant to Rule 248(c)(1)"
                     - "Notice of Death of Counsel"
@@ -2248,6 +2537,7 @@
                     - "Notice of Termination Assessment"
                     - "Notice of Trial"
                     - "Notice of Unavailability"
+                    - "Notice of Withdrawal as Counsel"
                     - "Objection"
                     - "Objection [anything]"
                     - "Opposition"
@@ -2297,11 +2587,12 @@
                     - "Prehearing Memorandum"
                     - "Pretrial Memorandum"
                     - "Proposed Stipulated Decision"
+                    - "Proposed Trial Exhibits"
                     - "Ratification"
                     - "Ratification of Petition"
                     - "Record on Appeal"
                     - "Redacted"
-                    - "Redacted Petition Filed"
+                    - "Redacted Petition"
                     - "Reference List of Redacted Information"
                     - "Reply"
                     - "Report"
@@ -2372,6 +2663,11 @@
                     only: true
                     presence: "required"
                     description: "The event code of the secondary document."
+                  rules: 
+                    - 
+                      name: "min"
+                      args: 
+                        limit: 1
                   allow: 
                     - "A"
                     - "AAAP"
@@ -2416,6 +2712,7 @@
                     - "FTRL"
                     - "HE"
                     - "HEAR"
+                    - "LEA"
                     - "LTR"
                     - "M000"
                     - "M001"
@@ -2551,6 +2848,7 @@
                     - "M134"
                     - "M135"
                     - "M136"
+                    - "M137"
                     - "M218"
                     - "MEMO"
                     - "MINC"
@@ -2577,12 +2875,14 @@
                     - "NNOB"
                     - "NOA"
                     - "NOB"
+                    - "NOC"
                     - "NODC"
                     - "NOEI"
                     - "NOEP"
                     - "NOI"
                     - "NOST"
                     - "NOT"
+                    - "NOTW"
                     - "NOU"
                     - "NPB"
                     - "NPJR"
@@ -2641,6 +2941,7 @@
                     - "PHM"
                     - "PMT"
                     - "PSDE"
+                    - "PTE"
                     - "PTFR"
                     - "PTRL"
                     - "RAT"
@@ -2686,6 +2987,7 @@
                     - "SPD"
                     - "SPML"
                     - "SPMT"
+                    - "SPOS"
                     - "SPTN"
                     - "SPTO"
                     - "SRMB"
@@ -2773,6 +3075,10 @@
                         presence: "optional"
                       rules: 
                         - 
+                          name: "min"
+                          args: 
+                            limit: 1
+                        - 
                           name: "email"
                           args: 
                             options: 
@@ -2788,6 +3094,10 @@
                         description: "The name of a party from a contact, or \"IRS\""
                       rules: 
                         - 
+                          name: "min"
+                          args: 
+                            limit: 1
+                        - 
                           name: "max"
                           args: 
                             limit: 100
@@ -2797,6 +3107,11 @@
                         only: true
                         presence: "optional"
                         description: "Currently only required for the IRS"
+                      rules: 
+                        - 
+                          name: "min"
+                          args: 
+                            limit: 1
                       allow: 
                         - "adc"
                         - "admin"
@@ -2809,10 +3124,27 @@
                         - "irsPractitioner"
                         - "irsSuperuser"
                         - "judge"
+                        - "legacyJudge"
                         - "petitioner"
                         - "petitionsclerk"
                         - "privatePractitioner"
                         - "trialclerk"
+            servedPartiesCode: 
+              type: "string"
+              flags: 
+                only: true
+                presence: "optional"
+                description: "Served parties code to override system-computed code."
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
+              allow: 
+                - "B"
+                - "P"
+                - "R"
+                - null
             serviceDate: 
               type: "date"
               flags: 
@@ -2832,11 +3164,20 @@
               type: "string"
               flags: 
                 presence: "optional"
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
             signedAt: 
               type: "string"
               flags: 
                 description: "The time at which the document was signed."
               rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
                 - 
                   name: "max"
                   args: 
@@ -2869,6 +3210,7 @@
                           allow: 
                             - "O"
                             - "OAJ"
+                            - "SPOS"
                             - "OAL"
                             - "OAP"
                             - "OAPF"
@@ -2930,6 +3272,10 @@
                 description: "The judge who signed the document."
               rules: 
                 - 
+                  name: "min"
+                  args: 
+                    limit: 1
+                - 
                   name: "max"
                   args: 
                     limit: 100
@@ -2958,9 +3304,15 @@
                           type: "string"
                           flags: 
                             only: true
+                          rules: 
+                            - 
+                              name: "min"
+                              args: 
+                                limit: 1
                           allow: 
                             - "O"
                             - "OAJ"
+                            - "SPOS"
                             - "OAL"
                             - "OAP"
                             - "OAPF"
@@ -3035,6 +3387,10 @@
                       presence: "required"
                     rules: 
                       - 
+                        name: "min"
+                        args: 
+                          limit: 1
+                      - 
                         name: "guid"
                         args: 
                           options: 
@@ -3046,6 +3402,10 @@
                       presence: "optional"
                     rules: 
                       - 
+                        name: "min"
+                        args: 
+                          limit: 1
+                      - 
                         name: "guid"
                         args: 
                           options: 
@@ -3053,11 +3413,64 @@
                               - "uuidv4"
                     allow: 
                       - null
+            signedJudgeUserId: 
+              type: "string"
+              flags: 
+                presence: "optional"
+                description: "The user id of the judge who signed the document."
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
+                - 
+                  name: "guid"
+                  args: 
+                    options: 
+                      version: 
+                        - "uuidv4"
+              allow: 
+                - null
+            strickenAt: 
+              type: "date"
+              flags: 
+                format: 
+                  - "YYYY-MM-DDTHH:mm:ss.SSSZ"
+                  - "YYYY-MM-DD"
+                presence: "optional"
+                description: "Date that this Docket Record item was stricken."
+              rules: 
+                - 
+                  name: "max"
+                  args: 
+                    date: "now"
+            strickenBy: 
+              type: "string"
+              flags: 
+                presence: "optional"
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
+            strickenByUserId: 
+              type: "string"
+              flags: 
+                presence: "optional"
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
             supportingDocument: 
               type: "string"
               flags: 
                 presence: "optional"
               rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
                 - 
                   name: "max"
                   args: 
@@ -3071,6 +3484,10 @@
                 description: "An optional trial location used when generating a fully concatenated document title."
               rules: 
                 - 
+                  name: "min"
+                  args: 
+                    limit: 1
+                - 
                   name: "max"
                   args: 
                     limit: 100
@@ -3082,6 +3499,10 @@
                 presence: "required"
               rules: 
                 - 
+                  name: "min"
+                  args: 
+                    limit: 1
+                - 
                   name: "guid"
                   args: 
                     options: 
@@ -3091,334 +3512,15 @@
               type: "object"
               flags: 
                 presence: "optional"
-              keys: 
-                assigneeId: 
-                  type: "string"
-                  flags: 
-                    presence: "optional"
-                  rules: 
-                    - 
-                      name: "guid"
-                      args: 
-                        options: 
-                          version: 
-                            - "uuidv4"
-                  allow: 
-                    - null
-                assigneeName: 
-                  type: "string"
-                  flags: 
-                    presence: "optional"
-                  rules: 
-                    - 
-                      name: "max"
-                      args: 
-                        limit: 100
-                  allow: 
-                    - null
-                associatedJudge: 
-                  type: "string"
-                  flags: 
-                    presence: "required"
-                  rules: 
-                    - 
-                      name: "max"
-                      args: 
-                        limit: 100
-                caseIsInProgress: 
-                  type: "boolean"
-                  flags: 
-                    presence: "optional"
-                caseStatus: 
-                  type: "string"
-                  flags: 
-                    only: true
-                    presence: "optional"
-                  allow: 
-                    - "Assigned - Case"
-                    - "Assigned - Motion"
-                    - "Calendared"
-                    - "CAV"
-                    - "Closed"
-                    - "General Docket - Not at Issue"
-                    - "General Docket - At Issue (Ready for Trial)"
-                    - "Jurisdiction Retained"
-                    - "New"
-                    - "On Appeal"
-                    - "Rule 155"
-                    - "Submitted"
-                caseTitle: 
-                  type: "string"
-                  flags: 
-                    presence: "optional"
-                  rules: 
-                    - 
-                      name: "max"
-                      args: 
-                        limit: 500
-                completedAt: 
-                  type: "date"
-                  flags: 
-                    format: 
-                      - "YYYY-MM-DDTHH:mm:ss.SSSZ"
-                      - "YYYY-MM-DD"
-                    presence: "optional"
-                completedBy: 
-                  type: "string"
-                  flags: 
-                    presence: "optional"
-                  rules: 
-                    - 
-                      name: "max"
-                      args: 
-                        limit: 100
-                  allow: 
-                    - null
-                completedByUserId: 
-                  type: "string"
-                  flags: 
-                    presence: "optional"
-                  rules: 
-                    - 
-                      name: "guid"
-                      args: 
-                        options: 
-                          version: 
-                            - "uuidv4"
-                  allow: 
-                    - null
-                completedMessage: 
-                  type: "string"
-                  flags: 
-                    presence: "optional"
-                  rules: 
-                    - 
-                      name: "max"
-                      args: 
-                        limit: 100
-                  allow: 
-                    - null
-                createdAt: 
-                  type: "date"
-                  flags: 
-                    format: 
-                      - "YYYY-MM-DDTHH:mm:ss.SSSZ"
-                      - "YYYY-MM-DD"
-                    presence: "optional"
-                docketNumber: 
-                  type: "string"
-                  flags: 
-                    presence: "required"
-                    description: "Unique case identifier in XXXXX-YY format."
-                  rules: 
-                    - 
-                      name: "pattern"
-                      args: 
-                        regex: "/^([1-9]\\d{2,4}-\\d{2})$/"
-                docketNumberWithSuffix: 
-                  type: "string"
-                  flags: 
-                    presence: "optional"
-                    description: "Auto-generated from docket number and the suffix."
-                document: 
-                  type: "object"
-                  flags: 
-                    presence: "required"
-                entityName: 
-                  type: "string"
-                  flags: 
-                    only: true
-                    presence: "required"
-                  allow: 
-                    - "WorkItem"
-                hideFromPendingMessages: 
-                  type: "boolean"
-                  flags: 
-                    presence: "optional"
-                highPriority: 
-                  type: "boolean"
-                  flags: 
-                    presence: "optional"
-                inProgress: 
-                  type: "boolean"
-                  flags: 
-                    presence: "optional"
-                isInitializeCase: 
-                  type: "boolean"
-                  flags: 
-                    presence: "optional"
-                isRead: 
-                  type: "boolean"
-                  flags: 
-                    presence: "optional"
-                section: 
-                  type: "string"
-                  flags: 
-                    only: true
-                    presence: "required"
-                  allow: 
-                    - "adc"
-                    - "admissions"
-                    - "chambers"
-                    - "clerkofcourt"
-                    - "docket"
-                    - "petitions"
-                    - "trialClerks"
-                    - "armensChambers"
-                    - "ashfordsChambers"
-                    - "buchsChambers"
-                    - "carluzzosChambers"
-                    - "cohensChambers"
-                    - "colvinsChambers"
-                    - "copelandsChambers"
-                    - "foleysChambers"
-                    - "galesChambers"
-                    - "gerbersChambers"
-                    - "goekesChambers"
-                    - "gustafsonsChambers"
-                    - "guysChambers"
-                    - "halpernsChambers"
-                    - "holmesChambers"
-                    - "jacobsChambers"
-                    - "jonesChambers"
-                    - "kerrigansChambers"
-                    - "laubersChambers"
-                    - "leydensChambers"
-                    - "marvelsChambers"
-                    - "morrisonsChambers"
-                    - "negasChambers"
-                    - "panuthosChambers"
-                    - "parisChambers"
-                    - "pughsChambers"
-                    - "ruwesChambers"
-                    - "thorntonsChambers"
-                    - "torosChambers"
-                    - "urdasChambers"
-                    - "vasquezsChambers"
-                    - "wellsChambers"
-                    - "admin"
-                    - "admissionsclerk"
-                    - "docketclerk"
-                    - "floater"
-                    - "inactivePractitioner"
-                    - "irsPractitioner"
-                    - "irsSuperuser"
-                    - "judge"
-                    - "petitioner"
-                    - "petitionsclerk"
-                    - "privatePractitioner"
-                    - "trialclerk"
-                    - "irsSystem"
-                sentBy: 
-                  type: "string"
-                  flags: 
-                    presence: "required"
-                    description: "The name of the user that sent the WorkItem"
-                  rules: 
-                    - 
-                      name: "max"
-                      args: 
-                        limit: 100
-                sentBySection: 
-                  type: "string"
-                  flags: 
-                    only: true
-                    presence: "optional"
-                  allow: 
-                    - "adc"
-                    - "admissions"
-                    - "chambers"
-                    - "clerkofcourt"
-                    - "docket"
-                    - "petitions"
-                    - "trialClerks"
-                    - "armensChambers"
-                    - "ashfordsChambers"
-                    - "buchsChambers"
-                    - "carluzzosChambers"
-                    - "cohensChambers"
-                    - "colvinsChambers"
-                    - "copelandsChambers"
-                    - "foleysChambers"
-                    - "galesChambers"
-                    - "gerbersChambers"
-                    - "goekesChambers"
-                    - "gustafsonsChambers"
-                    - "guysChambers"
-                    - "halpernsChambers"
-                    - "holmesChambers"
-                    - "jacobsChambers"
-                    - "jonesChambers"
-                    - "kerrigansChambers"
-                    - "laubersChambers"
-                    - "leydensChambers"
-                    - "marvelsChambers"
-                    - "morrisonsChambers"
-                    - "negasChambers"
-                    - "panuthosChambers"
-                    - "parisChambers"
-                    - "pughsChambers"
-                    - "ruwesChambers"
-                    - "thorntonsChambers"
-                    - "torosChambers"
-                    - "urdasChambers"
-                    - "vasquezsChambers"
-                    - "wellsChambers"
-                    - "admin"
-                    - "admissionsclerk"
-                    - "docketclerk"
-                    - "floater"
-                    - "inactivePractitioner"
-                    - "irsPractitioner"
-                    - "irsSuperuser"
-                    - "judge"
-                    - "petitioner"
-                    - "petitionsclerk"
-                    - "privatePractitioner"
-                    - "trialclerk"
-                sentByUserId: 
-                  type: "string"
-                  flags: 
-                    presence: "optional"
-                  rules: 
-                    - 
-                      name: "guid"
-                      args: 
-                        options: 
-                          version: 
-                            - "uuidv4"
-                trialDate: 
-                  type: "date"
-                  flags: 
-                    format: 
-                      - "YYYY-MM-DDTHH:mm:ss.SSSZ"
-                      - "YYYY-MM-DD"
-                    presence: "optional"
-                  allow: 
-                    - null
-                updatedAt: 
-                  type: "date"
-                  flags: 
-                    format: 
-                      - "YYYY-MM-DDTHH:mm:ss.SSSZ"
-                      - "YYYY-MM-DD"
-                    presence: "required"
-                workItemId: 
-                  type: "string"
-                  flags: 
-                    presence: "required"
-                  rules: 
-                    - 
-                      name: "guid"
-                      args: 
-                        options: 
-                          version: 
-                            - "uuidv4"
     caseCaption: 
       type: "string"
       flags: 
         presence: "required"
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "max"
           args: 
@@ -3428,6 +3530,11 @@
       flags: 
         only: true
         presence: "required"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "CDP (Lien/Levy)"
         - "Deficiency"
@@ -3458,6 +3565,11 @@
       flags: 
         only: true
         presence: "optional"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "Myself"
         - "Myself and my spouse"
@@ -3489,6 +3601,10 @@
       flags: 
         presence: "required"
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "max"
           args: 
@@ -3538,6 +3654,11 @@
       flags: 
         only: true
         presence: "required"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "Conservator"
         - "Corporation"
@@ -3679,6 +3800,11 @@
         only: true
         presence: "required"
         description: "Status of the case fee payment."
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "Paid"
         - "Not Paid"
@@ -3784,6 +3910,10 @@
         description: "How the petitioner paid the case fee."
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "max"
           args: 
             limit: 50
@@ -3833,9 +3963,17 @@
                 override: true
               - "Waived"
           then: 
-            type: "any"
+            type: "date"
             flags: 
+              format: 
+                - "YYYY-MM-DDTHH:mm:ss.SSSZ"
+                - "YYYY-MM-DD"
               presence: "required"
+            rules: 
+              - 
+                name: "max"
+                args: 
+                  date: "now"
           otherwise: 
             type: "any"
             flags: 
@@ -3859,6 +3997,11 @@
             type: "string"
             flags: 
               presence: "required"
+            rules: 
+              - 
+                name: "min"
+                args: 
+                  limit: 1
           otherwise: 
             type: "any"
             flags: 
@@ -3870,6 +4013,11 @@
       flags: 
         only: true
         presence: "required"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "Regular"
         - "Small"
@@ -4050,6 +4198,11 @@
               flags: 
                 only: true
                 presence: "required"
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
               allow: 
                 - "Statistic"
             irsDeficiencyAmount: 
@@ -4069,6 +4222,10 @@
                 description: "Unique statistic ID only used by the system."
               rules: 
                 - 
+                  name: "min"
+                  args: 
+                    limit: 1
+                - 
                   name: "guid"
                   args: 
                     options: 
@@ -4080,6 +4237,11 @@
                 presence: "required"
                 only: true
                 description: "Whether the statistics are for a year or period."
+              rules: 
+                - 
+                  name: "min"
+                  args: 
+                    limit: 1
               allow: 
                 - "Year"
                 - "Period"

@@ -5,8 +5,8 @@ const { STATUS_TYPES } = applicationContext.getConstants();
 export const docketClerkCreatesDocketEntryForSignedStipulatedDecision = test => {
   return it('docketclerk creates a docket entry for the signed stipulated decision', async () => {
     await test.runSequence('gotoAddCourtIssuedDocketEntrySequence', {
+      docketEntryId: test.stipDecisionDocketEntryId,
       docketNumber: test.docketNumber,
-      documentId: test.stipDecisionDocumentId,
     });
 
     expect(test.getState('form.documentType')).toEqual('Stipulated Decision');
@@ -21,10 +21,12 @@ export const docketClerkCreatesDocketEntryForSignedStipulatedDecision = test => 
 
     await test.runSequence('serveCourtIssuedDocumentFromDocketEntrySequence');
     expect(test.getState('currentPage')).toEqual('CaseDetailInternal');
-    const docketEntries = test.getState('caseDetail.docketRecord');
-    expect(docketEntries.length).toEqual(4);
+    const documents = test
+      .getState('caseDetail.docketEntries')
+      .filter(d => d.isOnDocketRecord);
+    expect(documents.length).toEqual(4);
     const stipDecisionDocument = test
-      .getState('caseDetail.documents')
+      .getState('caseDetail.docketEntries')
       .find(d => d.documentType === 'Stipulated Decision');
     expect(stipDecisionDocument.servedAt).toBeDefined();
     expect(test.getState('caseDetail.status')).toEqual(STATUS_TYPES.closed);

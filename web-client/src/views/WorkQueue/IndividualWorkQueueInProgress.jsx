@@ -48,21 +48,15 @@ export const IndividualWorkQueueInProgress = connect(
                   </td>
                   <td className="message-queue-row message-queue-document">
                     <div className="message-document-title">
-                      <a
-                        className="case-link"
-                        href={item.editLink}
-                        onClick={e => {
-                          e.stopPropagation();
-                        }}
-                      >
-                        {item.document.documentTitle ||
-                          item.document.documentType}
+                      <a className="case-link" href={item.editLink}>
+                        {item.docketEntry.documentTitle ||
+                          item.docketEntry.documentType}
                       </a>
                     </div>
                   </td>
                   {!workQueueHelper.hideFiledByColumn && (
                     <td className="message-queue-row">
-                      {item.document.filedBy}
+                      {item.docketEntry.filedBy}
                     </td>
                   )}
                   {workQueueHelper.showCaseStatusColumn && (

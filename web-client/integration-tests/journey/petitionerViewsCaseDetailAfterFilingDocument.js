@@ -38,14 +38,14 @@ export const petitionerViewsCaseDetailAfterFilingDocument = (
     // verify that the user was given a link to their receipt
     expect(test.getState('alertSuccess.linkUrl')).toBeDefined();
 
-    expect(caseDetail.documents.length).toEqual(6);
+    expect(caseDetail.docketEntries.length).toEqual(6);
 
     //verify that the documents were added and served
-    expect(caseDetail.documents).toEqual(
+    expect(caseDetail.docketEntries).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ eventCode: 'P' }),
         expect.objectContaining({
-          eventCode: INITIAL_DOCUMENT_TYPES.stin.eventCode,
+          eventCode: INITIAL_DOCUMENT_TYPES.requestForPlaceOfTrial.eventCode,
         }),
         expect.objectContaining({
           eventCode: 'M014',
@@ -65,8 +65,15 @@ export const petitionerViewsCaseDetailAfterFilingDocument = (
         }),
       ]),
     );
+
+    const statement = caseDetailFormatted.formattedDocketEntries.find(
+      entry => entry.documentType === 'Statement',
+    );
+
+    expect(statement.showLinkToDocument).toBeTruthy();
+
     expect(
-      caseDetailFormatted.docketRecordWithDocument[1].record.eventCode,
+      caseDetailFormatted.formattedDocketEntriesOnDocketRecord[1].eventCode,
     ).toEqual('RQT');
   });
 };

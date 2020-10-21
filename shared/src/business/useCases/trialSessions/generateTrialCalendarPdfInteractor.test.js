@@ -5,6 +5,7 @@ const {
   generateTrialCalendarPdfInteractor,
 } = require('./generateTrialCalendarPdfInteractor');
 const { MOCK_CASE } = require('../../../test/mockCase');
+const { US_STATES } = require('../../entities/EntityConstants');
 
 describe('generateTrialCalendarPdfInteractor', () => {
   const mockPdfUrl = { url: 'www.example.com' };
@@ -13,9 +14,13 @@ describe('generateTrialCalendarPdfInteractor', () => {
     applicationContext
       .getPersistenceGateway()
       .getCalendaredCasesForTrialSession.mockReturnValue([
-        MOCK_CASE,
-        MOCK_CASE,
-        MOCK_CASE,
+        { ...MOCK_CASE, docketNumberWithSuffix: '101-18' },
+        { ...MOCK_CASE, docketNumberWithSuffix: '102-19' },
+        {
+          ...MOCK_CASE,
+          docketNumberWithSuffix: '123-20',
+          removedFromTrial: true,
+        },
       ]);
 
     applicationContext
@@ -27,7 +32,7 @@ describe('generateTrialCalendarPdfInteractor', () => {
       .getTrialSessionById.mockReturnValue({
         address1: '123 Some Street',
         address2: 'Suite B',
-        city: 'New York',
+        city: US_STATES.NY,
         courtReporter: 'Lois Lane',
         courthouseName: 'Test Courthouse',
         irsCalendarAdministrator: 'iCalRS Admin',
@@ -72,6 +77,25 @@ describe('generateTrialCalendarPdfInteractor', () => {
       applicationContext.getDocumentGenerators().trialCalendar.mock.calls
         .length,
     ).toBe(1);
+    expect(
+      applicationContext.getDocumentGenerators().trialCalendar,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          cases: expect.arrayContaining([
+            expect.objectContaining({
+              docketNumber: '101-18',
+            }),
+            expect.objectContaining({
+              docketNumber: '102-19',
+            }),
+            expect.not.objectContaining({
+              docketNumber: '123-20',
+            }),
+          ]),
+        }),
+      }),
+    );
   });
 
   it('should return the trial session calendar pdf url', async () => {

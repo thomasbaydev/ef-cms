@@ -27,18 +27,19 @@ describe('sendIrsSuperuserPetitionEmail', () => {
         caseCaption: 'A Caption',
         contactPrimary: {},
         contactSecondary: {},
-        docketNumber: '123-20',
-        docketRecord: [
+        docketEntries: [
           {
-            documentId: '35479520-e2d6-4357-b72f-5b46f16a708a',
+            docketEntryId: '35479520-e2d6-4357-b72f-5b46f16a708a',
             index: 0,
           },
         ],
+        docketNumber: '123-20',
+        docketNumberWithSuffix: '123-20L',
         preferredTrialCity: 'Somecity, ST',
         privatePractitioners: [],
       },
-      documentEntity: {
-        documentId: '35479520-e2d6-4357-b72f-5b46f16a708a',
+      docketEntryEntity: {
+        docketEntryId: '35479520-e2d6-4357-b72f-5b46f16a708a',
         documentType: 'The Document',
         eventCode: 'P',
         servedAt: '2019-03-01T21:40:46.415Z',
@@ -66,9 +67,10 @@ describe('sendIrsSuperuserPetitionEmail', () => {
         contactSecondary: {
           name: 'Carol Baskin',
         },
+        docketEntries: [],
         docketNumber: '123-20',
         docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.SMALL,
-        docketRecord: [],
+        docketNumberWithSuffix: '123-20S',
         preferredTrialCity: 'Somecity, ST',
         privatePractitioners: [
           {
@@ -79,8 +81,8 @@ describe('sendIrsSuperuserPetitionEmail', () => {
           },
         ],
       },
-      documentEntity: {
-        documentId: 'test-document-id',
+      docketEntryEntity: {
+        docketEntryId: 'test-document-id',
         documentType: 'The Document',
         eventCode: 'P',
         servedAt: '2019-03-01T21:40:46.415Z',
@@ -88,7 +90,8 @@ describe('sendIrsSuperuserPetitionEmail', () => {
     });
 
     const { caseDetail } = reactTemplateGenerator.mock.calls[0][0].data;
-    expect(caseDetail.docketNumber).toEqual('123-20S');
+    expect(caseDetail.docketNumber).toEqual('123-20');
+    expect(caseDetail.docketNumberWithSuffix).toEqual('123-20S');
   });
 
   it('should add a `representing` field to practitioners with the names of parties they represent', async () => {
@@ -102,8 +105,9 @@ describe('sendIrsSuperuserPetitionEmail', () => {
         contactSecondary: {
           name: 'Carol Baskin',
         },
+        docketEntries: [],
         docketNumber: '123-20',
-        docketRecord: [],
+        docketNumberWithSuffix: '123-20L',
         preferredTrialCity: 'Somecity, ST',
         privatePractitioners: [
           {
@@ -115,8 +119,8 @@ describe('sendIrsSuperuserPetitionEmail', () => {
           },
         ],
       },
-      documentEntity: {
-        documentId: 'test-document-id',
+      docketEntryEntity: {
+        docketEntryId: 'test-document-id',
         documentType: 'The Document',
         eventCode: 'P',
         servedAt: '2019-03-01T21:40:46.415Z',
@@ -127,11 +131,11 @@ describe('sendIrsSuperuserPetitionEmail', () => {
 
     expect(practitioners).toMatchObject([
       {
-        representing: 'Joe Exotic',
+        representingFormatted: 'Joe Exotic',
         representingPrimary: true,
       },
       {
-        representing: 'Joe Exotic, Carol Baskin',
+        representingFormatted: 'Joe Exotic, Carol Baskin',
         representingPrimary: true,
       },
     ]);
@@ -145,11 +149,12 @@ describe('sendIrsSuperuserPetitionEmail', () => {
         contactPrimary: {
           name: 'Joe Exotic',
         },
+        docketEntries: [],
         docketNumber: '123-20',
-        docketRecord: [],
+        docketNumberWithSuffix: '123-20L',
         privatePractitioners: [],
       },
-      documentEntity: {
+      docketEntryEntity: {
         filingDate: '2019-03-05T21:40:46.415Z',
       },
     });
@@ -169,12 +174,13 @@ describe('sendIrsSuperuserPetitionEmail', () => {
         contactPrimary: {
           name: 'Joe Exotic',
         },
+        docketEntries: [],
         docketNumber: '123-20',
-        docketRecord: [],
+        docketNumberWithSuffix: '123-20L',
         preferredTrialCity: 'Fake Trial Location, ST',
         privatePractitioners: [],
       },
-      documentEntity: {
+      docketEntryEntity: {
         filingDate: '2019-03-05T21:40:46.415Z',
       },
     });
@@ -194,12 +200,13 @@ describe('sendIrsSuperuserPetitionEmail', () => {
         contactPrimary: {
           name: 'Joe Exotic',
         },
+        docketEntries: [],
         docketNumber: '123-20',
-        docketRecord: [],
+        docketNumberWithSuffix: '123-20L',
         preferredTrialCity: '',
         privatePractitioners: [],
       },
-      documentEntity: {
+      docketEntryEntity: {
         filingDate: '2019-03-05T21:40:46.415Z',
       },
     });

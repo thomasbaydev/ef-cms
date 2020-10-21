@@ -20,8 +20,9 @@ describe('chambers user skips signing an order', () => {
     test.docketNumber = caseDetail.docketNumber;
   });
 
-  loginAs(test, 'armensChambers@example.com');
-  chambersUserViewsCaseDetail(test);
+  loginAs(test, 'colvinsChambers@example.com');
+
+  chambersUserViewsCaseDetail(test, 2);
   chambersUserViewsDraftDocuments(test);
   chambersUserAddsOrderToCase(test);
   chambersUserSkipSigningOrder(test);

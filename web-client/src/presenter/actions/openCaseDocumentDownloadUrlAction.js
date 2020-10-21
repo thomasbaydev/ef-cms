@@ -12,20 +12,30 @@ export const openCaseDocumentDownloadUrlAction = async ({
   props,
   store,
 }) => {
-  const { docketNumber, documentId, isForIFrame, isPublic } = props;
+  const {
+    docketEntryId,
+    docketNumber,
+    isForIFrame,
+    isMobile,
+    isPublic,
+  } = props;
 
   const {
     url,
   } = await applicationContext.getUseCases().getDocumentDownloadUrlInteractor({
     applicationContext,
     docketNumber,
-    documentId,
     isPublic,
+    key: docketEntryId,
   });
 
   if (isForIFrame) {
     store.set(state.iframeSrc, url);
   } else {
-    window.open(url, '_blank');
+    if (isMobile) {
+      window.location.href = url;
+    } else {
+      window.open(url, '_blank');
+    }
   }
 };

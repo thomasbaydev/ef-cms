@@ -12,16 +12,16 @@ const { PublicCase } = require('../entities/cases/PublicCase');
 
 const getDocumentContentsForDocuments = async ({
   applicationContext,
-  documents,
+  docketEntries,
 }) => {
-  for (const document of documents) {
+  for (const document of docketEntries) {
     if (document.documentContentsId) {
       try {
         const documentContentsFile = await applicationContext
           .getPersistenceGateway()
           .getDocument({
             applicationContext,
-            documentId: document.documentContentsId,
+            key: document.documentContentsId,
             protocol: 'S3',
             useTempBucket: false,
           });
@@ -30,8 +30,8 @@ const getDocumentContentsForDocuments = async ({
           documentContentsFile.toString(),
         );
         document.documentContents = documentContentsData.documentContents;
-        document.draftState = {
-          ...document.draftState,
+        document.draftOrderState = {
+          ...document.draftOrderState,
           documentContents: documentContentsData.documentContents,
           richText: documentContentsData.richText,
         };
@@ -43,7 +43,7 @@ const getDocumentContentsForDocuments = async ({
     }
   }
 
-  return documents;
+  return docketEntries;
 };
 
 /**
@@ -75,7 +75,11 @@ exports.getCaseInteractor = async ({ applicationContext, docketNumber }) => {
       applicationContext.getCurrentUser(),
       ROLE_PERMISSIONS.GET_CASE,
       caseRecord.userId,
-    )
+    ) &&
+    !isAssociatedUser({
+      caseRaw: caseRecord,
+      user: applicationContext.getCurrentUser(),
+    })
   ) {
     throw new UnauthorizedError('Unauthorized');
   }
@@ -98,9 +102,9 @@ exports.getCaseInteractor = async ({ applicationContext, docketNumber }) => {
         .validate()
         .toRawObject();
 
-      caseDetailRaw.documents = await getDocumentContentsForDocuments({
+      caseDetailRaw.docketEntries = await getDocumentContentsForDocuments({
         applicationContext,
-        documents: caseDetailRaw.documents,
+        docketEntries: caseDetailRaw.docketEntries,
       });
     } else {
       caseRecord = caseSealedFormatter(caseRecord);
@@ -117,9 +121,9 @@ exports.getCaseInteractor = async ({ applicationContext, docketNumber }) => {
       .validate()
       .toRawObject();
 
-    caseDetailRaw.documents = await getDocumentContentsForDocuments({
+    caseDetailRaw.docketEntries = await getDocumentContentsForDocuments({
       applicationContext,
-      documents: caseDetailRaw.documents,
+      docketEntries: caseDetailRaw.docketEntries,
     });
   }
 

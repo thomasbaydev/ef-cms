@@ -14,12 +14,35 @@ export const formattedClosedCases = (get, applicationContext) => {
   return cases.map(myCase => formatCase(applicationContext, myCase));
 };
 
+const getUserIsAssignedToSession = ({ currentUser, get, result }) => {
+  const sessions = get(state.trialSessions);
+  let session;
+  if (sessions) {
+    session = sessions.find(s => s.trialSessionId === result.trialSessionId);
+  }
+
+  const judge = get(state.judgeUser);
+
+  const isJudgeUserAssigned = session?.judge?.userId === currentUser.userId;
+  const isChambersUserAssigned =
+    judge &&
+    session?.judge?.userId === judge?.userId &&
+    judge?.section === currentUser.section;
+  const isTrialClerkUserAssigned =
+    session?.trialClerk?.userId === currentUser.userId;
+
+  return (
+    isJudgeUserAssigned || isTrialClerkUserAssigned || isChambersUserAssigned
+  );
+};
+
 export const getShowDocumentViewerLink = ({
   hasDocument,
   isCourtIssuedDocument,
   isExternalUser,
   isInitialDocument,
   isServed,
+  isStipDecision,
   isStricken,
   isUnservable,
   userHasAccessToCase,
@@ -31,7 +54,7 @@ export const getShowDocumentViewerLink = ({
     if (isStricken) return false;
     if (userHasNoAccessToDocument) return false;
 
-    if (isCourtIssuedDocument) {
+    if (isCourtIssuedDocument && !isStipDecision) {
       if (isUnservable) return true;
       if (!isServed) return false;
     } else {
@@ -67,7 +90,7 @@ export const formattedCaseDetail = (get, applicationContext) => {
     formatCase,
     formatCaseDeadlines,
     setServiceIndicatorsForCase,
-    sortDocketRecords,
+    sortDocketEntries,
   } = applicationContext.getUtilities();
 
   let docketRecordSort;
@@ -86,8 +109,8 @@ export const formattedCaseDetail = (get, applicationContext) => {
     ...formatCase(applicationContext, caseDetail),
   };
 
-  result.docketRecordWithDocument = sortDocketRecords(
-    result.docketRecordWithDocument,
+  result.formattedDocketEntries = sortDocketEntries(
+    result.formattedDocketEntries,
     docketRecordSort,
   );
 
@@ -115,136 +138,142 @@ export const formattedCaseDetail = (get, applicationContext) => {
     };
   }
 
-  const getShowEditDocketRecordEntry = ({ document, userPermissions }) => {
+  const getShowEditDocketRecordEntry = ({ entry, userPermissions }) => {
     const hasSystemGeneratedDocument =
-      document && systemGeneratedEventCodes.includes(document.eventCode);
-    const hasCourtIssuedDocument = document && document.isCourtIssuedDocument;
+      entry && systemGeneratedEventCodes.includes(entry.eventCode);
+    const hasCourtIssuedDocument = entry && entry.isCourtIssuedDocument;
     const hasServedCourtIssuedDocument =
-      hasCourtIssuedDocument && !!document.servedAt;
+      hasCourtIssuedDocument && !!entry.servedAt;
     const hasUnservableCourtIssuedDocument =
-      document && UNSERVABLE_EVENT_CODES.includes(document.eventCode);
+      entry && UNSERVABLE_EVENT_CODES.includes(entry.eventCode);
 
     return (
       userPermissions.EDIT_DOCKET_ENTRY &&
-      (!document || document.qcWorkItemsCompleted) &&
-      !hasSystemGeneratedDocument &&
+      (hasSystemGeneratedDocument ||
+        entry.isMinuteEntry ||
+        entry.qcWorkItemsCompleted) &&
       (!hasCourtIssuedDocument ||
         hasServedCourtIssuedDocument ||
         hasUnservableCourtIssuedDocument)
     );
   };
 
-  result.formattedDocketEntries = result.docketRecordWithDocument.map(
-    ({ document, index, record }) => {
-      const userHasAccessToCase = !isExternalUser || userAssociatedWithCase;
-      const userHasAccessToDocument = record.isAvailableToUser;
+  result.formattedDocketEntries = result.formattedDocketEntries.map(entry => {
+    const userHasAccessToCase = !isExternalUser || userAssociatedWithCase;
+    const userHasAccessToDocument = entry.isAvailableToUser;
 
-      const formattedResult = {
-        numberOfPages: 0,
-        ...record,
-        ...document,
-        createdAtFormatted: record.createdAtFormatted,
-        descriptionDisplay: record.description,
-        index,
+    const formattedResult = {
+      numberOfPages: 0,
+      ...entry,
+      createdAtFormatted: entry.createdAtFormatted,
+    };
+
+    let showDocumentLinks = false;
+
+    if (isExternalUser) {
+      formattedResult.isInProgress = false;
+      formattedResult.hideIcons = true;
+      formattedResult.qcWorkItemsUntouched = false;
+    } else {
+      formattedResult.isInProgress = entry.isInProgress;
+
+      formattedResult.qcWorkItemsUntouched =
+        !formattedResult.isInProgress &&
+        entry.qcWorkItemsUntouched &&
+        !entry.isCourtIssuedDocument;
+
+      formattedResult.showLoadingIcon =
+        !permissions.UPDATE_CASE &&
+        entry.processingStatus !== DOCUMENT_PROCESSING_STATUS_OPTIONS.COMPLETE;
+    }
+
+    formattedResult.isPaper =
+      !formattedResult.isInProgress &&
+      !formattedResult.qcWorkItemsUntouched &&
+      entry.isPaper;
+
+    if (entry.documentTitle) {
+      formattedResult.descriptionDisplay = entry.documentTitle;
+      if (entry.additionalInfo && entry.addToCoversheet) {
+        formattedResult.descriptionDisplay += ` ${entry.additionalInfo}`;
+      }
+    }
+
+    formattedResult.showDocumentProcessing =
+      !permissions.UPDATE_CASE &&
+      entry.processingStatus !== DOCUMENT_PROCESSING_STATUS_OPTIONS.COMPLETE;
+
+    formattedResult.showNotServed =
+      !formattedResult.isUnservable &&
+      entry.isNotServedDocument &&
+      !entry.isMinuteEntry;
+    formattedResult.showServed = entry.isStatusServed;
+
+    const isInitialDocument = Object.keys(INITIAL_DOCUMENT_TYPES)
+      .map(k => INITIAL_DOCUMENT_TYPES[k].documentType)
+      .includes(entry.documentType);
+
+    showDocumentLinks = getShowDocumentViewerLink({
+      hasDocument: entry.isFileAttached,
+      isCourtIssuedDocument: entry.isCourtIssuedDocument,
+      isExternalUser,
+      isInitialDocument,
+      isServed: !!entry.servedAt,
+      isStipDecision: entry.isStipDecision,
+      isStricken: entry.isStricken,
+      isUnservable: formattedResult.isUnservable,
+      userHasAccessToCase,
+      userHasNoAccessToDocument: !userHasAccessToDocument,
+    });
+
+    formattedResult.showDocumentViewerLink =
+      !isExternalUser && showDocumentLinks;
+
+    formattedResult.showLinkToDocument = isExternalUser && showDocumentLinks;
+
+    formattedResult.filingsAndProceedingsWithAdditionalInfo = '';
+    if (entry.filingsAndProceedings) {
+      formattedResult.filingsAndProceedingsWithAdditionalInfo += ` ${entry.filingsAndProceedings}`;
+    }
+    if (entry.additionalInfo2) {
+      formattedResult.filingsAndProceedingsWithAdditionalInfo += ` ${entry.additionalInfo2}`;
+    }
+
+    formattedResult.showEditDocketRecordEntry = getShowEditDocketRecordEntry({
+      entry,
+      userPermissions: permissions,
+    });
+
+    formattedResult.showDocumentDescriptionWithoutLink = !showDocumentLinks;
+
+    return formattedResult;
+  });
+
+  result.formattedDocketEntriesOnDocketRecord = result.formattedDocketEntries.filter(
+    d => d.isOnDocketRecord,
+  );
+
+  result.formattedPendingDocketEntriesOnDocketRecord = result.formattedDocketEntriesOnDocketRecord.filter(
+    d => d.pending,
+  );
+
+  result.formattedDraftDocuments = (result.draftDocuments || []).map(
+    draftDocument => {
+      return {
+        ...draftDocument,
+        descriptionDisplay: draftDocument.documentTitle,
+        showDocumentViewerLink: permissions.UPDATE_CASE,
       };
-
-      let showDocumentLinks = false;
-
-      if (document) {
-        if (isExternalUser) {
-          formattedResult.isInProgress = false;
-          formattedResult.hideIcons = true;
-          formattedResult.qcWorkItemsUntouched = false;
-        } else {
-          formattedResult.isInProgress = document.isInProgress;
-
-          formattedResult.qcWorkItemsUntouched =
-            !formattedResult.isInProgress &&
-            document.qcWorkItemsUntouched &&
-            !document.isCourtIssuedDocument;
-
-          formattedResult.showLoadingIcon =
-            !permissions.UPDATE_CASE &&
-            document.processingStatus !==
-              DOCUMENT_PROCESSING_STATUS_OPTIONS.COMPLETE;
-        }
-
-        formattedResult.isPaper =
-          !formattedResult.isInProgress &&
-          !formattedResult.qcWorkItemsUntouched &&
-          document.isPaper;
-
-        if (document.documentTitle) {
-          formattedResult.descriptionDisplay = document.documentTitle;
-          if (document.additionalInfo) {
-            formattedResult.descriptionDisplay += ` ${document.additionalInfo}`;
-          }
-        }
-
-        formattedResult.showDocumentProcessing =
-          !permissions.UPDATE_CASE &&
-          document.processingStatus !==
-            DOCUMENT_PROCESSING_STATUS_OPTIONS.COMPLETE;
-
-        formattedResult.showNotServed =
-          !formattedResult.isUnservable && document.isNotServedDocument;
-        formattedResult.showServed = document.isStatusServed;
-
-        const isInitialDocument = Object.keys(INITIAL_DOCUMENT_TYPES)
-          .map(k => INITIAL_DOCUMENT_TYPES[k].documentType)
-          .includes(document.documentType);
-
-        showDocumentLinks = getShowDocumentViewerLink({
-          hasDocument: document.isFileAttached,
-          isCourtIssuedDocument: document.isCourtIssuedDocument,
-          isExternalUser,
-          isInitialDocument,
-          isServed: !!document.servedAt,
-          isStricken: record.isStricken,
-          isUnservable: formattedResult.isUnservable,
-          userHasAccessToCase,
-          userHasNoAccessToDocument: !userHasAccessToDocument,
-        });
-
-        formattedResult.showDocumentViewerLink =
-          !isExternalUser && showDocumentLinks;
-
-        formattedResult.showLinkToDocument =
-          isExternalUser && showDocumentLinks;
-      }
-
-      formattedResult.filingsAndProceedingsWithAdditionalInfo = '';
-      if (record.filingsAndProceedings) {
-        formattedResult.filingsAndProceedingsWithAdditionalInfo += ` ${record.filingsAndProceedings}`;
-      }
-      if (document && document.additionalInfo2) {
-        formattedResult.filingsAndProceedingsWithAdditionalInfo += ` ${document.additionalInfo2}`;
-      }
-
-      formattedResult.showEditDocketRecordEntry = getShowEditDocketRecordEntry({
-        document,
-        userPermissions: permissions,
-      });
-
-      formattedResult.showDocumentDescriptionWithoutLink = !showDocumentLinks;
-
-      return formattedResult;
     },
   );
 
-  result.formattedDraftDocuments = result.draftDocuments.map(draftDocument => {
-    return {
-      ...draftDocument,
-      descriptionDisplay: draftDocument.documentTitle,
-      showDocumentViewerLink: permissions.UPDATE_CASE,
-    };
-  });
-
-  result.pendingItemsDocketEntries = result.formattedDocketEntries.filter(
-    entry => entry.pending,
-  );
-
   result.consolidatedCases = result.consolidatedCases || [];
+
+  result.userIsAssignedToSession = getUserIsAssignedToSession({
+    currentUser: user,
+    get,
+    result,
+  });
 
   result.showBlockedTag = caseDetail.blocked || caseDetail.automaticBlocked;
   result.docketRecordSort = docketRecordSort;

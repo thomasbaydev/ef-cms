@@ -8,6 +8,11 @@
       flags: 
         only: true
         presence: "required"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "NewMessage"
     message: 
@@ -16,6 +21,10 @@
         presence: "required"
         description: "The message text."
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "max"
           args: 
@@ -27,6 +36,10 @@
         description: "The subject line of the message."
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "max"
           args: 
             limit: 250
@@ -36,6 +49,11 @@
         only: true
         presence: "required"
         description: "The section of the user who is the recipient of the message."
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "adc"
         - "admissions"
@@ -44,7 +62,6 @@
         - "docket"
         - "petitions"
         - "trialClerks"
-        - "armensChambers"
         - "ashfordsChambers"
         - "buchsChambers"
         - "carluzzosChambers"
@@ -53,17 +70,17 @@
         - "copelandsChambers"
         - "foleysChambers"
         - "galesChambers"
-        - "gerbersChambers"
         - "goekesChambers"
+        - "greavesChambers"
         - "gustafsonsChambers"
         - "guysChambers"
         - "halpernsChambers"
         - "holmesChambers"
-        - "jacobsChambers"
         - "jonesChambers"
         - "kerrigansChambers"
         - "laubersChambers"
         - "leydensChambers"
+        - "marshallsChambers"
         - "marvelsChambers"
         - "morrisonsChambers"
         - "negasChambers"
@@ -75,6 +92,7 @@
         - "torosChambers"
         - "urdasChambers"
         - "vasquezsChambers"
+        - "weilersChambers"
         - "wellsChambers"
     toUserId: 
       type: "string"
@@ -82,6 +100,10 @@
         presence: "required"
         description: "The ID of the user who is the recipient of the message."
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "guid"
           args: 

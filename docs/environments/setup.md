@@ -82,10 +82,12 @@ A prerequisite for a successful build within CircleCI is [access to CircleCI’s
   | `EFCMS_DOMAIN` | Domain name chosen above |
   | `COGNITO_SUFFIX` | Suffix of your choice for the Cognito URL |
   | `USTC_ADMIN_PASS` | Password of your choice used by the Cognito admin user |
-  | `SES_DMARC_EMAIL` | Email address used with SES to which aggregate DMARC validations are sent |
+  | `EMAIL_DMARC_POLICY` | DMARC policy in the format of `v=DMARC1; p=none; rua=mailto:postmaster@example.com;` |
   | `IRS_SUPERUSER_EMAIL_STG` | Email address used to serve all new petitions to the IRS for STG |
   | `IRS_SUPERUSER_EMAIL_TEST` | Email address used to serve all new petitions to the IRS for TEST |
   | `IRS_SUPERUSER_EMAIL_PROD` | Email address used to serve all new petitions to the IRS for PROD |
+  | `DEFAULT_ACCOUNT_PASS` | Default password for all test accounts and some password resets |
+  | `STATUSPAGE_DNS_RECORD` | DNS record for Statuspage of CNAME `status.${EFCMS_DOMAIN}` (optional) |
 
 - Run a build in CircleCI.
   - The build may fail the first time, as provisioning new security certificates can take some time (and cause a timeout). See [the troubleshooting guide](../TROUBLESHOOTING.md) for solutions to common problems.

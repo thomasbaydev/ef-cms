@@ -71,18 +71,15 @@ export const IndividualWorkQueueInbox = connect(
                           item.isRead ? 'case-link' : 'link case-link-bold'
                         }
                         href={item.editLink}
-                        onClick={e => {
-                          e.stopPropagation();
-                        }}
                       >
-                        {item.document.documentTitle ||
-                          item.document.documentType}
+                        {item.docketEntry.documentTitle ||
+                          item.docketEntry.documentType}
                       </a>
                     </div>
                   </td>
                   {!workQueueHelper.hideFiledByColumn && (
                     <td className="message-queue-row">
-                      {item.document.filedBy}
+                      {item.docketEntry.filedBy}
                     </td>
                   )}
                   <td className="message-queue-row">{item.caseStatus}</td>

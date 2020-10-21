@@ -8,8 +8,7 @@ const {
 } = require('../../entities/EntityConstants');
 const { Case } = require('../../entities/cases/Case');
 const { DOCKET_SECTION } = require('../../entities/EntityConstants');
-const { DocketRecord } = require('../../entities/DocketRecord');
-const { Document } = require('../../entities/Document');
+const { DocketEntry } = require('../../entities/DocketEntry');
 const { NotFoundError, UnauthorizedError } = require('../../../errors/errors');
 const { omit } = require('lodash');
 const { WorkItem } = require('../../entities/WorkItem');
@@ -35,7 +34,7 @@ exports.fileCourtIssuedDocketEntryInteractor = async ({
     throw new UnauthorizedError('Unauthorized');
   }
 
-  const { docketNumber, documentId } = documentMeta;
+  const { docketEntryId, docketNumber } = documentMeta;
 
   const caseToUpdate = await applicationContext
     .getPersistenceGateway()
@@ -46,12 +45,12 @@ exports.fileCourtIssuedDocketEntryInteractor = async ({
 
   let caseEntity = new Case(caseToUpdate, { applicationContext });
 
-  const document = caseEntity.getDocumentById({
-    documentId,
+  const docketEntry = caseEntity.getDocketEntryById({
+    docketEntryId,
   });
 
-  if (!document) {
-    throw new NotFoundError('Document not found');
+  if (!docketEntry) {
+    throw new NotFoundError('Docket entry not found');
   }
 
   const user = await applicationContext
@@ -65,22 +64,24 @@ exports.fileCourtIssuedDocketEntryInteractor = async ({
 
   const numberOfPages = await applicationContext
     .getUseCaseHelpers()
-    .countPagesInDocument({ applicationContext, documentId });
+    .countPagesInDocument({ applicationContext, docketEntryId });
 
   const isUnservable = UNSERVABLE_EVENT_CODES.includes(documentMeta.eventCode);
 
-  const documentEntity = new Document(
+  const docketEntryEntity = new DocketEntry(
     {
-      ...omit(document, 'filedBy'),
+      ...omit(docketEntry, 'filedBy'),
       attachments: documentMeta.attachments,
       date: documentMeta.date,
       documentTitle: documentMeta.generatedDocumentTitle,
       documentType: documentMeta.documentType,
+      editState: JSON.stringify(documentMeta),
       eventCode: documentMeta.eventCode,
       filedBy: undefined,
       freeText: documentMeta.freeText,
       isDraft: false,
       isFileAttached: true,
+      isOnDocketRecord: true,
       judge: documentMeta.judge,
       numberOfPages,
       scenario: documentMeta.scenario,
@@ -99,12 +100,12 @@ exports.fileCourtIssuedDocketEntryInteractor = async ({
       caseIsInProgress: caseEntity.inProgress,
       caseStatus: caseToUpdate.status,
       caseTitle: Case.getCaseTitle(Case.getCaseCaption(caseEntity)),
+      docketEntry: {
+        ...docketEntryEntity.toRawObject(),
+        createdAt: docketEntryEntity.createdAt,
+      },
       docketNumber: caseToUpdate.docketNumber,
       docketNumberWithSuffix: caseToUpdate.docketNumberWithSuffix,
-      document: {
-        ...documentEntity.toRawObject(),
-        createdAt: documentEntity.createdAt,
-      },
       hideFromPendingMessages: true,
       inProgress: true,
       section: DOCKET_SECTION,
@@ -118,8 +119,8 @@ exports.fileCourtIssuedDocketEntryInteractor = async ({
     workItem.setAsCompleted({ message: 'completed', user });
   }
 
-  documentEntity.setWorkItem(workItem);
-  caseEntity.updateDocument(documentEntity);
+  docketEntryEntity.setWorkItem(workItem);
+  caseEntity.updateDocketEntry(docketEntryEntity);
 
   workItem.assignToUser({
     assigneeId: user.userId,
@@ -129,20 +130,6 @@ exports.fileCourtIssuedDocketEntryInteractor = async ({
     sentBySection: user.section,
     sentByUserId: user.userId,
   });
-
-  caseEntity.addDocketRecord(
-    new DocketRecord(
-      {
-        description: documentMeta.generatedDocumentTitle,
-        documentId: documentEntity.documentId,
-        editState: JSON.stringify(documentMeta),
-        eventCode: documentEntity.eventCode,
-        filingDate: documentEntity.filingDate,
-        numberOfPages,
-      },
-      { applicationContext },
-    ),
-  );
 
   caseEntity = await applicationContext
     .getUseCaseHelpers()

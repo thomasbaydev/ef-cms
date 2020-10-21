@@ -30,7 +30,7 @@ describe('Docket Clerk Uploads Court-Issued Order to Docket Record', () => {
   docketClerkUploadsACourtIssuedDocument(test, fakeFile);
 
   loginAs(test, 'petitionsclerk@example.com');
-  petitionsClerkViewsCaseDetail(test, 3);
+  petitionsClerkViewsCaseDetail(test, 4);
   petitionsClerkViewsDraftOrder(test, 0);
 
   loginAs(test, 'docketclerk@example.com');

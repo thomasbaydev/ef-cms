@@ -15,6 +15,7 @@ const {
 } = require('../../../utilities/JoiValidationConstants');
 const {
   joiValidationDecorator,
+  validEntityDecorator,
 } = require('../../../utilities/JoiValidationDecorator');
 const {
   SecondaryDocumentInformationFactory,
@@ -105,7 +106,11 @@ function ExternalDocumentInformationFactory() {}
  * @returns {Function} the created entity
  */
 ExternalDocumentInformationFactory.get = documentMetadata => {
-  let entityConstructor = function (rawProps) {
+  /**
+   *
+   */
+  function entityConstructor() {}
+  entityConstructor.prototype.init = function init(rawProps) {
     this.attachments = rawProps.attachments;
     this.casesParties = rawProps.casesParties;
     this.certificateOfService = rawProps.certificateOfService;
@@ -165,18 +170,16 @@ ExternalDocumentInformationFactory.get = documentMetadata => {
     attachments: joi.boolean().required(),
     casesParties: joi.object().optional(),
     certificateOfService: joi.boolean().required(),
-    documentType: joi
-      .string()
-      .valid(...ALL_DOCUMENT_TYPES)
-      .optional(),
-    eventCode: joi
-      .string()
-      .valid(...ALL_EVENT_CODES)
-      .optional(),
-    freeText: joi.string().optional(),
+    documentType: JoiValidationConstants.STRING.valid(
+      ...ALL_DOCUMENT_TYPES,
+    ).optional(),
+    eventCode: JoiValidationConstants.STRING.valid(
+      ...ALL_EVENT_CODES,
+    ).optional(),
+    freeText: JoiValidationConstants.STRING.optional(),
     hasSupportingDocuments: joi.boolean().required(),
     lodged: joi.boolean().optional(),
-    ordinalValue: joi.string().optional(),
+    ordinalValue: JoiValidationConstants.STRING.optional(),
     previousDocument: joi.object().optional(),
     primaryDocumentFile: joi.object().required(),
     primaryDocumentFileSize: joi
@@ -190,7 +193,7 @@ ExternalDocumentInformationFactory.get = documentMetadata => {
   let schemaOptionalItems = {
     certificateOfServiceDate: JoiValidationConstants.ISO_DATE.max('now'),
     hasSecondarySupportingDocuments: joi.boolean(),
-    objections: joi.string(),
+    objections: JoiValidationConstants.STRING,
     partyIrsPractitioner: joi.boolean(),
     partyPrimary: joi.boolean(),
     partySecondary: joi.boolean(),
@@ -202,7 +205,7 @@ ExternalDocumentInformationFactory.get = documentMetadata => {
       .max(MAX_FILE_SIZE_BYTES)
       .integer(),
     secondarySupportingDocuments: joi.array().optional(),
-    selectedCases: joi.array().items(joi.string()).optional(),
+    selectedCases: joi.array().items(JoiValidationConstants.STRING).optional(),
     supportingDocuments: joi.array().optional(),
   };
 
@@ -301,7 +304,7 @@ ExternalDocumentInformationFactory.get = documentMetadata => {
 
   joiValidationDecorator(entityConstructor, schema, VALIDATION_ERROR_MESSAGES);
 
-  return new entityConstructor(documentMetadata);
+  return new (validEntityDecorator(entityConstructor))(documentMetadata);
 };
 
 module.exports = {

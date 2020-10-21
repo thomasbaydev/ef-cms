@@ -2,11 +2,15 @@ const {
   documentMeetsAgeRequirements,
 } = require('../utilities/getFormattedCaseDetail');
 const {
+  INITIAL_DOCUMENT_TYPES,
+  ROLES,
+  STIPULATED_DECISION_EVENT_CODE,
+} = require('../entities/EntityConstants');
+const {
   isAuthorized,
   ROLE_PERMISSIONS,
 } = require('../../authorization/authorizationClientService');
 const { Case } = require('../entities/cases/Case');
-const { ROLES } = require('../entities/EntityConstants');
 const { UnauthorizedError } = require('../../errors/errors');
 const { User } = require('../entities/User');
 
@@ -15,13 +19,13 @@ const { User } = require('../entities/User');
  * @param {object} providers the providers object
  * @param {object} providers.applicationContext the application context
  * @param {string} providers.docketNumber the docket number of the case containing the document
- * @param {string} providers.documentId the id of the document
+ * @param {string} providers.key the key of the document
  * @returns {Array<string>} the filing type options based on user role
  */
 exports.getDownloadPolicyUrlInteractor = async ({
   applicationContext,
   docketNumber,
-  documentId,
+  key,
 }) => {
   const user = applicationContext.getCurrentUser();
 
@@ -31,31 +35,41 @@ exports.getDownloadPolicyUrlInteractor = async ({
 
   const isInternalUser = User.isInternalUser(user && user.role);
   const isIrsSuperuser = user && user.role && user.role === ROLES.irsSuperuser;
+  const isPetitionsClerk =
+    user && user.role && user.role === ROLES.petitionsClerk;
+
+  const caseData = await applicationContext
+    .getPersistenceGateway()
+    .getCaseByDocketNumber({
+      applicationContext,
+      docketNumber,
+    });
+
+  const caseEntity = new Case(caseData, { applicationContext });
+
+  const petitionDocketEntry = caseEntity.getPetitionDocketEntry();
 
   if (!isInternalUser && !isIrsSuperuser) {
-    const caseData = await applicationContext
-      .getPersistenceGateway()
-      .getCaseByDocketNumber({
-        applicationContext,
-        docketNumber,
-      });
-
-    const caseEntity = new Case(caseData, { applicationContext });
-
-    if (documentId.includes('.pdf')) {
-      if (caseEntity.getCaseConfirmationGeneratedPdfFileName() !== documentId) {
+    if (key.includes('.pdf')) {
+      if (caseEntity.getCaseConfirmationGeneratedPdfFileName() !== key) {
         throw new UnauthorizedError('Unauthorized');
       }
     } else {
-      const selectedDocument = caseData.documents.find(
-        document => document.documentId === documentId,
-      );
+      const docketEntryEntity = caseEntity.getDocketEntryById({
+        docketEntryId: key,
+      });
 
-      const documentEntity = caseEntity.getDocumentById({ documentId });
+      const selectedDocketEntry = caseData.docketEntries.find(
+        document => document.docketEntryId === key,
+      );
 
       const documentIsAvailable = documentMeetsAgeRequirements(
-        selectedDocument,
+        selectedDocketEntry,
       );
+
+      const selectedIsStin =
+        selectedDocketEntry.documentType ===
+        INITIAL_DOCUMENT_TYPES.stin.documentType;
 
       if (!documentIsAvailable) {
         throw new UnauthorizedError(
@@ -63,49 +77,74 @@ exports.getDownloadPolicyUrlInteractor = async ({
         );
       }
 
-      if (documentEntity.isCourtIssued()) {
-        if (!documentEntity.servedAt) {
+      const userAssociatedWithCase = await applicationContext
+        .getPersistenceGateway()
+        .verifyCaseForUser({
+          applicationContext,
+          docketNumber: caseEntity.docketNumber,
+          userId: user.userId,
+        });
+
+      if (docketEntryEntity.isCourtIssued()) {
+        if (!docketEntryEntity.servedAt) {
+          throw new UnauthorizedError(
+            'Unauthorized to view document at this time',
+          );
+        } else if (
+          docketEntryEntity.eventCode === STIPULATED_DECISION_EVENT_CODE &&
+          !userAssociatedWithCase
+        ) {
           throw new UnauthorizedError(
             'Unauthorized to view document at this time',
           );
         }
+      } else if (selectedIsStin) {
+        throw new UnauthorizedError(
+          'Unauthorized to view document at this time',
+        );
       } else {
-        const userAssociatedWithCase = await applicationContext
-          .getPersistenceGateway()
-          .verifyCaseForUser({
-            applicationContext,
-            docketNumber: caseEntity.docketNumber,
-            userId: user.userId,
-          });
-
         if (!userAssociatedWithCase) {
           throw new UnauthorizedError('Unauthorized');
         }
       }
     }
   } else if (isIrsSuperuser) {
-    const caseData = await applicationContext
-      .getPersistenceGateway()
-      .getCaseByDocketNumber({
-        applicationContext,
-        docketNumber,
-      });
-
-    const caseEntity = new Case(caseData, { applicationContext });
-
-    const isPetitionServed = caseEntity.documents.find(
-      doc => doc.documentType === 'Petition',
-    ).servedAt;
-
-    if (!isPetitionServed) {
+    if (petitionDocketEntry && !petitionDocketEntry.servedAt) {
       throw new UnauthorizedError(
         'Unauthorized to view case documents at this time',
       );
+    }
+  } else if (isInternalUser) {
+    const selectedDocketEntry = caseData.docketEntries.find(
+      document => document.docketEntryId === key,
+    );
+
+    const selectedIsStin =
+      selectedDocketEntry &&
+      selectedDocketEntry.documentType ===
+        INITIAL_DOCUMENT_TYPES.stin.documentType;
+
+    if (isPetitionsClerk) {
+      if (
+        selectedIsStin &&
+        petitionDocketEntry &&
+        petitionDocketEntry.servedAt
+      ) {
+        throw new UnauthorizedError(
+          'Unauthorized to view case documents at this time',
+        );
+      }
+    } else {
+      if (selectedIsStin) {
+        throw new UnauthorizedError(
+          'Unauthorized to view case documents at this time',
+        );
+      }
     }
   }
 
   return applicationContext.getPersistenceGateway().getDownloadPolicyUrl({
     applicationContext,
-    documentId,
+    key,
   });
 };

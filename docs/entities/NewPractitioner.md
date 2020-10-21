@@ -9,6 +9,10 @@
         presence: "required"
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "max"
           args: 
             limit: 100
@@ -16,11 +20,20 @@
       type: "string"
       flags: 
         presence: "optional"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - null
     judgeFullName: 
       type: "string"
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "max"
           args: 
@@ -52,6 +65,10 @@
     judgeTitle: 
       type: "string"
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "max"
           args: 
@@ -91,6 +108,10 @@
             presence: "required"
           rules: 
             - 
+              name: "min"
+              args: 
+                limit: 1
+            - 
               name: "max"
               args: 
                 limit: 100
@@ -99,6 +120,10 @@
           flags: 
             presence: "optional"
           rules: 
+            - 
+              name: "min"
+              args: 
+                limit: 1
             - 
               name: "max"
               args: 
@@ -111,6 +136,10 @@
             presence: "optional"
           rules: 
             - 
+              name: "min"
+              args: 
+                limit: 1
+            - 
               name: "max"
               args: 
                 limit: 100
@@ -122,6 +151,10 @@
             presence: "required"
           rules: 
             - 
+              name: "min"
+              args: 
+                limit: 1
+            - 
               name: "max"
               args: 
                 limit: 100
@@ -130,11 +163,21 @@
           flags: 
             only: true
             presence: "required"
+          rules: 
+            - 
+              name: "min"
+              args: 
+                limit: 1
           allow: 
             - "domestic"
             - "international"
         country: 
           type: "string"
+          rules: 
+            - 
+              name: "min"
+              args: 
+                limit: 1
           whens: 
             - 
               ref: 
@@ -165,6 +208,10 @@
             presence: "required"
           rules: 
             - 
+              name: "min"
+              args: 
+                limit: 1
+            - 
               name: "max"
               args: 
                 limit: 100
@@ -190,6 +237,10 @@
                   presence: "required"
                 rules: 
                   - 
+                    name: "min"
+                    args: 
+                      limit: 1
+                  - 
                     name: "max"
                     args: 
                       limit: 100
@@ -199,6 +250,10 @@
                   presence: "required"
                 rules: 
                   - 
+                    name: "min"
+                    args: 
+                      limit: 1
+                  - 
                     name: "pattern"
                     args: 
                       regex: "/^(\\d{5}|\\d{5}-\\d{4})$/"
@@ -206,6 +261,11 @@
           type: "string"
           flags: 
             only: true
+          rules: 
+            - 
+              name: "min"
+              args: 
+                limit: 1
           allow: 
             - "AK"
             - "AL"
@@ -298,18 +358,38 @@
       type: "string"
       flags: 
         presence: "required"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
     entityName: 
       type: "string"
       flags: 
         only: true
         presence: "required"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "Practitioner"
+    isUpdatingInformation: 
+      type: "boolean"
+      flags: 
+        presence: "optional"
+        description: "Whether the contact information for the user is being updated."
     section: 
       type: "string"
       flags: 
         only: true
         presence: "optional"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "adc"
         - "admissions"
@@ -318,7 +398,6 @@
         - "docket"
         - "petitions"
         - "trialClerks"
-        - "armensChambers"
         - "ashfordsChambers"
         - "buchsChambers"
         - "carluzzosChambers"
@@ -327,17 +406,18 @@
         - "copelandsChambers"
         - "foleysChambers"
         - "galesChambers"
-        - "gerbersChambers"
         - "goekesChambers"
+        - "greavesChambers"
         - "gustafsonsChambers"
         - "guysChambers"
         - "halpernsChambers"
         - "holmesChambers"
-        - "jacobsChambers"
         - "jonesChambers"
         - "kerrigansChambers"
         - "laubersChambers"
+        - "legacyJudgesChambers"
         - "leydensChambers"
+        - "marshallsChambers"
         - "marvelsChambers"
         - "morrisonsChambers"
         - "negasChambers"
@@ -349,6 +429,7 @@
         - "torosChambers"
         - "urdasChambers"
         - "vasquezsChambers"
+        - "weilersChambers"
         - "wellsChambers"
         - "admin"
         - "admissionsclerk"
@@ -358,6 +439,7 @@
         - "irsPractitioner"
         - "irsSuperuser"
         - "judge"
+        - "legacyJudge"
         - "petitioner"
         - "petitionsclerk"
         - "privatePractitioner"
@@ -366,10 +448,20 @@
       type: "string"
       flags: 
         presence: "optional"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
     userId: 
       type: "string"
       flags: 
         presence: "optional"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - null
     additionalPhone: 
@@ -378,6 +470,10 @@
         presence: "optional"
         description: "An alternate phone number for the practitioner."
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "max"
           args: 
@@ -401,12 +497,21 @@
       type: "string"
       flags: 
         presence: "required"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
     alternateEmail: 
       type: "string"
       flags: 
         presence: "optional"
         description: "An alternate email address for the practitioner."
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "email"
           args: 
@@ -422,6 +527,11 @@
       type: "string"
       flags: 
         presence: "optional"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - null
     birthYear: 
@@ -446,6 +556,11 @@
         only: true
         presence: "required"
         description: "The employer designation for the practitioner."
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "IRS"
         - "DOJ"
@@ -457,6 +572,10 @@
         description: "The firm name for the practitioner."
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "max"
           args: 
             limit: 100
@@ -466,16 +585,30 @@
       type: "string"
       flags: 
         presence: "required"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
     lastName: 
       type: "string"
       flags: 
         presence: "required"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
     middleName: 
       type: "string"
       flags: 
         presence: "optional"
         description: "The optional middle name of the practitioner."
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "max"
           args: 
@@ -489,6 +622,10 @@
         description: "The state in which the practitioner passed their bar examination."
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "max"
           args: 
             limit: 100
@@ -498,6 +635,11 @@
         only: true
         presence: "required"
         description: "The type of practitioner - either Attorney or Non-Attorney."
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "Attorney"
         - "Non-Attorney"
@@ -507,6 +649,10 @@
         presence: "optional"
         description: "The name suffix of the practitioner."
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "max"
           args: 

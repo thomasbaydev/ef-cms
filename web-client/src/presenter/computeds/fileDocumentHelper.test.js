@@ -473,7 +473,7 @@ describe('fileDocumentHelper', () => {
     });
   });
 
-  it('shows the multi select form and map cases when there are many cases to file ', () => {
+  it('shows the multi select form and map cases when there are many cases to file', () => {
     state.form = {
       documentType: 'Motion for Leave to File',
       selectedCases: ['101-19', '102-19'],
@@ -481,15 +481,15 @@ describe('fileDocumentHelper', () => {
     state.caseDetail.consolidatedCases = [
       {
         ...MOCK_CASE,
+        docketEntries: null,
         docketNumber: '101-19',
         docketRecord: null,
-        documents: null,
       },
       {
         ...MOCK_CASE,
+        docketEntries: null,
         docketNumber: '102-19',
         docketRecord: null,
-        documents: null,
       },
     ];
     const result = runCompute(fileDocumentHelper, { state });

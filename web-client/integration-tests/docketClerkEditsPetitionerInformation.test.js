@@ -46,13 +46,32 @@ describe('docket clerk edits the petitioner information', () => {
       value: '',
     });
 
+    await test.runSequence('updateFormValueSequence', {
+      key: 'contactPrimary.phone',
+      value: '',
+    });
+
     expect(test.getState('form.contactPrimary.address1')).toBeUndefined();
 
     await test.runSequence('updatePetitionerInformationFormSequence');
 
     expect(test.getState('validationErrors')).toEqual({
-      contactPrimary: { address1: 'Enter mailing address' },
+      contactPrimary: {
+        address1: 'Enter mailing address',
+        phone: 'Enter phone number',
+      },
       contactSecondary: null,
+    });
+
+    await test.runSequence('updateFormValueSequence', {
+      key: 'contactPrimary.phone',
+      value: '1234567890',
+    });
+
+    await test.runSequence('updatePetitionerInformationFormSequence');
+
+    await test.runSequence('gotoEditPetitionerInformationSequence', {
+      docketNumber: caseDetail.docketNumber,
     });
 
     await test.runSequence('updateFormValueSequence', {
@@ -74,7 +93,7 @@ describe('docket clerk edits the petitioner information', () => {
     );
 
     const noticeDocument = test
-      .getState('caseDetail.documents')
+      .getState('caseDetail.docketEntries')
       .find(d => d.documentTitle === 'Notice of Change of Address');
     expect(noticeDocument.servedAt).toBeDefined();
   });

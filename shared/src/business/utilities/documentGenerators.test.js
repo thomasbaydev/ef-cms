@@ -106,7 +106,7 @@ describe('documentGenerators', () => {
         data: {
           formattedCases: [
             {
-              associatedJudge: 'Judge Armen',
+              associatedJudge: 'Judge Colvin',
               caseTitle: 'rick james b',
               docketNumber: '101-20',
               docketNumberSuffix: DOCKET_NUMBER_SUFFIXES.LIEN_LEVY,
@@ -293,21 +293,17 @@ describe('documentGenerators', () => {
           docketNumberWithSuffix: '123-45S',
           entries: [
             {
-              document: {
-                filedBy: 'Test Filer',
-                isNotServedDocument: false,
-                isStatusServed: true,
-                servedAtFormatted: '02/02/20',
-                servedPartiesCode: SERVED_PARTIES_CODES.BOTH,
-              },
+              action: 'Axun',
+              createdAtFormatted: '01/01/20',
+              description: 'Test Description',
+              eventCode: 'T',
+              filedBy: 'Test Filer',
+              filingsAndProceedings: 'Test Filings And Proceedings',
               index: 1,
-              record: {
-                action: 'Axun',
-                createdAtFormatted: '01/01/20',
-                description: 'Test Description',
-                eventCode: 'T',
-                filingsAndProceedings: 'Test Filings And Proceedings',
-              },
+              isNotServedDocument: false,
+              isStatusServed: true,
+              servedAtFormatted: '02/02/20',
+              servedPartiesCode: SERVED_PARTIES_CODES.BOTH,
             },
           ],
         },

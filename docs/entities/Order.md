@@ -9,6 +9,10 @@
         presence: "required"
       rules: 
         - 
+          name: "min"
+          args: 
+            limit: 1
+        - 
           name: "max"
           args: 
             limit: 100
@@ -17,6 +21,11 @@
       flags: 
         only: true
         presence: "required"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "Administrative Record"
         - "Affidavit in Support"
@@ -45,6 +54,7 @@
         - "Bond"
         - "Bounced Electronic Service"
         - "Brief in Support"
+        - "Caption of case is amended"
         - "Certificate as to the Genuineness of the Administrative Record"
         - "Certificate of Service"
         - "Civil Penalty Approval Form"
@@ -53,13 +63,17 @@
         - "Decision"
         - "Declaration in Support"
         - "Designation of Counsel to Receive Service"
+        - "Docket Number is amended"
         - "Entry of Appearance"
         - "Evidence"
         - "Exhibit(s)"
+        - "Filing Fee Paid"
+        - "Filing Fee Waived"
         - "Further Trial before"
         - "Hearing Exhibits"
         - "Hearing before"
         - "Letter"
+        - "Limited Entry of Appearance"
         - "Memorandum"
         - "Memorandum Opinion"
         - "Memorandum in Support"
@@ -72,6 +86,7 @@
         - "Motion for Certification of an Interlocutory Order to Permit Immediate Appeal"
         - "Motion for Continuance"
         - "Motion for Default and Dismissal"
+        - "Motion for Document Subpoena Hearing"
         - "Motion for Entry of Decision"
         - "Motion for Entry of Order that Undenied Allegations be Deemed Admitted Pursuant to Rule 37(c)"
         - "Motion for Estate Tax Deduction Developing at or after Trial Pursuant to Rule 156"
@@ -151,7 +166,7 @@
         - "Motion to Dismiss for Lack of Jurisdiction"
         - "Motion to Dismiss for Lack of Jurisdiction as to [person, notice, or year]"
         - "Motion to Dismiss for Lack of Prosecution"
-        - "Motion to Dismiss on Grounds of Mootness"
+        - "Motion to Dismiss on Ground of Mootness"
         - "Motion to Disqualify Counsel"
         - "Motion to Enforce Subpoena"
         - "Motion to Enforce a Refund of Overpayment Pursuant to Rule 260"
@@ -209,6 +224,7 @@
         - "Notice of Change of Counsel for Non-Party"
         - "Notice of Change of Telephone Number"
         - "Notice of Clarification of Tax Matters Partner"
+        - "Notice of Completion"
         - "Notice of Concession"
         - "Notice of Consistent Agreement Pursuant to Rule 248(c)(1)"
         - "Notice of Death of Counsel"
@@ -235,6 +251,7 @@
         - "Notice of Termination Assessment"
         - "Notice of Trial"
         - "Notice of Unavailability"
+        - "Notice of Withdrawal as Counsel"
         - "Objection"
         - "Objection [anything]"
         - "Opposition"
@@ -284,11 +301,12 @@
         - "Prehearing Memorandum"
         - "Pretrial Memorandum"
         - "Proposed Stipulated Decision"
+        - "Proposed Trial Exhibits"
         - "Ratification"
         - "Ratification of Petition"
         - "Record on Appeal"
         - "Redacted"
-        - "Redacted Petition Filed"
+        - "Redacted Petition"
         - "Reference List of Redacted Information"
         - "Reply"
         - "Report"
@@ -358,6 +376,11 @@
       flags: 
         only: true
         presence: "optional"
+      rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
       allow: 
         - "A"
         - "AAAP"
@@ -402,6 +425,7 @@
         - "FTRL"
         - "HE"
         - "HEAR"
+        - "LEA"
         - "LTR"
         - "M000"
         - "M001"
@@ -537,6 +561,7 @@
         - "M134"
         - "M135"
         - "M136"
+        - "M137"
         - "M218"
         - "MEMO"
         - "MINC"
@@ -563,12 +588,14 @@
         - "NNOB"
         - "NOA"
         - "NOB"
+        - "NOC"
         - "NODC"
         - "NOEI"
         - "NOEP"
         - "NOI"
         - "NOST"
         - "NOT"
+        - "NOTW"
         - "NOU"
         - "NPB"
         - "NPJR"
@@ -627,6 +654,7 @@
         - "PHM"
         - "PMT"
         - "PSDE"
+        - "PTE"
         - "PTFR"
         - "PTRL"
         - "RAT"
@@ -672,6 +700,7 @@
         - "SPD"
         - "SPML"
         - "SPMT"
+        - "SPOS"
         - "SPTN"
         - "SPTO"
         - "SRMB"
@@ -702,6 +731,10 @@
       flags: 
         presence: "required"
       rules: 
+        - 
+          name: "min"
+          args: 
+            limit: 1
         - 
           name: "max"
           args: 

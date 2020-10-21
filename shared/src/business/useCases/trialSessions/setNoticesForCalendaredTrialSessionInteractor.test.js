@@ -15,13 +15,13 @@ const { PARTY_TYPES, ROLES } = require('../../entities/EntityConstants');
 const { User } = require('../../entities/User');
 
 const findNoticeOfTrial = caseRecord => {
-  return caseRecord.documents.find(
+  return caseRecord.docketEntries.find(
     document => document.documentType === NOTICE_OF_TRIAL.documentType,
   );
 };
 
 const findStandingPretrialDocument = caseRecord => {
-  return caseRecord.documents.find(
+  return caseRecord.docketEntries.find(
     document =>
       document.documentType === STANDING_PRETRIAL_NOTICE.documentType ||
       document.documentType === STANDING_PRETRIAL_ORDER.documentType,
@@ -208,19 +208,38 @@ describe('setNoticesForCalendaredTrialSessionInteractor', () => {
   });
 
   it('Should create a docket entry for each case', async () => {
+    const mockNumberOfPages = 999;
+    applicationContext
+      .getUseCaseHelpers()
+      .countPagesInDocument.mockReturnValue(mockNumberOfPages);
+
     await setNoticesForCalendaredTrialSessionInteractor({
       applicationContext,
       trialSessionId: '6805d1ab-18d0-43ec-bafb-654e83405416',
     });
 
     const findNoticeOfTrialDocketEntry = caseRecord => {
-      return caseRecord.docketRecord.find(
-        entry => entry.description === NOTICE_OF_TRIAL.documentType,
+      return caseRecord.docketEntries.find(
+        entry => entry.documentType === NOTICE_OF_TRIAL.documentType,
       );
     };
 
-    expect(findNoticeOfTrialDocketEntry(calendaredCases[0])).toBeTruthy();
-    expect(findNoticeOfTrialDocketEntry(calendaredCases[1])).toBeTruthy();
+    expect(
+      applicationContext.getUseCaseHelpers().countPagesInDocument,
+    ).toHaveBeenCalled();
+
+    expect(findNoticeOfTrialDocketEntry(calendaredCases[0])).toMatchObject({
+      index: expect.anything(),
+      isFileAttached: true,
+      isOnDocketRecord: true,
+      numberOfPages: 999,
+    });
+    expect(findNoticeOfTrialDocketEntry(calendaredCases[1])).toMatchObject({
+      index: expect.anything(),
+      isFileAttached: true,
+      isOnDocketRecord: true,
+      numberOfPages: 999,
+    });
   });
 
   it('Should set the status of the Notice of Trial as served for each case', async () => {
@@ -354,8 +373,8 @@ describe('setNoticesForCalendaredTrialSessionInteractor', () => {
     });
 
     const findNoticeOfTrialDocketEntry = caseRecord => {
-      return caseRecord.docketRecord.find(
-        entry => entry.description === NOTICE_OF_TRIAL.documentType,
+      return caseRecord.docketEntries.find(
+        entry => entry.documentType === NOTICE_OF_TRIAL.documentType,
       );
     };
 
