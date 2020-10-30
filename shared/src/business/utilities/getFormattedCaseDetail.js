@@ -103,9 +103,7 @@ const formatDocketEntry = (applicationContext, docketEntry) => {
 
   const qcWorkItem = formattedEntry.workItem;
 
-  formattedEntry.qcWorkItemsCompleted = !!(
-    qcWorkItem && qcWorkItem.completedAt
-  );
+  formattedEntry.qcWorkItemsCompleted = !qcWorkItem || !!qcWorkItem.completedAt;
 
   formattedEntry.isUnservable =
     UNSERVABLE_EVENT_CODES.includes(formattedEntry.eventCode) ||
@@ -132,10 +130,12 @@ const formatDocketEntry = (applicationContext, docketEntry) => {
   formattedEntry.qcWorkItemsUntouched =
     qcWorkItem && !qcWorkItem.isRead && !qcWorkItem.completedAt;
 
-  // Served parties code - R = Respondent, P = Petitioner, B = Both
-  formattedEntry.servedPartiesCode = getServedPartiesCode(
-    formattedEntry.servedParties,
-  );
+  if (formattedEntry.servedPartiesCode !== SERVED_PARTIES_CODES.PETITIONER) {
+    // Served parties code - R = Respondent, P = Petitioner, B = Both
+    formattedEntry.servedPartiesCode = getServedPartiesCode(
+      formattedEntry.servedParties,
+    );
+  }
 
   if (
     formattedEntry.isCourtIssuedDocument &&
@@ -247,7 +247,7 @@ const formatCase = (applicationContext, caseDetail) => {
     result.formattedDocketEntries.sort(byIndexSortFunction);
 
     result.pendingItemsDocketEntries = result.formattedDocketEntries.filter(
-      entry => entry.pending,
+      entry => entry.pending && entry.servedAt,
     );
   }
 

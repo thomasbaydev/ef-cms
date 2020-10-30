@@ -84,6 +84,7 @@ const {
 } = require('../../shared/src/persistence/elasticsearch/bulkIndexRecords');
 const {
   CASE_STATUS_TYPES,
+  MAX_SEARCH_RESULTS,
   SESSION_STATUS_GROUPS,
 } = require('../../shared/src/business/entities/EntityConstants');
 const {
@@ -273,6 +274,9 @@ const {
   fetchPendingItems: fetchPendingItemsPersistence,
 } = require('../../shared/src/persistence/elasticsearch/fetchPendingItems');
 const {
+  fetchPendingItemsByDocketNumber,
+} = require('../../shared/src/business/useCaseHelper/pendingItems/fetchPendingItemsByDocketNumber');
+const {
   fetchPendingItemsInteractor,
 } = require('../../shared/src/business/useCases/pendingItems/fetchPendingItemsInteractor');
 const {
@@ -368,7 +372,7 @@ const {
 } = require('../../shared/src/persistence/dynamo/cases/getCaseByDocketNumber');
 const {
   getCaseDeadlinesByDateRange,
-} = require('../../shared/src/persistence/dynamo/caseDeadlines/getCaseDeadlinesByDateRange');
+} = require('../../shared/src/persistence/elasticsearch/caseDeadlines/getCaseDeadlinesByDateRange');
 const {
   getCaseDeadlinesByDocketNumber,
 } = require('../../shared/src/persistence/dynamo/caseDeadlines/getCaseDeadlinesByDocketNumber');
@@ -481,6 +485,9 @@ const {
 const {
   getFormattedCaseDetail,
 } = require('../../shared/src/business/utilities/getFormattedCaseDetail');
+const {
+  getFullCaseByDocketNumber,
+} = require('../../shared/src/persistence/dynamo/cases/getFullCaseByDocketNumber');
 const {
   getHealthCheckInteractor,
 } = require('../../shared/src/business/useCases/health/getHealthCheckInteractor');
@@ -1132,6 +1139,7 @@ const gatewayMethods = {
     createUser,
     createUserInboxRecord,
     fetchPendingItems: fetchPendingItemsPersistence,
+    getFullCaseByDocketNumber,
     getSesStatus,
     incrementCounter,
     markMessageThreadRepliedTo,
@@ -1289,11 +1297,13 @@ module.exports = appContextUser => {
       }
     },
     getConstants: () => ({
-      CASE_INVENTORY_MAX_PAGE_SIZE: 5000,
+      CASE_INVENTORY_MAX_PAGE_SIZE: 20000, // the Chief Judge will have ~15k records, so setting to 20k to be safe
+      MAX_SEARCH_RESULTS,
       OPEN_CASE_STATUSES: Object.values(CASE_STATUS_TYPES).filter(
         status => status !== CASE_STATUS_TYPES.closed,
       ),
       ORDER_TYPES_MAP: ORDER_TYPES,
+      PENDING_ITEMS_PAGE_SIZE: 100,
       SESSION_STATUS_GROUPS,
     }),
     getCurrentUser,
@@ -1323,8 +1333,20 @@ module.exports = appContextUser => {
     },
     getDynamoClient,
     getEmailClient: () => {
-      if (process.env.CI) {
+      if (process.env.CI || process.env.DISABLE_EMAILS === 'true') {
         return {
+          getSendStatistics: () => {
+            // mock this out so the health checks pass on smoketests
+            return {
+              promise: async () => ({
+                SendDataPoints: [
+                  {
+                    Rejects: 0,
+                  },
+                ],
+              }),
+            };
+          },
           sendBulkTemplatedEmail: params => {
             return {
               promise: () =>
@@ -1461,6 +1483,7 @@ module.exports = appContextUser => {
         appendPaperServiceAddressPageToPdf,
         countPagesInDocument,
         fetchPendingItems,
+        fetchPendingItemsByDocketNumber,
         formatAndSortConsolidatedCases,
         generateCaseInventoryReportPdf,
         getCaseInventoryReport,
@@ -1680,9 +1703,9 @@ module.exports = appContextUser => {
     notifyHoneybadger: async (message, context) => {
       const honeybadger = initHoneybadger();
 
-      const notifyAsync = message => {
+      const notifyAsync = messageForNotification => {
         return new Promise(resolve => {
-          honeybadger.notify(message, null, null, resolve);
+          honeybadger.notify(messageForNotification, null, null, resolve);
         });
       };
 
