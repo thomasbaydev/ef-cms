@@ -127,9 +127,6 @@ const {
   createCase,
 } = require('../../shared/src/persistence/dynamo/cases/createCase');
 const {
-  createCaseCatalogRecord,
-} = require('../../shared/src/persistence/dynamo/cases/createCaseCatalogRecord');
-const {
   createCaseDeadline,
 } = require('../../shared/src/persistence/dynamo/caseDeadlines/createCaseDeadline');
 const {
@@ -355,6 +352,9 @@ const {
 const {
   getBlockedCases,
 } = require('../../shared/src/persistence/elasticsearch/getBlockedCases');
+const {
+  getBlockedCases: getBlockedCasesOld,
+} = require('../../shared/src/persistence/elasticsearch/getBlockedCases.old');
 const {
   getBlockedCasesInteractor,
 } = require('../../shared/src/business/useCases/getBlockedCasesInteractor');
@@ -903,9 +903,6 @@ const {
   updateDocketEntryProcessingStatus,
 } = require('../../shared/src/persistence/dynamo/documents/updateDocketEntryProcessingStatus');
 const {
-  updateHighPriorityCaseTrialSortMappingRecords,
-} = require('../../shared/src/persistence/dynamo/cases/updateHighPriorityCaseTrialSortMappingRecords');
-const {
   updateInitialFilingDocuments,
 } = require('../../shared/src/business/useCaseHelper/initialFilingDocuments/updateInitialFilingDocuments');
 const {
@@ -991,6 +988,7 @@ const { createLogger } = require('../../shared/src/utilities/createLogger');
 const { exec } = require('child_process');
 const { getDocument } = require('../../shared/src/persistence/s3/getDocument');
 const { getUniqueId } = require('../../shared/src/sharedAppContext.js');
+const { isCodeDisabled } = require('../../codeToggles');
 const { User } = require('../../shared/src/business/entities/User');
 const { v4: uuidv4 } = require('uuid');
 
@@ -1125,7 +1123,6 @@ const gatewayMethods = {
     bulkDeleteRecords,
     bulkIndexRecords,
     createCase,
-    createCaseCatalogRecord,
     createCaseDeadline,
     createCaseTrialSortMappingRecords,
     createMessage,
@@ -1157,7 +1154,6 @@ const gatewayMethods = {
     updateCaseTrialSortMappingRecords,
     updateDocketEntry,
     updateDocketEntryProcessingStatus,
-    updateHighPriorityCaseTrialSortMappingRecords,
     updateMessage,
     updatePractitionerUser,
     updateTrialSession,
@@ -1186,7 +1182,7 @@ const gatewayMethods = {
   deleteUserOutboxRecord,
   deleteWorkItemFromInbox,
   deleteWorkItemFromSection,
-  getBlockedCases,
+  getBlockedCases: isCodeDisabled(7137) ? getBlockedCasesOld : getBlockedCases,
   getCalendaredCasesForTrialSession,
   getCaseByDocketNumber,
   getCaseDeadlinesByDateRange,
