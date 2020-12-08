@@ -47,6 +47,9 @@ const {
   advancedDocumentSearch,
 } = require('../../shared/src/persistence/elasticsearch/advancedDocumentSearch');
 const {
+  advancedDocumentSearch: advancedDocumentSearchOld,
+} = require('../../shared/src/persistence/elasticsearch/advancedDocumentSearch.old');
+const {
   appendPaperServiceAddressPageToPdf,
 } = require('../../shared/src/business/useCaseHelper/service/appendPaperServiceAddressPageToPdf');
 const {
@@ -263,16 +266,22 @@ const {
 } = require('../../shared/src/business/utilities/documentUrlTranslator');
 const {
   fetchPendingItems,
-} = require('../../shared/src/business/useCaseHelper/pendingItems/fetchPendingItems');
-const {
-  fetchPendingItems: fetchPendingItemsPersistence,
 } = require('../../shared/src/persistence/elasticsearch/fetchPendingItems');
+const {
+  fetchPendingItems: fetchPendingItemsOld,
+} = require('../../shared/src/business/useCaseHelper/pendingItems/fetchPendingItems.old');
 const {
   fetchPendingItemsByDocketNumber,
 } = require('../../shared/src/business/useCaseHelper/pendingItems/fetchPendingItemsByDocketNumber');
 const {
+  fetchPendingItemsByDocketNumber: fetchPendingItemsByDocketNumberOld,
+} = require('../../shared/src/business/useCaseHelper/pendingItems/fetchPendingItemsByDocketNumber.old');
+const {
   fetchPendingItemsInteractor,
 } = require('../../shared/src/business/useCases/pendingItems/fetchPendingItemsInteractor');
+const {
+  fetchPendingItemsInteractor: fetchPendingItemsInteractorOld,
+} = require('../../shared/src/business/useCases/pendingItems/fetchPendingItemsInteractor.old');
 const {
   fileAndServeCourtIssuedDocumentInteractor,
 } = require('../../shared/src/business/useCases/courtIssuedDocument/fileAndServeCourtIssuedDocumentInteractor');
@@ -336,6 +345,9 @@ const {
 const {
   generatePrintablePendingReportInteractor,
 } = require('../../shared/src/business/useCases/pendingItems/generatePrintablePendingReportInteractor');
+const {
+  generatePrintablePendingReportInteractor: generatePrintablePendingReportInteractorOld,
+} = require('../../shared/src/business/useCases/pendingItems/generatePrintablePendingReportInteractor.old');
 const {
   generateStandingPretrialNoticeInteractor,
 } = require('../../shared/src/business/useCases/trialSessions/generateStandingPretrialNoticeInteractor');
@@ -546,6 +558,9 @@ const {
   getPractitionersByName,
 } = require('../../shared/src/persistence/elasticsearch/getPractitionersByName');
 const {
+  getPractitionersByName: getPractitionersByNameOld,
+} = require('../../shared/src/persistence/elasticsearch/getPractitionersByName.old');
+const {
   getPractitionersByNameInteractor,
 } = require('../../shared/src/business/useCases/practitioners/getPractitionersByNameInteractor');
 const {
@@ -716,6 +731,9 @@ const {
 const {
   prioritizeCaseInteractor,
 } = require('../../shared/src/business/useCases/prioritizeCaseInteractor');
+const {
+  prioritizeCaseInteractor: prioritizeCaseInteractorOld,
+} = require('../../shared/src/business/useCases/prioritizeCaseInteractor.old');
 const {
   PrivatePractitioner,
 } = require('../../shared/src/business/entities/PrivatePractitioner');
@@ -900,11 +918,17 @@ const {
   updateDocketEntryMetaInteractor,
 } = require('../../shared/src/business/useCases/docketEntry/updateDocketEntryMetaInteractor');
 const {
+  updateDocketEntryMetaInteractor: updateDocketEntryMetaInteractorOld,
+} = require('../../shared/src/business/useCases/docketEntry/updateDocketEntryMetaInteractor.old');
+const {
   updateDocketEntryProcessingStatus,
 } = require('../../shared/src/persistence/dynamo/documents/updateDocketEntryProcessingStatus');
 const {
   updateInitialFilingDocuments,
 } = require('../../shared/src/business/useCaseHelper/initialFilingDocuments/updateInitialFilingDocuments');
+const {
+  updateInitialFilingDocumentsOld,
+} = require('../../shared/src/business/useCaseHelper/initialFilingDocuments/updateInitialFilingDocuments.old');
 const {
   updateMessage,
 } = require('../../shared/src/persistence/dynamo/messages/updateMessage');
@@ -914,6 +938,9 @@ const {
 const {
   updatePetitionDetailsInteractor,
 } = require('../../shared/src/business/useCases/updatePetitionDetailsInteractor');
+const {
+  updatePetitionDetailsInteractor: updatePetitionDetailsInteractorOld,
+} = require('../../shared/src/business/useCases/updatePetitionDetailsInteractor.old');
 const {
   updatePetitionerInformationInteractor,
 } = require('../../shared/src/business/useCases/updatePetitionerInformationInteractor');
@@ -988,7 +1015,7 @@ const { createLogger } = require('../../shared/src/utilities/createLogger');
 const { exec } = require('child_process');
 const { getDocument } = require('../../shared/src/persistence/s3/getDocument');
 const { getUniqueId } = require('../../shared/src/sharedAppContext.js');
-const { isCodeDisabled } = require('../../codeToggles');
+const { isCodeDisabled, isCodeEnabled } = require('../../codeToggles');
 const { User } = require('../../shared/src/business/entities/User');
 const { v4: uuidv4 } = require('uuid');
 
@@ -1133,7 +1160,7 @@ const gatewayMethods = {
     createTrialSessionWorkingCopy,
     createUser,
     createUserInboxRecord,
-    fetchPendingItems: fetchPendingItemsPersistence,
+    fetchPendingItems,
     getFullCaseByDocketNumber,
     getSesStatus,
     incrementCounter,
@@ -1164,7 +1191,9 @@ const gatewayMethods = {
     updateWorkItemInCase,
   }),
   // methods below are not known to create "entity" records
-  advancedDocumentSearch,
+  advancedDocumentSearch: isCodeEnabled(7029)
+    ? advancedDocumentSearch
+    : advancedDocumentSearchOld,
   caseAdvancedSearch,
   casePublicSearch: casePublicSearchPersistence,
   deleteCaseByDocketNumber,
@@ -1210,7 +1239,9 @@ const gatewayMethods = {
   getMessageThreadByParentId,
   getMessagesByDocketNumber,
   getPractitionerByBarNumber,
-  getPractitionersByName,
+  getPractitionersByName: isCodeEnabled(7136)
+    ? getPractitionersByName
+    : getPractitionersByNameOld,
   getPublicDownloadPolicyUrl,
   getReadyForTrialCases,
   getSectionInboxMessages,
@@ -1495,7 +1526,10 @@ module.exports = (appContextUser, logger = createLogger()) => {
         countPagesInDocument,
         createTrialSessionAndWorkingCopy,
         fetchPendingItems,
-        fetchPendingItemsByDocketNumber,
+        fetchPendingItemsByDocketNumber: isCodeEnabled(7198)
+          ? fetchPendingItemsByDocketNumber
+          : fetchPendingItemsByDocketNumberOld,
+        fetchPendingItemsOld,
         formatAndSortConsolidatedCases,
         generateCaseInventoryReportPdf,
         getCaseInventoryReport,
@@ -1507,7 +1541,9 @@ module.exports = (appContextUser, logger = createLogger()) => {
         sendIrsSuperuserPetitionEmail,
         sendServedPartiesEmails,
         updateCaseAutomaticBlock,
-        updateInitialFilingDocuments,
+        updateInitialFilingDocuments: isCodeEnabled(6933)
+          ? updateInitialFilingDocuments
+          : updateInitialFilingDocumentsOld,
       };
     },
     getUseCases: () => {
@@ -1544,7 +1580,9 @@ module.exports = (appContextUser, logger = createLogger()) => {
         deleteDeficiencyStatisticInteractor,
         deleteTrialSessionInteractor,
         deleteUserCaseNoteInteractor,
-        fetchPendingItemsInteractor,
+        fetchPendingItemsInteractor: isCodeEnabled(7134)
+          ? fetchPendingItemsInteractor
+          : fetchPendingItemsInteractorOld,
         fileAndServeCourtIssuedDocumentInteractor,
         fileCorrespondenceDocumentInteractor,
         fileCourtIssuedDocketEntryInteractor,
@@ -1559,7 +1597,9 @@ module.exports = (appContextUser, logger = createLogger()) => {
         generatePdfFromHtmlInteractor,
         generatePrintableCaseInventoryReportInteractor,
         generatePrintableFilingReceiptInteractor,
-        generatePrintablePendingReportInteractor,
+        generatePrintablePendingReportInteractor: isCodeEnabled(7134)
+          ? generatePrintablePendingReportInteractor
+          : generatePrintablePendingReportInteractorOld,
         generateStandingPretrialNoticeInteractor,
         generateStandingPretrialOrderInteractor,
         generateTrialCalendarPdfInteractor,
@@ -1616,7 +1656,9 @@ module.exports = (appContextUser, logger = createLogger()) => {
         orderAdvancedSearchInteractor,
         orderPublicSearchInteractor,
         parseLegacyDocumentsInteractor,
-        prioritizeCaseInteractor,
+        prioritizeCaseInteractor: isCodeEnabled(7166)
+          ? prioritizeCaseInteractor
+          : prioritizeCaseInteractorOld,
         processStreamRecordsInteractor,
         removeCaseFromTrialInteractor,
         removeCasePendingItemInteractor,
@@ -1652,9 +1694,13 @@ module.exports = (appContextUser, logger = createLogger()) => {
         updateCourtIssuedOrderInteractor,
         updateDeficiencyStatisticInteractor,
         updateDocketEntryInteractor,
-        updateDocketEntryMetaInteractor,
+        updateDocketEntryMetaInteractor: isCodeEnabled(7178)
+          ? updateDocketEntryMetaInteractor
+          : updateDocketEntryMetaInteractorOld,
         updateOtherStatisticsInteractor,
-        updatePetitionDetailsInteractor,
+        updatePetitionDetailsInteractor: isCodeEnabled(7166)
+          ? updatePetitionDetailsInteractor
+          : updatePetitionDetailsInteractorOld,
         updatePetitionerInformationInteractor,
         updatePractitionerUserInteractor,
         updatePrimaryContactInteractor,

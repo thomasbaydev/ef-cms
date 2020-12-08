@@ -53,12 +53,15 @@ import { formattedPendingItems } from './computeds/formattedPendingItems';
 import { formattedTrialSessionDetails } from './computeds/formattedTrialSessionDetails';
 import { formattedTrialSessions } from './computeds/formattedTrialSessions';
 import { formattedWorkQueue } from './computeds/formattedWorkQueue';
+import { formattedWorkQueue as formattedWorkQueueOld } from './computeds/formattedWorkQueue.old';
 import { getTrialCityName } from './computeds/formattedTrialCity';
 import { headerHelper } from './computeds/headerHelper';
 import { internalTypesHelper } from './computeds/internalTypesHelper';
+import { isCodeEnabled } from '../../../codeToggles';
 import { loadingHelper } from './computeds/loadingHelper';
 import { menuHelper } from './computeds/menuHelper';
 import { messageDocumentHelper } from './computeds/messageDocumentHelper';
+import { messageDocumentHelper as messageDocumentHelperOld } from './computeds/messageDocumentHelper.old';
 import { messageModalHelper } from './computeds/messageModalHelper';
 import { messagesHelper } from './computeds/messagesHelper';
 import { orderTypesHelper } from './computeds/orderTypesHelper';
@@ -75,13 +78,14 @@ import { requestAccessHelper } from './computeds/requestAccessHelper';
 import { reviewSavedPetitionHelper } from './computeds/reviewSavedPetitionHelper';
 import { scanBatchPreviewerHelper } from './computeds/scanBatchPreviewerHelper';
 import { scanHelper } from './computeds/scanHelper';
-import { selectDocumentTypeHelper } from './computeds/selectDocumentTypeHelper';
+import { selectDocumentTypeHelper as selectDocumentTypeHelperOld } from './computeds/selectDocumentTypeHelper.old';
 import { showAppTimeoutModalHelper } from './computeds/showAppTimeoutModalHelper';
 import { startCaseHelper } from './computeds/startCaseHelper';
 import { startCaseInternalContactsHelper } from './computeds/startCaseInternalContactsHelper';
 import { startCaseInternalHelper } from './computeds/startCaseInternalHelper';
 import { statisticsFormHelper } from './computeds/statisticsFormHelper';
 import { statisticsHelper } from './computeds/statisticsHelper';
+import { templateHelper } from './computeds/templateHelper';
 import { trialCitiesHelper } from './computeds/trialCitiesHelper';
 import { trialSessionDetailsHelper } from './computeds/trialSessionDetailsHelper';
 import { trialSessionHeaderHelper } from './computeds/trialSessionHeaderHelper';
@@ -147,13 +151,17 @@ const helpers = {
   formattedPendingItems,
   formattedTrialSessionDetails,
   formattedTrialSessions,
-  formattedWorkQueue,
+  formattedWorkQueue: isCodeEnabled(6934)
+    ? formattedWorkQueue
+    : formattedWorkQueueOld,
   getTrialCityName,
   headerHelper,
   internalTypesHelper,
   loadingHelper,
   menuHelper,
-  messageDocumentHelper,
+  messageDocumentHelper: isCodeEnabled(7022)
+    ? messageDocumentHelper
+    : messageDocumentHelperOld,
   messageModalHelper,
   messagesHelper,
   orderTypesHelper,
@@ -170,13 +178,16 @@ const helpers = {
   reviewSavedPetitionHelper,
   scanBatchPreviewerHelper,
   scanHelper,
-  selectDocumentTypeHelper,
+  selectDocumentTypeHelper: isCodeEnabled(6915)
+    ? undefined
+    : selectDocumentTypeHelperOld,
   showAppTimeoutModalHelper,
   startCaseHelper,
   startCaseInternalContactsHelper,
   startCaseInternalHelper,
   statisticsFormHelper,
   statisticsHelper,
+  templateHelper,
   trialCitiesHelper,
   trialSessionDetailsHelper,
   trialSessionHeaderHelper,
@@ -249,7 +260,7 @@ export const baseState = {
   // shared object for creating new entities, clear before using
   header: {
     searchTerm: '',
-    showBetaBar: true,
+    showBetaBar: true, // default state
     showMobileMenu: false,
     showUsaBannerDetails: false,
   },
@@ -300,9 +311,7 @@ export const baseState = {
   sessionMetadata: {
     docketRecordSort: [],
   },
-
   showValidation: false,
-
   user: null,
   // used for progress indicator when updating contact information for all of a user's cases
   userContactEditProgress: {},

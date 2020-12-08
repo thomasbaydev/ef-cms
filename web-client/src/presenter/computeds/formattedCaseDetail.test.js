@@ -1,3 +1,5 @@
+jest.mock('../../../../codeToggles');
+import { MOCK_CASE } from '../../../../shared/src/test/mockCase';
 import { applicationContextForClient as applicationContext } from '../../../../shared/src/business/test/createTestApplicationContext';
 import {
   formattedCaseDetail as formattedCaseDetailComputed,
@@ -6,6 +8,7 @@ import {
   getShowDocumentViewerLink,
 } from './formattedCaseDetail';
 import { getUserPermissions } from '../../../../shared/src/authorization/getUserPermissions';
+import { isCodeEnabled } from '../../../../codeToggles';
 import { runCompute } from 'cerebral/test';
 import { withAppContextDecorator } from '../../withAppContext';
 
@@ -14,6 +17,7 @@ const getDateISO = () => new Date().toISOString();
 describe('formattedCaseDetail', () => {
   let globalUser;
   const {
+    DOCUMENT_PROCESSING_STATUS_OPTIONS,
     DOCUMENT_RELATIONSHIPS,
     JUDGES_CHAMBERS,
     OBJECTIONS_OPTIONS_MAP,
@@ -214,6 +218,10 @@ describe('formattedCaseDetail', () => {
       servedAt: '2019-06-19T17:29:13.120Z',
     },
   ];
+
+  beforeEach(() => {
+    isCodeEnabled.mockReturnValue(true);
+  });
 
   it('does not error and returns expected empty values on empty caseDetail', () => {
     const result = runCompute(formattedCaseDetail, {
@@ -1555,6 +1563,67 @@ describe('formattedCaseDetail', () => {
     });
   });
 
+  it('should not show the link to an unassociated external user for a pending paper filed document', () => {
+    const result = runCompute(formattedCaseDetail, {
+      state: {
+        ...getBaseState(petitionerUser),
+        caseDetail: {
+          docketEntries: [
+            {
+              ...simpleDocketEntries[0],
+              processingStatus: DOCUMENT_PROCESSING_STATUS_OPTIONS.PENDING,
+            },
+          ],
+        },
+        permissions: {
+          CREATE_ORDER_DOCKET_ENTRY: false,
+          DOCKET_ENTRY: false,
+          UPDATE_CASE: false,
+        },
+        validationErrors: {},
+      },
+    });
+
+    expect(
+      result.formattedDocketEntries[0].showDocumentDescriptionWithoutLink,
+    ).toEqual(false);
+    expect(result.formattedDocketEntries[0].showDocumentProcessing).toEqual(
+      true,
+    );
+  });
+
+  it('should not show the link to an unassociated external user for a complete paper filed document', () => {
+    const result = runCompute(formattedCaseDetail, {
+      state: {
+        ...getBaseState(petitionerUser),
+        caseDetail: {
+          docketEntries: [
+            {
+              ...simpleDocketEntries[0],
+              processingStatus: DOCUMENT_PROCESSING_STATUS_OPTIONS.COMPLETE,
+            },
+          ],
+        },
+        permissions: {
+          CREATE_ORDER_DOCKET_ENTRY: false,
+          DOCKET_ENTRY: false,
+          UPDATE_CASE: false,
+        },
+        screenMetadata: {
+          isAssociated: false,
+        },
+        validationErrors: {},
+      },
+    });
+
+    expect(
+      result.formattedDocketEntries[0].showDocumentDescriptionWithoutLink,
+    ).toEqual(true);
+    expect(result.formattedDocketEntries[0].showDocumentProcessing).toEqual(
+      false,
+    );
+  });
+
   describe('stricken docket record', () => {
     let caseDetail;
 
@@ -1581,6 +1650,7 @@ describe('formattedCaseDetail', () => {
             isOnDocketRecord: true,
             isStricken: true,
             numberOfPages: 24,
+            processingStatus: DOCUMENT_PROCESSING_STATUS_OPTIONS.COMPLETE,
           },
           {
             description: 'Filing Fee Paid',
@@ -2005,6 +2075,30 @@ describe('formattedCaseDetail', () => {
           isUnservable: false,
           userHasAccessToCase: true,
           userHasNoAccessToDocument: false,
+        },
+        output: true,
+      },
+      {
+        // User is external, with no access to case, document link is not publicly visible
+        inputs: {
+          hasDocument: true,
+          isCourtIssuedDocument: true,
+          isExternalUser: true,
+          isHiddenToPublic: true,
+          isUnservable: true,
+          userHasAccessToCase: false,
+        },
+        output: false,
+      },
+      {
+        // User is external, with access to case, document link is visible
+        inputs: {
+          hasDocument: true,
+          isCourtIssuedDocument: true,
+          isExternalUser: true,
+          isHiddenToPublic: true,
+          isUnservable: true,
+          userHasAccessToCase: true,
         },
         output: true,
       },
@@ -2577,6 +2671,96 @@ describe('formattedCaseDetail', () => {
           isOnDocketRecord: true,
           pending: true,
         },
+      ]);
+    });
+
+    it('should add items to formattedPendingDocketEntriesOnDocketRecord when isLegacyServed is true and the item is pending and 7198 is toggled on', async () => {
+      const caseDetail = {
+        ...MOCK_CASE,
+        docketEntries: [
+          {
+            ...MOCK_CASE.docketEntries[2],
+            docketEntryId: '999999',
+            isLegacyServed: true,
+            isOnDocketRecord: true,
+            pending: true,
+            servedAt: undefined,
+            servedParties: undefined,
+          },
+        ],
+      };
+      const result = runCompute(formattedCaseDetail, {
+        state: {
+          caseDetail,
+          ...getBaseState(petitionsClerkUser),
+        },
+      });
+
+      expect(result.formattedPendingDocketEntriesOnDocketRecord).toMatchObject([
+        { docketEntryId: '999999' },
+      ]);
+    });
+
+    it('should NOT add items to formattedPendingDocketEntriesOnDocketRecord when isLegacyServed is true and the item is pending and 7198 is toggled off', async () => {
+      isCodeEnabled.mockReturnValue(false);
+
+      const caseDetail = {
+        ...MOCK_CASE,
+        docketEntries: [
+          {
+            ...MOCK_CASE.docketEntries[2],
+            docketEntryId: '999999',
+            isLegacyServed: true,
+            isOnDocketRecord: true,
+            pending: true,
+            servedAt: undefined,
+            servedParties: undefined,
+          },
+        ],
+      };
+
+      const result = runCompute(formattedCaseDetail, {
+        state: {
+          caseDetail,
+          ...getBaseState(petitionsClerkUser),
+        },
+      });
+
+      expect(result.formattedPendingDocketEntriesOnDocketRecord.length).toBe(0);
+    });
+
+    it('should add items to formattedPendingDocketEntriesOnDocketRecord when servedAt is defined and the item is pending', async () => {
+      const caseDetail = {
+        ...MOCK_CASE,
+        docketEntries: [
+          {
+            ...MOCK_CASE.docketEntries[2],
+            docketEntryId: '999999',
+            isLegacyServed: false,
+            isOnDocketRecord: true,
+            pending: true,
+            servedAt: '2019-08-25T05:00:00.000Z',
+            servedParties: [
+              {
+                name: 'Bernard Lowe',
+              },
+              {
+                name: 'IRS',
+                role: 'irsSuperuser',
+              },
+            ],
+          },
+        ],
+      };
+      const result = runCompute(formattedCaseDetail, {
+        state: {
+          caseDetail,
+          ...getBaseState(petitionsClerkUser),
+        },
+      });
+
+      expect(result.formattedPendingDocketEntriesOnDocketRecord).toMatchObject([
+        { docketEntryId: '999999' },
       ]);
     });
   });
