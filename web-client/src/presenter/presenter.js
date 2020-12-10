@@ -5,10 +5,13 @@ import { ServerInvalidResponseError } from './errors/ServerInvalidResponseError'
 import { UnauthorizedRequestError } from './errors/UnauthorizedRequestError';
 import { UnidentifiedUserError } from './errors/UnidentifiedUserError';
 import { addCaseToTrialSessionSequence } from './sequences/addCaseToTrialSessionSequence';
-import { addCaseToTrialSessionSequence as addCaseToTrialSessionSequenceOld } from './sequences/addCaseToTrialSessionSequence.old';
 import { addPenaltyInputSequence } from './sequences/addPenaltyInputSequence';
 import { addStatisticToFormSequence } from './sequences/addStatisticToFormSequence';
 import { addSupportingDocumentToFormSequence } from './sequences/addSupportingDocumentToFormSequence';
+import { adminContactUpdateCompleteSequence } from './sequences/adminContactUpdateCompleteSequence';
+import { adminContactUpdateErrorSequence } from './sequences/adminContactUpdateErrorSequence';
+import { adminContactUpdateInitialUpdateCompleteSequence } from './sequences/adminContactUpdateInitialUpdateCompleteSequence';
+import { adminContactUpdateProgressSequence } from './sequences/adminContactUpdateProgressSequence';
 import { advancedSearchTabChangeSequence } from './sequences/advancedSearchTabChangeSequence';
 import { archiveDraftDocumentModalSequence } from './sequences/archiveDraftDocumentModalSequence';
 import { archiveDraftDocumentSequence } from './sequences/archiveDraftDocumentSequence';
@@ -79,7 +82,6 @@ import { dismissCreateMessageModalSequence } from './sequences/dismissCreateMess
 import { dismissModalSequence } from './sequences/dismissModalSequence';
 import { editCorrespondenceDocumentSequence } from './sequences/editCorrespondenceDocumentSequence';
 import { editUploadCourtIssuedDocumentSequence } from './sequences/editUploadCourtIssuedDocumentSequence';
-import { fetchPendingItemsSequence } from './sequences/pending/fetchPendingItemsSequence';
 import { fetchUserNotificationsSequence } from './sequences/fetchUserNotificationsSequence';
 import { fileDocketEntrySequence } from './sequences/fileDocketEntrySequence';
 import { filterCaseDeadlinesByJudgeSequence } from './sequences/filterCaseDeadlinesByJudgeSequence';
@@ -154,7 +156,6 @@ import { gotoUploadCourtIssuedDocumentSequence } from './sequences/gotoUploadCou
 import { gotoUserContactEditSequence } from './sequences/gotoUserContactEditSequence';
 import { gotoViewAllDocumentsSequence } from './sequences/gotoViewAllDocumentsSequence';
 import { gotoWorkQueueSequence } from './sequences/gotoWorkQueueSequence';
-import { isCodeEnabled } from '../../../codeToggles';
 import { leaveCaseForLaterServiceSequence } from './sequences/leaveCaseForLaterServiceSequence';
 import { loadDefaultDocketViewerDocumentToDisplaySequence } from './sequences/DocketEntry/loadDefaultDocketViewerDocumentToDisplaySequence';
 import { loadDefaultDraftViewerDocumentToDisplaySequence } from './sequences/DocketEntry/loadDefaultDraftViewerDocumentToDisplaySequence';
@@ -449,12 +450,14 @@ export const presenter = {
   ],
   providers: {},
   sequences: {
-    addCaseToTrialSessionSequence: isCodeEnabled(6506)
-      ? addCaseToTrialSessionSequence
-      : addCaseToTrialSessionSequenceOld,
+    addCaseToTrialSessionSequence,
     addPenaltyInputSequence,
     addStatisticToFormSequence,
     addSupportingDocumentToFormSequence,
+    adminContactUpdateCompleteSequence,
+    adminContactUpdateErrorSequence,
+    adminContactUpdateInitialUpdateCompleteSequence,
+    adminContactUpdateProgressSequence,
     advancedSearchTabChangeSequence,
     archiveDraftDocumentModalSequence,
     archiveDraftDocumentSequence,
@@ -525,7 +528,6 @@ export const presenter = {
     dismissModalSequence,
     editCorrespondenceDocumentSequence,
     editUploadCourtIssuedDocumentSequence,
-    fetchPendingItemsSequence,
     fetchUserNotificationsSequence,
     fileDocketEntrySequence,
     filterCaseDeadlinesByJudgeSequence,
