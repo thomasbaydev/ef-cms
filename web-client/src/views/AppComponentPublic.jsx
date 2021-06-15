@@ -34,6 +34,8 @@ const pages = {
   TodaysOrders,
 };
 
+let initialPageLoaded = false;
+
 /**
  * Root application component for the public site
  */
@@ -50,8 +52,13 @@ export const AppComponentPublic = connect(
     };
 
     useEffect(() => {
-      focusMain();
-    });
+      if (initialPageLoaded) {
+        focusMain();
+      }
+      if (currentPage !== 'Interstitial') {
+        initialPageLoaded = true;
+      }
+    }, [currentPage]);
 
     if (!process.env.CI) {
       useScript('https://lynmjtcq5px1.statuspage.io/embed/script.js');

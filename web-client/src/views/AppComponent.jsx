@@ -167,6 +167,8 @@ const pages = {
   WorkQueue,
 };
 
+let initialPageLoaded = false;
+
 /**
  * Root application component
  */
@@ -191,16 +193,13 @@ export const AppComponent = connect(
       return;
     };
 
-    const focusSkipNav = e => {
-      e && e.preventDefault();
-      const skipNav = window.document.querySelector('.usa-skipnav');
-      if (skipNav) skipNav.focus();
-      return;
-    };
-
     useEffect(() => {
-      // focusSkipNav();
-      focusMain();
+      if (initialPageLoaded) {
+        focusMain();
+      }
+      if (currentPage !== 'Interstitial') {
+        initialPageLoaded = true;
+      }
     }, [currentPage]);
 
     const CurrentPage = pages[currentPage];
