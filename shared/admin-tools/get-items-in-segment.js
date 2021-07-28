@@ -6,13 +6,13 @@ const dynamodb = new AWS.DynamoDB({
   retryDelayOptions: { base: 300 },
 });
 
-const segmentNum = 53294;
-const totalSegments = 68057;
-const sourceDb = 'efcms-mig-beta';
+const sourceDb = process.argv[2]; // 'efcms-mig-beta';
 const ESClusterConfig = {
-  environmentName: 'mig',
+  environmentName: process.argv[3], // 'mig'
   version: 'alpha',
 };
+const segmentNum = process.argv[4]; // 53294;
+const totalSegments = process.argv[5]; // 68057;
 
 const dynamoDbDocumentClient = new AWS.DynamoDB.DocumentClient({
   endpoint: 'dynamodb.us-east-1.amazonaws.com',
@@ -68,16 +68,22 @@ const processItems = async ({ esClient, items }) => {
         index = 'efcms-docket-entry';
         break;
       default:
+        // console.log(item.entityName);
+        // if (!item.entityName) {
+        //   console.log(item);
+        // }
         continue;
     }
 
     const res = await findRecordInElasticSearch({ esClient, index, item });
 
+    // if (res.hits.total.value === 0) {
     console.log({
       found: res.hits.total.value > 0,
       pk: item.pk,
       sk: item.sk,
     });
+    // }
   }
 };
 
